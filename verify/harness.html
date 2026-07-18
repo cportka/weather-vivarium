@@ -1,0 +1,139 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>weather-vivarium verify harness</title>
+<style>body{margin:0;background:#141018;font-family:monospace;color:#ddd}canvas{image-rendering:pixelated}</style>
+</head><body>
+<canvas id="out" width="10" height="10"></canvas>
+<script type="module">
+import { CATALOG } from "../src/catalog/index.js";
+import { LANDMARKS } from "../src/catalog/landmarks.js";
+import { createPainter } from "../src/engine/painter.js";
+import { resolveScene } from "../src/world/resolve.js";
+import { pools } from "../src/catalog/index.js";
+import { createScene } from "../src/scene/compositor.js";
+import { defaultState } from "../src/data/weather.js";
+import { seedFrom } from "../src/engine/random.js";
+import { moonIllumination, dayFactor } from "../src/engine/astronomy.js";
+
+const L = 50, GEOM = { L, horizon: 24, groundTop: 37, roadBot: 46 };
+
+function mockEnv(over) {
+  return Object.assign({
+    night: false, dayT: 1, frame: 0, col: c => c, rng: () => 0.5, wind: 0.45, dir: 1,
+    text: "72°", code: 0, cloud: 20, aqi: 40, temp: 72, rough: false, cold: false, waveM: 0.9, tide: 0.5,
+    L, horizon: 24, groundTop: 37, roadBot: 46, sunrise: 380, sunset: 1180, latitude: 34, intensity: 0
+  }, over || {});
+}
+
+// Render a labelled contact sheet of a catalog list (day row + night row per entry).
+window.contactSheet = function (list, title) {
+  const cell = 54, cols = 6, cw = cell, ch = cell + 12;
+  const rows = Math.ceil(list.length / cols);
+  const out = document.getElementById("out");
+  out.width = cols * cw; out.height = rows * ch + 20;
+  const octx = out.getContext("2d"); octx.imageSmoothingEnabled = false;
+  octx.fillStyle = "#141018"; octx.fillRect(0, 0, out.width, out.height);
+  octx.fillStyle = "#8fd"; octx.font = "12px monospace"; octx.fillText(title, 6, 14);
+
+  const buf = document.createElement("canvas"); buf.width = L; buf.height = L;
+  const b = buf.getContext("2d"); b.imageSmoothingEnabled = false;
+  const P = createPainter(b, L);
+
+  list.forEach((e, i) => {
+    const cx = (i % cols) * cw, cy = Math.floor(i / cols) * ch + 20;
+    const anchor = e.anchor || "baseline";
+    [false, true].forEach((night, ni) => {
+      b.clearRect(0, 0, L, L);
+      // background tint so night sprites are visible
+      b.fillStyle = night ? "#1a2036" : "#9ac4d8"; b.fillRect(0, 0, L, L);
+      const env = mockEnv({ night, dayT: night ? 0.1 : 1, col: night ? (c => P.mix(c, "#20202c", 0.55)) : (c => c) });
+      const x = anchor === "center" ? 25 : Math.round((L - (e.w || 8)) / 2);
+      const yb = anchor === "center" ? 25 : 40;
+      try { e.draw(P, x, yb, env); } catch (err) { b.fillStyle = "#f44"; b.fillRect(0, 0, L, L); console.error("DRAW FAIL", e.id, err.message); window.__errors = (window.__errors||[]); window.__errors.push(e.id + ": " + err.message); }
+      octx.drawImage(buf, cx + ni * (cw / 2) + 1, cy, cw / 2 - 2, cw / 2 - 2);
+    });
+    octx.fillStyle = "#bbb"; octx.font = "8px monospace";
+    octx.fillText((e.id || "?").slice(0, 10), cx + 2, cy + cw / 2 + 9);
+  });
+  return { w: out.width, h: out.height };
+};
+
+// Render a full scene (a strip of frames) for a place, at a given time & weather.
+window.sceneStrip = function (placeOpts, weatherOver, nowMin, frames) {
+  const place = Object.assign({ name: "", country: "", admin1: "", latitude: 34, longitude: -118, timezone: "UTC", elevation: 20 }, placeOpts);
+  const res = resolveScene(place, placeOpts.opts || {});
+  const W = Object.assign(defaultState(), weatherOver || {});
+  const lt = { year: 2026, month: 7, day: 18 };
+  const world = {
+    geometry: GEOM, biome: res.biome, landscape: res.landscape, landmark: res.landmark,
+    latitude: res.latitude, coastal: res.coastal, unit: res.unit,
+    pools: pools(res.biome.id), W, sunrise: W.sunrise, sunset: W.sunset,
+    moon: moonIllumination(lt.year, lt.month, lt.day), seed: seedFrom(place.name + place.latitude),
+    place, tempText: () => (W.temp == null ? "--" : W.temp + "°")
+  };
+  const buf = document.createElement("canvas"); buf.width = L; buf.height = L;
+  const b = buf.getContext("2d"); b.imageSmoothingEnabled = false;
+  const P = createPainter(b, L);
+  const scene = createScene(P, world, { reduce: false });
+  const dT = dayFactor(nowMin, W.sunrise, W.sunset);
+  const n = frames || 1, scale = 3, gap = 4;
+  const out = document.getElementById("out");
+  out.width = n * (L * scale + gap); out.height = L * scale + 16;
+  const octx = out.getContext("2d"); octx.imageSmoothingEnabled = false;
+  octx.fillStyle = "#141018"; octx.fillRect(0, 0, out.width, out.height);
+  for (let f = 0; f < n; f++) {
+    try { scene.render(f * 8 + 1, nowMin, dT); } catch (err) { console.error("SCENE FAIL", err.message); window.__errors = (window.__errors||[]); window.__errors.push("scene: " + err.message); }
+    octx.drawImage(buf, 0, 0, L, L, f * (L * scale + gap), 12, L * scale, L * scale);
+  }
+  octx.fillStyle = "#8fd"; octx.font = "11px monospace";
+  octx.fillText(res.landscape.name + " / " + res.biome.id + (res.landmark ? " [" + res.landmark.id + "]" : ""), 4, 10);
+  return { w: out.width, h: out.height, biome: res.biome.id, landscape: res.landscape.id, landmark: res.landmark && res.landmark.id };
+};
+// ---- 12-city preview grid (for the README) ----
+function buildScene(spec) {
+  const place = Object.assign({ name: "", country: "United States", admin1: "", latitude: 34, longitude: -118, timezone: "UTC", elevation: 20 }, spec.place);
+  const res = resolveScene(place, {});
+  const W = Object.assign(defaultState(), spec.wx || {});
+  const world = {
+    geometry: GEOM, biome: res.biome, landscape: res.landscape, landmark: res.landmark,
+    latitude: res.latitude, coastal: res.coastal, unit: res.unit,
+    pools: pools(res.biome.id), W, sunrise: W.sunrise, sunset: W.sunset,
+    moon: moonIllumination(2026, 7, 18), seed: seedFrom(place.name + place.latitude),
+    place, tempText: () => (W.temp == null ? "--" : W.temp + "°")
+  };
+  const buf = document.createElement("canvas"); buf.width = L; buf.height = L;
+  const b = buf.getContext("2d"); b.imageSmoothingEnabled = false;
+  const P = createPainter(b, L);
+  return { scene: createScene(P, world, { reduce: false }), buf, now: spec.now, label: spec.label,
+    unit: res.unit, dayT: dayFactor(spec.now, W.sunrise, W.sunset) };
+}
+
+let PREVIEW = null;
+window.previewInit = function (specs) {
+  PREVIEW = specs.map(buildScene);
+  const cols = 4, rows = 3, tile = 100, pad = 4, lab = 16;
+  const out = document.getElementById("out");
+  out.width = cols * (tile + pad) + pad;
+  out.height = rows * (tile + lab + pad) + pad;
+  return { w: out.width, h: out.height, tiles: PREVIEW.length };
+};
+window.previewFrame = function (f) {
+  const cols = 4, tile = 100, pad = 4, lab = 16;
+  const out = document.getElementById("out");
+  const octx = out.getContext("2d"); octx.imageSmoothingEnabled = false;
+  octx.fillStyle = "#0e1016"; octx.fillRect(0, 0, out.width, out.height);
+  PREVIEW.forEach((t, i) => {
+    try { t.scene.render(f, t.now, t.dayT); } catch (e) { window.__errors = (window.__errors||[]); window.__errors.push("preview " + t.label + ": " + e.message); }
+    const cx = pad + (i % cols) * (tile + pad), cy = pad + Math.floor(i / cols) * (tile + lab + pad);
+    octx.drawImage(t.buf, 0, 0, L, L, cx, cy, tile, tile);
+    octx.fillStyle = "#0b0d13"; octx.fillRect(cx, cy + tile, tile, lab);
+    octx.fillStyle = "#cfd6e2"; octx.font = "10px monospace"; octx.textBaseline = "middle";
+    octx.fillText(t.label, cx + 4, cy + tile + lab / 2);
+  });
+  return { f };
+};
+
+window.CATALOG = CATALOG;
+window.LANDMARKS = LANDMARKS;
+window.__ready = true;
+</script>
+</body></html>
