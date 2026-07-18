@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>weather-vivarium — a living weather diorama for any city</title>
+<meta name="description" content="A tiny living pixel-art weather diorama for any city. Type a place and watch its sky, sun, weather, landscape and landmark come alive in real time." />
+<meta name="color-scheme" content="dark light" />
+<meta property="og:title" content="weather-vivarium" />
+<meta property="og:description" content="A living pixel-art weather diorama for any city." />
+<style>
+  :root { --bg:#0e1016; --panel:#171a22; --ink:#e6e9ef; --muted:#9aa2b1; --accent:#4a9eff; --line:#252a35; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:radial-gradient(1200px 600px at 50% -10%, #1a2030, var(--bg)); color:var(--ink);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace; min-height:100vh; }
+  header { text-align:center; padding:28px 16px 6px; }
+  h1 { margin:0; font-size:22px; letter-spacing:.5px; }
+  header p { margin:6px 0 0; color:var(--muted); font-size:13px; }
+  main { max-width:760px; margin:0 auto; padding:16px; }
+  .stage { display:flex; flex-direction:column; align-items:center; gap:14px; }
+  #mount { min-height:300px; display:flex; align-items:center; justify-content:center; }
+  .controls { width:100%; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:14px; }
+  .row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .row + .row { margin-top:12px; }
+  input[type=text] { flex:1 1 220px; background:#0f121a; border:1px solid var(--line); color:var(--ink);
+    border-radius:8px; padding:9px 11px; font:inherit; }
+  button { background:#20263340; border:1px solid var(--line); color:var(--ink); border-radius:8px;
+    padding:9px 12px; font:inherit; cursor:pointer; }
+  button.primary { background:var(--accent); border-color:var(--accent); color:#08111f; font-weight:600; }
+  button:hover { border-color:var(--accent); }
+  .chips button { padding:6px 10px; font-size:12px; }
+  label.mut { color:var(--muted); font-size:12px; }
+  input[type=range] { flex:1; accent-color:var(--accent); }
+  .readout { color:var(--muted); font-size:12.5px; text-align:center; line-height:1.6; min-height:3em; }
+  .readout b { color:var(--ink); }
+  a { color:var(--accent); text-decoration:none; }
+  footer { text-align:center; color:var(--muted); font-size:12px; padding:24px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>weather-vivarium</h1>
+  <p>a tiny living weather diorama for any city — click it to zoom</p>
+</header>
+<main>
+  <div class="stage">
+    <div id="mount"></div>
+    <div class="readout" id="readout">Loading…</div>
+    <div class="controls">
+      <div class="row">
+        <input id="city" type="text" placeholder="Type a city — Kyoto, Reykjavík, Cusco…" value="Los Angeles" />
+        <button class="primary" id="go">Go</button>
+        <button id="unit" title="Toggle °F / °C">°F/°C</button>
+      </div>
+      <div class="row chips" id="presets"></div>
+      <div class="row">
+        <label class="mut" for="time">time</label>
+        <input id="time" type="range" min="0" max="1439" value="720" />
+        <label class="mut"><input type="checkbox" id="live" checked /> live</label>
+      </div>
+    </div>
+    <p style="color:var(--muted);font-size:12px">See the <a href="gallery.html">12-city gallery →</a></p>
+  </div>
+</main>
+<footer>
+  weather-vivarium · pixel-art weather for anywhere ·
+  data from <a href="https://open-meteo.com">Open-Meteo</a> ·
+  <a href="https://github.com/cportka/weather-vivarium">source</a>
+</footer>
+
+<script type="module">
+  import { createVivarium } from "./src/index.js";
+
+  const mount = document.getElementById("mount");
+  const readout = document.getElementById("readout");
+  const cityInput = document.getElementById("city");
+  const timeEl = document.getElementById("time");
+  const liveEl = document.getElementById("live");
+  let unit = "auto", instance = null;
+
+  const presets = ["Tokyo", "Reykjavík", "Cairo", "Rio de Janeiro", "Zurich", "Nairobi", "Sydney", "New Orleans", "Kathmandu"];
+  const pc = document.getElementById("presets");
+  presets.forEach(name => {
+    const b = document.createElement("button"); b.textContent = name;
+    b.onclick = () => { cityInput.value = name; load(name); };
+    pc.appendChild(b);
+  });
+
+  function describe(inst) {
+    if (!inst || !inst.resolution) return;
+    const r = inst.resolution, w = inst.weather;
+    const u = r.unit === "celsius" ? "C" : "F";
+    readout.innerHTML = `<b>${(r.place.name || cityInput.value)}${r.place.admin1 ? ", " + r.place.admin1 : ""}</b> — ` +
+      `${w.temp == null ? "…" : w.temp + "°" + u} · ` +
+      `<b>${r.landscape.name}</b> (${r.biome.id})` +
+      (r.landmark ? ` · landmark: <b>${r.landmark.name}</b>` : "");
+  }
+
+  function load(city) {
+    if (instance) instance.destroy();
+    readout.textContent = "Resolving " + city + "…";
+    instance = createVivarium(mount, { city, size: 300, interactive: true, temperatureUnit: unit });
+    applyTime();
+    describe(instance);
+    instance.ready.then(() => {
+      describe(instance);
+      // keep the readout current as async weather lands
+      const t = setInterval(() => describe(instance), 1500);
+      setTimeout(() => clearInterval(t), 12000);
+    });
+  }
+  function applyTime() {
+    if (!instance) return;
+    if (liveEl.checked) instance.setTimeOverride(undefined);
+    else instance.setTimeOverride(+timeEl.value);
+  }
+
+  document.getElementById("go").onclick = () => load(cityInput.value.trim() || "Los Angeles");
+  cityInput.addEventListener("keydown", e => { if (e.key === "Enter") load(cityInput.value.trim() || "Los Angeles"); });
+  document.getElementById("unit").onclick = () => {
+    unit = unit === "fahrenheit" ? "celsius" : unit === "celsius" ? "auto" : "fahrenheit";
+    load(cityInput.value.trim() || "Los Angeles");
+  };
+  timeEl.addEventListener("input", () => { liveEl.checked = false; applyTime(); });
+  liveEl.addEventListener("change", applyTime);
+
+  load("Los Angeles");
+</script>
+</body>
+</html>
