@@ -1,3 +1,4 @@
-/* People catalog — reference figures plus fanned-out batches. */
+/* People catalog — reference figures plus the fanned-out figures batch. */
 import core from "./parts/people-core.js";
-export default [].concat(core);
+import a from "./parts/people-a.js";
+export default [].concat(core, a);

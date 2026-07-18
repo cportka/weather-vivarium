@@ -5,7 +5,7 @@
 
 export default [
   {
-    id: "gull", name: "Seagull", biomes: ["coast", "lake", "city", "wetland"],
+    id: "gull", name: "Seagull", biomes: ["coast", "ocean", "lake", "city", "wetland"],
     tags: ["bird", "sky", "shore"], w: 5, h: 2, anchor: "center", rarity: 3,
     draw: function (P, x, y, env) {
       var up = ((env.frame >> 2) & 1) === 0;

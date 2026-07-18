@@ -12,7 +12,7 @@ generalised: same hand-built vintage-pixel soul, now for the whole world.
 
 <p align="center">
   <a href="https://cportka.github.io/weather-vivarium/gallery.html">
-    <img src="assets/gallery-preview.gif" alt="Twelve live weather-vivarium dioramas — Berkeley, New York, Honolulu, Anchorage, Seattle, Las Vegas, Miami, Austin, Washington, New Orleans, Memphis, Chicago" width="640" />
+    <img src="assets/gallery-preview.gif" alt="Twelve live weather-vivarium dioramas — Berkeley, New York, Honolulu, Anchorage, Seattle, Las Vegas, Miami, Austin, Washington, New Orleans, Memphis, Chicago" width="420" />
   </a>
   <br />
   <em>Twelve cities, each on its current weather — <a href="https://cportka.github.io/weather-vivarium/gallery.html">open the live gallery →</a></em>

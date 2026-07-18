@@ -44,5 +44,9 @@
   },
   "engines": {
     "node": ">=18"
+  },
+  "devDependencies": {
+    "gifenc": "^1.0.3",
+    "pngjs": "^7.0.0"
   }
 }

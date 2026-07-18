@@ -2,16 +2,15 @@
 // Representative time/weather per city (deterministic, no network). Run:
 //   node verify/preview.mjs
 import { createRequire } from "module";
-import { execFileSync } from "child_process";
 import http from "http";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import { encodeGif } from "./gif.mjs";
 
 const require = createRequire(import.meta.url);
 const { chromium } = require("/opt/node22/lib/node_modules/playwright");
 const CHROME = "/opt/pw-browsers/chromium-1194/chrome-linux/chrome";
-const FFMPEG = "/opt/pw-browsers/ffmpeg-1011/ffmpeg-linux";
 
 const ROOT = path.resolve(fileURLToPath(import.meta.url), "../..");
 const FRAMES = path.join(ROOT, "verify", "out", "frames");
@@ -48,7 +47,7 @@ const server = http.createServer((req, res) => {
 async function main() {
   await new Promise(r => server.listen(8098, r));
   const browser = await chromium.launch({ executablePath: CHROME, args: ["--no-sandbox"] });
-  const page = await browser.newPage({ deviceScaleFactor: 2 });
+  const page = await browser.newPage({ deviceScaleFactor: 1 });
   await page.goto("http://localhost:8098/verify/harness.html");
   await page.waitForFunction("window.__ready === true", { timeout: 15000 });
   const dims = await page.evaluate((s) => window.previewInit(s), SPECS);
@@ -66,13 +65,10 @@ async function main() {
   await browser.close(); server.close();
   if (errors.length) console.log("PREVIEW ERRORS:\n" + errors.slice(0, 10).join("\n"));
 
-  // static PNG (first frame) + animated GIF (12fps) via ffmpeg 2-pass palette
+  // static PNG (first frame) + animated GIF (12fps), encoded in pure JS
   fs.copyFileSync(path.join(FRAMES, "f000.png"), path.join(ASSETS, "gallery-preview.png"));
-  const pal = path.join(FRAMES, "palette.png");
-  execFileSync(FFMPEG, ["-y", "-i", path.join(FRAMES, "f%03d.png"), "-vf", "palettegen=stats_mode=diff", pal], { stdio: "ignore" });
-  execFileSync(FFMPEG, ["-y", "-framerate", "12", "-i", path.join(FRAMES, "f%03d.png"), "-i", pal,
-    "-lavfi", "paletteuse=dither=bayer:bayer_scale=3", "-loop", "0", path.join(ASSETS, "gallery-preview.gif")], { stdio: "ignore" });
-  const gifKB = Math.round(fs.statSync(path.join(ASSETS, "gallery-preview.gif")).size / 1024);
-  console.log(`Wrote assets/gallery-preview.png and assets/gallery-preview.gif (${gifKB} KB)`);
+  const info = encodeGif(FRAMES, path.join(ASSETS, "gallery-preview.gif"), { delay: 83 });
+  console.log(`Wrote assets/gallery-preview.png and assets/gallery-preview.gif ` +
+    `(${info.width}x${info.height}, ${info.frames} frames, ${Math.round(info.bytes / 1024)} KB)`);
 }
 main().catch(e => { console.error(e); process.exit(1); });

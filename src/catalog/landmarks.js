@@ -1,8 +1,9 @@
 /* landmarks.js — the landmark catalog + the picker that gives a place its
    signature feature (or nothing, when no known landmark fits). */
 import core from "./parts/landmarks-core.js";
+import a from "./parts/landmarks-a.js";
 
-export var LANDMARKS = [].concat(core);
+export var LANDMARKS = [].concat(core, a);
 
 export function getLandmark(id) {
   for (var i = 0; i < LANDMARKS.length; i++) if (LANDMARKS[i].id === id) return LANDMARKS[i];

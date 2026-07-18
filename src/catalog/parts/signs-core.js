@@ -6,7 +6,9 @@
 
 export default [
   {
-    id: "neon", name: "Neon billboard", biomes: ["coast", "city", "desert", "plains", "savanna", "farmland"],
+    // No `biomes` list → universal: guarantees every place has a temperature
+    // display, even biomes without a themed sign (ocean, jungle, lake, …).
+    id: "neon", name: "Neon billboard",
     tags: ["sign", "neon"], w: 19, h: 19, anchor: "baseline",
     draw: function (P, x, yb, env) {
       var w = 19, h = 15, top = yb - 19, frame = env.frame;

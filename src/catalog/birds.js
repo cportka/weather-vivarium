@@ -1,3 +1,4 @@
-/* Bird catalog — reference birds plus fanned-out batches. */
+/* Bird catalog — reference birds plus the fanned-out species batch. */
 import core from "./parts/birds-core.js";
-export default [].concat(core);
+import a from "./parts/birds-a.js";
+export default [].concat(core, a);

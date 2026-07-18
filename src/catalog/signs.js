@@ -1,3 +1,4 @@
-/* Sign catalog — reference signs plus fanned-out batches. */
+/* Sign catalog — reference signs plus the fanned-out styles batch. */
 import core from "./parts/signs-core.js";
-export default [].concat(core);
+import a from "./parts/signs-a.js";
+export default [].concat(core, a);
