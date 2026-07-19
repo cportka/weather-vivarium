@@ -92,6 +92,10 @@ export function createScene(P, world, opts) {
     return {
       L: P.L, horizon: G.horizon, groundTop: G.groundTop, roadBot: G.roadBot,
       frame: frame, now: now, dayT: dayT, night: night, col: col, rng: rng,
+      // srng: a deterministic generator reseeded every frame, so static scenery
+      // (a city skyline, wall graffiti) is laid out identically each frame instead
+      // of flickering/"scrolling" as the shared rng advances.
+      srng: makeRng(world.seed || 1),
       wind: clamp((W.windKph || 0) / 45, 0, 1),
       code: W.code, cloud: W.cloud, aqi: W.aqi, temp: W.temp,
       waveM: W.waveM, tide: W.tide, sunrise: world.sunrise, sunset: world.sunset,
@@ -175,9 +179,6 @@ export function createScene(P, world, opts) {
     }
     if (isFog(env.code)) EFFECTS.fog(P, env);
 
-    // the city's landmark (a background feature, behind the moving cast)
-    if (props.landmark) props.landmark.entry.draw(P, props.landmark.x, G.groundTop - 1, env);
-
     // birds (behind midground)
     if (!reduce) {
       if (world.pools.birds.length && frame >= nextBird && birds.length < 2) { spawnBird(); nextBird = frame + Math.round(260 + rng() * 520); }
@@ -205,6 +206,11 @@ export function createScene(P, world, opts) {
         }
       }
     }
+
+    // the city's landmark — a structure at the shoreline/midground: drawn AFTER
+    // the water cast so a passing boat never floats in front of it, but before
+    // the foreground trees/actors so those still layer over it.
+    if (props.landmark) props.landmark.entry.draw(P, props.landmark.x, G.groundTop - 1, env);
 
     // fixed trees (behind the road)
     for (var ti = 0; ti < props.trees.length; ti++) {

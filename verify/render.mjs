@@ -58,7 +58,10 @@ async function main() {
     ["scene-anchorage-snow", { name: "Anchorage", country: "United States", latitude: 61.2, longitude: -149.9 }, { temp: 20, code: 73, cloud: 90 }, 720, 4],
     ["scene-honolulu", { name: "Honolulu", country: "United States", latitude: 21.3, longitude: -157.8 }, { temp: 84, code: 1, waveM: 1.6 }, 780, 4],
     ["scene-miami", { name: "Miami", country: "United States", latitude: 25.76, longitude: -80.19 }, { temp: 88, code: 95, cloud: 80 }, 810, 4],
-    ["scene-cairo", { name: "Cairo", country: "Egypt", latitude: 30.04, longitude: 31.24 }, { temp: 38, code: 0 }, 780, 4]
+    ["scene-cairo", { name: "Cairo", country: "Egypt", latitude: 30.04, longitude: 31.24 }, { temp: 38, code: 0 }, 780, 4],
+    ["scene-sydney", { name: "Sydney", country: "Australia", latitude: -33.87, longitude: 151.21 }, { temp: 22, code: 1, waveM: 1.2 }, 720, 6],
+    ["scene-zurich", { name: "Zurich", country: "Switzerland", latitude: 47.37, longitude: 8.54, elevation: 408 }, { temp: 12, code: 2 }, 720, 4],
+    ["scene-nairobi", { name: "Nairobi", country: "Kenya", latitude: -1.29, longitude: 36.82, elevation: 1795 }, { temp: 26, code: 1 }, 720, 4]
   ];
   for (const [name, place, wx, now, frames] of scenes) {
     await shot(name, (a) => window.sceneStrip(a.place, a.wx, a.now, a.frames), { place, wx, now, frames });
