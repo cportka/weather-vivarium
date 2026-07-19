@@ -4,6 +4,15 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com) and the project uses
 [Semantic Versioning](https://semver.org). Every change bumps the version and adds an entry below.
 
+## [0.4.1] - 2026-07-19
+
+### Added
+- **Tracked city count.** The README now advertises the precomputed total
+  (**1,030** cities across **140** countries — the unique union of `world.json`'s
+  1,000 and `us.json`'s 62), the demo shows it live from the loaded data, and a
+  new test (`tests/cities-count.test.mjs`) enforces that the README figure matches
+  the datasets so it can't drift.
+
 ## [0.4.0] - 2026-07-19
 
 Making cities feel like cities, more of the world, and a smarter search.

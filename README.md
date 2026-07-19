@@ -2,7 +2,8 @@
   <img src="assets/logo.png" alt="weather-vivarium" width="560" />
 </p>
 
-> **Version:** 0.4.0
+> **Version:** 0.4.1
+> **Cities:** 1,030 precomputed · 140 countries · **any** city on Earth via geocoding
 
 A tiny **living pixel-art weather diorama** for *any* city — dependency-free, drop
 anywhere. Give it a place (or let it find yours) and its sky, sun, moon phase,
@@ -96,10 +97,13 @@ biome, so a diorama is always populated with things that belong there.
 
 `data/cities/` holds precomputed lookups from a city to its resolved vivarium —
 biome, landscape, landmark, category, unit — so a known city renders from **only
-its current weather**, no geocoding hop. Two datasets ship: a curated
-`us.json` (`npm run build:cities`) and a `world.json` of the top 1000 cities
+its current weather**, no geocoding hop. Two datasets ship — **1,030 cities in
+all, across 140 countries**: a curated **`us.json`** (62 cities;
+`npm run build:cities`) and a **`world.json`** of the top **1,000** cities
 worldwide (`npm run build:cities -- --world`, from GeoNames via `all-the-cities`,
-with offline timezones from `tz-lookup`). The roadmap (US → Mexico/Canada →
+with offline timezones from `tz-lookup`). Anything not in them still renders via
+live geocoding. The count above is enforced by a test (`tests/cities-count.test.mjs`),
+so it can't drift. The roadmap (US → Mexico/Canada →
 Europe/Asia → the world, toward the ~5M named places) and the GeoNames ingest are
 in [`data/cities/README.md`](data/cities/README.md).
 
