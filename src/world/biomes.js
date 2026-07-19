@@ -203,7 +203,9 @@ var PLAINS = {
 var CITY = {
   id: "city", name: "City",
   water: null, road: { kind: "asphalt", markings: true },
-  drawFar: function (P, env) { skyline(P, env); },
+  // Buildings now come from the compositor's density-driven urbanLayer (so every
+  // biome can be urban); the city biome just contributes pavement + a hint of haze.
+  drawFar: function () {},
   drawGround: function (P, env) {
     P.dband(0, env.horizon, P.L, env.groundTop + 2, env.col("#5a5f66"), env.col("#3f444a"));
     // sidewalk seam

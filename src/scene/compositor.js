@@ -39,6 +39,52 @@ function drawClouds(P, env, frame, sky) {
   }
 }
 
+// ---- urbanisation overlay -----------------------------------------------
+// Buildings whose count/height/coverage scale with env.density, laid over ANY
+// biome so a dense mountain or delta city reads as a city — while the gaps
+// between buildings keep showing the biome's nature, conveying the built-up-to-
+// nature ratio. A distant hazy back row plus, for denser places, a taller near
+// row. Stable per frame via env.srng.
+function oneBuilding(P, x, w, top, bot, wall, lit, rng) {
+  P.rect(x, top, w, bot - top, wall);
+  P.rect(x, top, w, 1, mix(wall, "#000000", 0.22));           // parapet
+  for (var wy = top + 2; wy < bot - 1; wy += 2) {
+    for (var wx = x + 1; wx < x + w - 1; wx += 2) {
+      P.px(wx, wy, (lit && rng() < 0.55) ? "#ffe58a" : mix(wall, "#000000", 0.28));
+    }
+  }
+}
+function urbanLayer(P, env) {
+  var d = env.density || 0;
+  if (d < 0.12) return;
+  var rng = env.srng || env.rng;
+  var hy = env.horizon, gt = env.groundTop, lit = env.night || env.dayT < 0.42;
+  // back row — distant, hazier, denser coverage with density
+  var x = 0;
+  while (x < P.L) {
+    if (rng() < 0.3 + d * 0.65) {
+      var w = 3 + Math.floor(rng() * 4);
+      var h = Math.round(3 + d * (hy - 5) + rng() * 3);
+      var wall = mix(env.col(mix("#3a4150", "#59636f", rng())), "#8791a0", 0.28 * (1 - d));
+      oneBuilding(P, x, w, hy - h, hy + 1, wall, lit, rng);
+      x += w + 1;
+    } else { x += 2 + Math.floor(rng() * 3); }               // gap → the biome shows through
+  }
+  // near row — taller, in front, only for denser places
+  if (d > 0.42) {
+    var fx = 0;
+    while (fx < P.L) {
+      if (rng() < (d - 0.38) * 1.5) {
+        var fw = 4 + Math.floor(rng() * 5);
+        var fh = Math.round(6 + (d - 0.4) * 22 + rng() * 4);
+        var ftop = Math.max(2, (gt - 1) - fh);
+        oneBuilding(P, fx, fw, ftop, gt - 1, env.col(mix("#2c333d", "#454f5b", rng())), lit, rng);
+        fx += fw + 1;
+      } else { fx += 5 + Math.floor(rng() * 7); }             // wide gap → street frontage / nature
+    }
+  }
+}
+
 // gear a strolling figure gears up with in rough weather
 function drawGear(P, x, fy, gear, env) {
   if (gear === "umbrella") {
@@ -67,9 +113,10 @@ export function createScene(P, world, opts) {
     var pool = world.pools.trees;
     if (pool.length) {
       // A landmark takes the left; trees fill the remaining space so they never
-      // stack on top of it.
+      // stack on top of it. Denser (more urban) places show fewer street trees.
       var xs = props.landmark ? [40, 33] : [7, 40, 22];
-      var nTrees = world.biome.id === "ocean" ? 0 : (props.landmark ? 1 : (1 + (rng() < 0.6 ? 1 : 0)));
+      var base = props.landmark ? 1 : (1 + (rng() < 0.6 ? 1 : 0));
+      var nTrees = world.biome.id === "ocean" ? 0 : Math.max(0, Math.round(base * (1 - (world.density || 0) * 0.7)));
       for (var i = 0; i < nTrees; i++) {
         props.trees.push({ entry: pickWeighted(rng, pool), x: xs[i] });
       }
@@ -104,6 +151,7 @@ export function createScene(P, world, opts) {
       // (a city skyline, wall graffiti) is laid out identically each frame instead
       // of flickering/"scrolling" as the shared rng advances.
       srng: makeRng(world.seed || 1),
+      density: world.density || 0,
       wind: clamp((W.windKph || 0) / 45, 0, 1),
       code: W.code, cloud: W.cloud, aqi: W.aqi, temp: W.temp,
       waveM: W.waveM, tide: W.tide, sunrise: world.sunrise, sunset: world.sunset,
@@ -185,6 +233,8 @@ export function createScene(P, world, opts) {
       P.withAlpha(0.55, function () { P.rect(0, G.horizon, P.L, G.groundTop - G.horizon + 1, env.col("#eef4f8")); });
       P.rect(0, G.groundTop - 1, P.L, 1, env.col("#f4f8fb"));
     }
+    // city fabric — buildings scaled by how urban the place is (gaps show nature)
+    urbanLayer(P, env);
     if (isFog(env.code)) EFFECTS.fog(P, env);
 
     // birds (behind midground)
@@ -249,7 +299,8 @@ export function createScene(P, world, opts) {
 
     // road traffic (in front)
     if (!reduce && world.pools.roadVehicles.length && world.biome.road.kind !== "none") {
-      if (frame >= nextCar && cars.length < 3) { spawnCar(); nextCar = frame + Math.round(24 + rng() * 64); }
+      var maxCars = env.density > 0.6 ? 4 : env.density > 0.3 ? 3 : 2;   // busier streets in denser cities
+      if (frame >= nextCar && cars.length < maxCars) { spawnCar(); nextCar = frame + Math.round((24 + rng() * 64) * (1.3 - env.density * 0.9)); }
       for (var ci = cars.length - 1; ci >= 0; ci--) {
         var car = cars[ci]; car.x += car.speed * car.dir;
         if (car.x < -car.entry.w - 10 || car.x > P.L + car.entry.w + 10) cars.splice(ci, 1);

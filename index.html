@@ -59,6 +59,12 @@
   .tile .meta { font-size:10.5px; color:var(--muted); text-align:center; min-height:2.6em; line-height:1.25; }
   a { color:var(--accent); text-decoration:none; }
   footer { text-align:center; color:var(--muted); font-size:12px; padding:24px; }
+  #ac { list-style:none; margin:4px 0 0; padding:4px; position:absolute; left:0; right:0; top:100%; z-index:20;
+    background:#0f121a; border:1px solid var(--line); border-radius:8px; max-height:240px; overflow:auto;
+    box-shadow:0 10px 30px rgba(0,0,0,.4); }
+  #ac li { padding:7px 9px; border-radius:6px; font-size:12.5px; cursor:pointer; color:var(--ink); }
+  #ac li .sub { color:var(--muted); }
+  #ac li.on, #ac li:hover { background:#20263355; }
 </style>
 </head>
 <body>
@@ -72,7 +78,10 @@
     <div class="readout" id="readout">Finding your city…</div>
     <div class="controls">
       <div class="row">
-        <input id="city" type="text" placeholder="Type a city — Kyoto, Reykjavík, Cusco…" />
+        <div id="acwrap" style="position:relative;flex:1 1 220px">
+          <input id="city" type="text" autocomplete="off" style="width:100%" placeholder="Type a city — Kyoto, Reykjavík, Cusco…" />
+          <ul id="ac" hidden></ul>
+        </div>
         <button class="primary" id="go">Go</button>
         <button id="unit" title="Toggle °F / °C">°F/°C</button>
       </div>
@@ -104,7 +113,7 @@
 </footer>
 
 <script type="module">
-  import { createVivarium } from "./src/index.js";
+  import { createVivarium, geocodeSuggest } from "./src/index.js";
 
   const mount = document.getElementById("mount");
   const readout = document.getElementById("readout");
@@ -133,7 +142,7 @@
     if (instance) instance.destroy();
     const opts = { size: 300, interactive: true, temperatureUnit: unit };
     if (typeof place === "string") { opts.city = place; cityInput.value = place; }
-    else { Object.assign(opts, { city: place.city, lat: place.lat, lon: place.lon, timezone: place.tz, country: place.country }); cityInput.value = place.city || ""; }
+    else { Object.assign(opts, { city: place.city, lat: place.lat, lon: place.lon, timezone: place.tz, country: place.country, population: place.population }); cityInput.value = place.city || ""; }
     readout.textContent = "Resolving " + (opts.city || "your area") + "…";
     instance = createVivarium(mount, opts);
     applyTime(); describe(instance);
@@ -143,8 +152,46 @@
     if (!instance) return;
     instance.setTimeOverride(liveEl.checked ? undefined : +timeEl.value);
   }
-  document.getElementById("go").onclick = () => load(cityInput.value.trim() || "Los Angeles");
-  cityInput.addEventListener("keydown", e => { if (e.key === "Enter") load(cityInput.value.trim() || "Los Angeles"); });
+  document.getElementById("go").onclick = () => { hideAC(); load(cityInput.value.trim() || "Los Angeles"); };
+
+  /* ---- search autocomplete (Open-Meteo geocoding: name + admin + country) ---- */
+  const acWrap = document.getElementById("acwrap"), ac = document.getElementById("ac");
+  let acItems = [], acIdx = -1, acTimer = null;
+  function hideAC() { ac.hidden = true; acItems = []; acIdx = -1; }
+  function renderAC(results) {
+    acItems = results; acIdx = -1;
+    if (!results.length) { hideAC(); return; }
+    ac.innerHTML = "";
+    results.forEach((r, i) => {
+      const li = document.createElement("li");
+      const where = [r.admin1, r.country].filter(Boolean).join(", ");
+      li.innerHTML = "<b>" + r.name + "</b>" + (where ? " <span class='sub'>" + where + "</span>" : "");
+      li.onmousedown = e => { e.preventDefault(); pickAC(i); };
+      ac.appendChild(li);
+    });
+    ac.hidden = false;
+  }
+  function highlightAC() { [...ac.children].forEach((li, i) => li.classList.toggle("on", i === acIdx)); }
+  function pickAC(i) {
+    const r = acItems[i]; if (!r) return;
+    cityInput.value = r.name; hideAC();
+    load({ city: r.name, lat: r.latitude, lon: r.longitude, tz: r.timezone, country: r.country, population: r.population });
+  }
+  cityInput.addEventListener("input", () => {
+    clearTimeout(acTimer);
+    const q = cityInput.value.trim();
+    if (q.length < 2) { hideAC(); return; }
+    acTimer = setTimeout(() => geocodeSuggest(q, { count: 7 }).then(renderAC).catch(hideAC), 200);
+  });
+  cityInput.addEventListener("keydown", e => {
+    if (!ac.hidden && acItems.length) {
+      if (e.key === "ArrowDown") { e.preventDefault(); acIdx = Math.min(acIdx + 1, acItems.length - 1); highlightAC(); return; }
+      if (e.key === "ArrowUp") { e.preventDefault(); acIdx = Math.max(acIdx - 1, 0); highlightAC(); return; }
+      if (e.key === "Enter") { e.preventDefault(); acIdx >= 0 ? pickAC(acIdx) : (hideAC(), load(cityInput.value.trim() || "Los Angeles")); return; }
+      if (e.key === "Escape") { hideAC(); return; }
+    } else if (e.key === "Enter") { load(cityInput.value.trim() || "Los Angeles"); }
+  });
+  document.addEventListener("click", e => { if (!acWrap.contains(e.target)) hideAC(); });
   document.getElementById("unit").onclick = () => {
     unit = unit === "fahrenheit" ? "celsius" : unit === "celsius" ? "auto" : "fahrenheit";
     if (instance && instance.resolution) load({ city: instance.resolution.place.name, lat: instance.resolution.place.latitude, lon: instance.resolution.place.longitude, tz: instance.resolution.place.timezone, country: instance.resolution.place.country });
@@ -212,8 +259,8 @@
       const name = document.createElement("div"); name.className = "name"; name.textContent = c.name + ", " + c.cc;
       const meta = document.createElement("div"); meta.className = "meta"; meta.textContent = c.landscape + (c.landmark ? " · " + c.landmark : "");
       tile.append(m, name, meta); host.appendChild(tile);
-      const inst = createVivarium(m, { city: c.name, lat: c.lat, lon: c.lon, timezone: c.tz, biome: c.biome, landscape: c.landscape, temperatureUnit: c.unit, size: 140, interactive: true, minimalData: true, refreshMs: 0 });
-      tile.onclick = e => { if (!m.contains(e.target)) load({ city: c.name, lat: c.lat, lon: c.lon, tz: c.tz }); };
+      const inst = createVivarium(m, { city: c.name, lat: c.lat, lon: c.lon, timezone: c.tz, biome: c.biome, landscape: c.landscape, population: c.population, temperatureUnit: c.unit, size: 140, interactive: true, minimalData: true, refreshMs: 0 });
+      tile.onclick = e => { if (!m.contains(e.target)) load({ city: c.name, lat: c.lat, lon: c.lon, tz: c.tz, population: c.population }); };
       const u = c.unit === "celsius" ? "C" : "F";
       const paint = () => { const w = inst.weather; meta.textContent = (w.temp == null ? "…" : w.temp + "°" + u) + " · " + c.landscape + (c.landmark ? " · " + c.landmark : ""); };
       paint(); const t = setInterval(paint, 1500); setTimeout(() => clearInterval(t), 12000);

@@ -104,7 +104,7 @@ export default [
     }
   },
   {
-    id: "mount-fuji", name: "Mount Fuji", cities: ["tokyo", "shizuoka"], biomes: ["mountain", "coast", "forest"],
+    id: "mount-fuji", name: "Mount Fuji", cities: ["shizuoka", "fuji", "hakone", "gotemba"], biomes: ["mountain", "coast", "forest"],
     tags: ["mountain", "volcano", "snow", "landmark"],
     w: 28, h: 16, anchor: "baseline",
     draw: function (P, x, yb, env) {

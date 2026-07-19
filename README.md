@@ -2,7 +2,7 @@
   <img src="assets/logo.png" alt="weather-vivarium" width="560" />
 </p>
 
-> **Version:** 0.3.0
+> **Version:** 0.4.0
 
 A tiny **living pixel-art weather diorama** for *any* city — dependency-free, drop
 anywhere. Give it a place (or let it find yours) and its sky, sun, moon phase,
@@ -57,6 +57,8 @@ createVivarium("#w", { lat: 21.31, lon: -157.86, timezone: "Pacific/Honolulu", c
 | `timezone` | `"UTC"` | IANA zone — so the sun sets at the *place's* dusk. |
 | `elevation`, `country`, `admin1` | — | Improve biome/unit resolution. |
 | `biome`, `landscape` | auto | Force a look (see the catalog below). |
+| `population` | — | City population → **urban density** (built-up vs nature). |
+| `density` | auto | Override urbanisation directly, `0` (rural) … `1` (metropolis). |
 | `temperatureUnit` | `"auto"` | `"fahrenheit"` \| `"celsius"` \| `"auto"` (country default). |
 | `size` | `100` | Display size in px (the art is a crisp integer upscale). |
 | `interactive` | `false` | Click to zoom to a centred overlay. |
@@ -78,6 +80,10 @@ Everything is real pixel art, selected per place and per weather:
   **20+ people**, **20+ trees**, **10+ birds**, **10+ signs**, and a growing set of
   **city landmarks** (Statue of Liberty, Space Needle, casino, Diamond Head,
   riverboat, pyramids, …) matched to the city by name.
+- **Urban density.** From a city's population, buildings fill in over *any*
+  biome — the gaps between them keep showing the biome's nature, so a dense
+  mountain city, a tropical megacity and a quiet town all read at a glance. Street
+  trees thin out and traffic thickens as a place gets more built-up.
 - **Live everything** — sun arc + sunrise/sunset for the place, moon with its real
   phase, stars, drifting clouds, rain, snow, fog, storm lightning, wind-blown
   debris, rainbows, aurora (high-latitude nights), sandstorms, heat shimmer, hail,

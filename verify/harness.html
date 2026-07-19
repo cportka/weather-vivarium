@@ -48,6 +48,13 @@ window.moonSheet = function () {
 };
 
 const L = 50, GEOM = { L, horizon: 24, groundTop: 37, roadBot: 46 };
+function densFrom(place, res) {
+  const pop = place.population;
+  let pd = null;
+  if (pop && pop > 0) { pd = (Math.log(pop) / Math.LN10 - 3.4) / 3.8; pd = pd < 0 ? 0 : pd > 1 ? 1 : pd; }
+  if (place.density != null) return place.density;
+  return Math.max(pd != null ? pd : 0.25, res.biome.id === "city" ? 0.72 : 0);
+}
 
 function mockEnv(over) {
   return Object.assign({
@@ -98,7 +105,7 @@ window.sceneStrip = function (placeOpts, weatherOver, nowMin, frames) {
   const lt = { year: 2026, month: 7, day: 18 };
   const world = {
     geometry: GEOM, biome: res.biome, landscape: res.landscape, landmark: res.landmark,
-    latitude: res.latitude, coastal: res.coastal, unit: res.unit,
+    latitude: res.latitude, coastal: res.coastal, unit: res.unit, density: densFrom(place, res),
     pools: pools(res.biome.id), W, sunrise: W.sunrise, sunset: W.sunset,
     moon: moonIllumination(lt.year, lt.month, lt.day), seed: seedFrom(place.name + place.latitude),
     place, tempText: () => (W.temp == null ? "--" : W.temp + "°")
@@ -128,7 +135,7 @@ function buildScene(spec) {
   const W = Object.assign(defaultState(), spec.wx || {});
   const world = {
     geometry: GEOM, biome: res.biome, landscape: res.landscape, landmark: res.landmark,
-    latitude: res.latitude, coastal: res.coastal, unit: res.unit,
+    latitude: res.latitude, coastal: res.coastal, unit: res.unit, density: densFrom(place, res),
     pools: pools(res.biome.id), W, sunrise: W.sunrise, sunset: W.sunset,
     moon: moonIllumination(2026, 7, 18), seed: seedFrom(place.name + place.latitude),
     place, tempText: () => (W.temp == null ? "--" : W.temp + "°")
@@ -137,8 +144,30 @@ function buildScene(spec) {
   const b = buf.getContext("2d"); b.imageSmoothingEnabled = false;
   const P = createPainter(b, L);
   return { scene: createScene(P, world, { reduce: false }), buf, now: spec.now, label: spec.label,
-    unit: res.unit, dayT: dayFactor(spec.now, W.sunrise, W.sunset) };
+    unit: res.unit, dayT: dayFactor(spec.now, W.sunrise, W.sunset), res, density: world.density };
 }
+
+// Evaluation grid: render many cities (with population → density) into one sheet.
+window.cityGrid = function (specs, cols) {
+  cols = cols || 6;
+  const built = specs.map(s => ({ s, b: buildScene(s) }));
+  const tile = 100, pad = 5, lab = 28, rows = Math.ceil(built.length / cols);
+  const out = document.getElementById("out");
+  out.width = cols * (tile + pad) + pad; out.height = rows * (tile + lab + pad) + pad;
+  const octx = out.getContext("2d"); octx.imageSmoothingEnabled = false;
+  octx.fillStyle = "#141018"; octx.fillRect(0, 0, out.width, out.height);
+  built.forEach(({ s, b }, i) => {
+    for (let f = 0; f <= 26; f++) b.scene.render(f, b.now, b.dayT);
+    const cx = pad + (i % cols) * (tile + pad), cy = pad + Math.floor(i / cols) * (tile + lab + pad);
+    octx.drawImage(b.buf, 0, 0, L, L, cx, cy, tile, tile);
+    octx.fillStyle = "#0b0d13"; octx.fillRect(cx, cy + tile, tile, lab);
+    octx.textBaseline = "middle";
+    octx.fillStyle = "#cfd6e2"; octx.font = "10px monospace"; octx.fillText(s.label, cx + 4, cy + tile + 9);
+    octx.fillStyle = "#8a94a4"; octx.font = "9px monospace";
+    octx.fillText(b.res.biome.id + (b.res.landmark ? "·" + b.res.landmark.id : "") + " d" + b.density.toFixed(2), cx + 4, cy + tile + 20);
+  });
+  return { w: out.width, h: out.height };
+};
 
 let PREVIEW = null;
 window.previewInit = function (specs) {
