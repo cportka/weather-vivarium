@@ -75,7 +75,15 @@ export function createScene(P, world, opts) {
       }
     }
     var signs = world.pools.signs;
-    if (signs.length) props.sign = { entry: pickWeighted(rng, signs), x: 29 };
+    if (signs.length) {
+      // a landmark may name a paired sign (e.g. the casino → the Vegas welcome
+      // sign); use it when it's available for this biome, else weighted-random.
+      var chosen = null;
+      if (props.landmark && props.landmark.pairedSign) {
+        for (var s = 0; s < signs.length; s++) if (signs[s].id === props.landmark.pairedSign) { chosen = signs[s]; break; }
+      }
+      props.sign = { entry: chosen || pickWeighted(rng, signs), x: 29 };
+    }
   })();
 
   // ---- moving cast ------------------------------------------------------

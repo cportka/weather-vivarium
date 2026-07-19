@@ -134,15 +134,17 @@ export function createVivarium(target, options) {
   function loadWeather() {
     if (!resolution) return;
     fetchWeather(world.place, W, {
-      coastal: resolution.coastal, temperatureUnit: resolution.unit,
+      coastal: resolution.coastal && !options.minimalData,
+      airQuality: !options.minimalData,        // gallery tiles skip AQI to spare requests
+      temperatureUnit: resolution.unit,
       onUpdate: function () { describe(); if (reduce) renderOnce(); }
     });
   }
   function startData() {
     loadWeather();
     if (refreshTimer) clearInterval(refreshTimer);
-    var ms = options.refreshMs || 10 * 60 * 1000;
-    if (typeof setInterval !== "undefined") refreshTimer = setInterval(loadWeather, ms);
+    var ms = options.refreshMs != null ? options.refreshMs : 10 * 60 * 1000;
+    if (ms > 0 && typeof setInterval !== "undefined") refreshTimer = setInterval(loadWeather, ms);
   }
 
   // --- boot -------------------------------------------------------------

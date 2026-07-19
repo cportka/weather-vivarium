@@ -1,0 +1,20 @@
+# weather-vivarium
+
+> A tiny, dependency-free living pixel-art weather diorama for any city. Given a city (or
+> coordinates), it renders a 100x100 scene whose sky, sun, moon phase, weather, tide, wind,
+> landscape and a signature landmark track that place's real current conditions and its own
+> sunrise/sunset. Born from the Los Angeles beach widget on kevinhaulihan.online, generalised
+> to the whole world.
+
+## Pages
+- [Demo](/): try any city, or see your own (IP-located) plus interesting cities nearby and worldwide.
+- [Gallery](/gallery.html): a live wall of 1000 cities, each on its current weather.
+
+## Use it
+- ESM: `import { createVivarium } from "weather-vivarium"; createVivarium(el, { city: "Kyoto" })`
+- Options: city | lat/lon, timezone, biome, landscape, temperatureUnit ('fahrenheit'|'celsius'|'auto'), size, interactive.
+- Data: Open-Meteo (forecast, marine, air quality, geocoding); keyless, CORS, graceful fallback.
+
+## Source
+- GitHub: https://github.com/cportka/weather-vivarium (MIT)
+- npm: weather-vivarium (currently 0.x; 1.0.0 will be the first npm publish)

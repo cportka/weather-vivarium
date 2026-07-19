@@ -23,21 +23,30 @@ export default [
   },
   {
     id: "casino", name: "Casino", cities: ["las vegas", "reno", "atlantic city", "macau", "monte carlo"], biomes: ["desert", "city"],
-    w: 16, h: 18, anchor: "baseline",
+    pairedSign: "vegas-welcome", w: 16, h: 22, anchor: "baseline",
     draw: function (P, x, yb, env) {
-      var neon = P.clamp(1 - env.dayT, 0, 1);
-      P.rect(x, yb - 12, 16, 12, env.col("#3a2f4a"));         // tower block
-      P.rect(x + 5, yb - 17, 6, 5, env.col("#4a3a5f"));       // penthouse
-      // marquee lights ring
-      var bulbs = ["#ff4a7a", "#ffd24a", "#4affd2", "#8a5aff"];
-      for (var i = 0; i < 16; i++) {
-        var c = bulbs[(i + (env.frame >> 1)) % bulbs.length];
-        var lit = neon > 0.3 ? c : env.col("#6a5a4a");
-        P.px(x + i, yb - 13, lit);
+      var neon = P.clamp(1 - env.dayT, 0, 1), f = env.frame || 0;
+      var bulbs = ["#ff4a7a", "#ffd24a", "#4affd2", "#8a5aff", "#ff7a3a"];
+      function chase(i) { return neon > 0.25 ? bulbs[(i + (f >> 1)) % bulbs.length] : env.col("#6a5a4a"); }
+      // tower + a stepped penthouse crown
+      P.rect(x, yb - 13, 16, 13, env.col("#332a44"));
+      P.rect(x + 4, yb - 17, 8, 4, env.col("#42354f"));
+      P.rect(x + 6, yb - 20, 4, 3, env.col("#4a3a5f"));
+      // full marquee ring of chasing bulbs around the whole facade
+      for (var i = 0; i < 16; i++) { P.px(x + i, yb - 13, chase(i)); P.px(x + i, yb - 1, chase(i + 2)); }
+      for (var yy = 0; yy < 12; yy += 2) { P.px(x, yb - 1 - yy, chase(yy)); P.px(x + 15, yb - 1 - yy, chase(yy + 1)); }
+      // lit windows glowing gold
+      for (var wy = yb - 11; wy < yb - 2; wy += 2) for (var wx = x + 3; wx < x + 14; wx += 3) P.px(wx, wy, neon > 0.3 ? "#ffe58a" : env.col("#5a5240"));
+      // a tall vertical marquee sign up the middle (pure celebration, no numbers)
+      var vsign = P.mix("#c23a7a", "#ff5aa8", neon);
+      P.rect(x + 7, yb - 19, 2, 6, vsign);
+      P.px(x + 7, yb - 20, chase(0)); P.px(x + 8, yb - 20, chase(3)); // twin bulbs atop
+      // rooftop searchlight sweep + sparkle at night
+      if (neon > 0.4) {
+        var sweep = Math.round(Math.sin(f * 0.08) * 6);
+        P.withAlpha(0.25, function () { P.line(x + 8, yb - 20, x + 8 + sweep, yb - 26, "#fff2b0"); });
+        if ((f >> 1) % 3 === 0) P.px(x + 2 + (f % 12), yb - 15, "#ffffff");
       }
-      P.px(x + 7, yb - 20, neon > 0.3 ? "#ffd24a" : env.col("#8a7a4a"));
-      P.px(x + 8, yb - 20, neon > 0.3 ? "#ff4a7a" : env.col("#8a5a5a"));
-      P.text(env.text || "", x + 3, yb - 9, neon > 0.3 ? "#ffe58a" : env.col("#caa"));
     }
   },
   {

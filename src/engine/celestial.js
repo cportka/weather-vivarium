@@ -23,25 +23,28 @@ export function drawSun(P, pos, env, sky) {
 }
 
 /**
- * Draw the moon at `pos` with a phase bite. `illum` = { fraction, waxing } from
- * astronomy.moonIllumination. `sky` supplies the colour that carves the shadow.
+ * Draw the moon at `pos` with its real phase. `illum` = { fraction, waxing }
+ * from astronomy.moonIllumination. Rendered per-pixel with a proper terminator:
+ * the lit side is bright, the shadowed side is a faint earthshine grey (a little
+ * above the sky), so it reads as one softly-shaded sphere — never a hard second
+ * circle punched out of the disc.
  */
 export function drawMoon(P, pos, illum, sky) {
   var r = 3;
-  P.disc(pos.x, pos.y, r, "#e9e7cf");
-  // craters
-  P.px(pos.x - 1, pos.y - 1, "#cfcdb4");
-  P.px(pos.x + 1, pos.y + 1, "#cfcdb4");
-
-  var frac = illum ? illum.fraction : 1;
-  if (frac >= 0.96) return;                    // full moon — no shadow
-  // Slide a sky-coloured disc across to bite the shadow side. New moon → fully
-  // covered; the offset direction encodes waxing (shadow on the left) vs waning.
-  var cover = 1 - frac;                        // 0 full .. 1 new
-  var dx = (illum && illum.waxing) ? -1 : 1;   // waxing: lit on the right
-  var off = (r * 2) * cover;
-  P.ctx.fillStyle = sky.top;
-  P.ctx.beginPath();
-  P.ctx.arc(pos.x + 0.5 + dx * off, pos.y + 0.5, r + 0.4, 0, 7);
-  P.ctx.fill();
+  var k = illum ? illum.fraction : 1;          // illuminated fraction 0..1
+  var waxing = illum ? illum.waxing : true;
+  var lit = "#edeadb", crater = "#d3d0bf";
+  var dark = P.mix(sky.top, "#8a90a8", 0.3);    // dim earthshine, blends with the night sky
+  for (var dy = -r; dy <= r; dy++) {
+    for (var dx = -r; dx <= r; dx++) {
+      if (dx * dx + dy * dy > r * r + r) continue;              // soft round disc
+      var vert = Math.sqrt(Math.max(0, 1 - (dy * dy) / (r * r)));
+      var term = r * (1 - 2 * k) * vert;                        // terminator x on this row
+      var isLit = waxing ? (dx >= term - 0.001) : (dx <= -term + 0.001);
+      var c = isLit ? lit : dark;
+      // a couple of subtle craters, only where they'd catch the light
+      if (isLit && ((dx === -1 && dy === -1) || (dx === 1 && dy === 1))) c = crater;
+      P.px(pos.x + dx, pos.y + dy, c);
+    }
+  }
 }
