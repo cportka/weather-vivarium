@@ -38,6 +38,13 @@ function tempText(state, unit) {
   return String(state.temp) + "°";
 }
 
+// Urbanisation 0..1 from population: ~1k → 0, ~100k → 0.42, ~1M → 0.68, ~10M → 0.95.
+function densityFrom(pop) {
+  if (!pop || pop <= 0) return null;
+  var d = (Math.log(pop) / Math.LN10 - 3.4) / 3.8;
+  return d < 0 ? 0 : d > 1 ? 1 : d;
+}
+
 export function createVivarium(target, options) {
   options = options || {};
   var doc = options.document || (typeof document !== "undefined" ? document : null);
@@ -76,9 +83,14 @@ export function createVivarium(target, options) {
   function buildWorld(place, res) {
     var lt = localTime(place.timezone, nowOverride);
     var moon = moonIllumination(lt.year, lt.month, lt.day);
+    var pd = densityFrom(place.population);
+    // urbanisation: population if we have it, else a modest default; city biomes
+    // are urban by definition, so floor them well above pastoral.
+    var density = options.density != null ? options.density
+      : Math.max(pd != null ? pd : 0.25, res.biome.id === "city" ? 0.72 : 0);
     var w = {
       geometry: GEOMETRY, biome: res.biome, landscape: res.landscape, landmark: res.landmark,
-      latitude: res.latitude, coastal: res.coastal, unit: res.unit,
+      latitude: res.latitude, coastal: res.coastal, unit: res.unit, density: density,
       pools: pools(res.biome.id), W: W, sunrise: W.sunrise, sunset: W.sunset, moon: moon,
       seed: seedFrom(options.seed || (place.name + place.latitude)),
       place: place,
@@ -152,7 +164,8 @@ export function createVivarium(target, options) {
   var initialPlace = explicitCoords ? {
     name: options.city || options.name || "", country: options.country || "", admin1: options.admin1 || "",
     latitude: options.lat, longitude: options.lon, timezone: options.timezone || "UTC",
-    elevation: options.elevation != null ? options.elevation : null
+    elevation: options.elevation != null ? options.elevation : null,
+    population: options.population != null ? options.population : null
   } : DEFAULT_PLACE;
 
   // Bring the widget to life for a resolved place: set the scene, paint the

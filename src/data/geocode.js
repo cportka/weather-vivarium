@@ -31,16 +31,36 @@ export function geocode(name, opts) {
   return j(url).then(function (d) {
     if (!d || !d.results || !d.results.length) return null;
     var r = d.results[0];
-    return {
-      name: r.name,
-      country: r.country || "",
-      admin1: r.admin1 || "",
-      latitude: r.latitude,
-      longitude: r.longitude,
-      timezone: r.timezone || "UTC",
-      elevation: typeof r.elevation === "number" ? r.elevation : null,
-      population: r.population || null,
-      featureCode: r.feature_code || ""
-    };
+    return one(r);
+  });
+}
+
+function one(r) {
+  return {
+    name: r.name,
+    country: r.country || "",
+    admin1: r.admin1 || "",
+    latitude: r.latitude,
+    longitude: r.longitude,
+    timezone: r.timezone || "UTC",
+    elevation: typeof r.elevation === "number" ? r.elevation : null,
+    population: r.population || null,
+    featureCode: r.feature_code || ""
+  };
+}
+
+/**
+ * Suggest up to `count` matching places for a partial query — for search
+ * autocomplete. Returns an array (name, admin1, country, coords, timezone,
+ * population, …), or [] on no match / short query / failure.
+ */
+export function geocodeSuggest(name, opts) {
+  opts = opts || {};
+  var q = encodeURIComponent(String(name || "").trim());
+  if (q.length < 2) return Promise.resolve([]);
+  var url = GEOCODE_ORIGIN + "/v1/search?name=" + q + "&count=" + (opts.count || 6) +
+    "&language=" + (opts.language || "en") + "&format=json";
+  return j(url).then(function (d) {
+    return d && d.results ? d.results.map(one) : [];
   });
 }

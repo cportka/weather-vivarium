@@ -2,8 +2,9 @@
    signature feature (or nothing, when no known landmark fits). */
 import core from "./parts/landmarks-core.js";
 import a from "./parts/landmarks-a.js";
+import b from "./parts/landmarks-b.js";
 
-export var LANDMARKS = [].concat(core, a);
+export var LANDMARKS = [].concat(core, a, b);
 
 export function getLandmark(id) {
   for (var i = 0; i < LANDMARKS.length; i++) if (LANDMARKS[i].id === id) return LANDMARKS[i];
@@ -16,16 +17,18 @@ function normalize(s) {
 
 /**
  * Choose a landmark for a place. City-name match wins (loose substring, either
- * direction), then a landscape-signature match. Returns the entry or null — a
- * landmark is only shown when the place genuinely has one.
+ * direction), then a landscape-signature match — but only when the landmark
+ * suits the resolved biome (so e.g. Mount Fuji never lands inside a city). Pass
+ * `biomeId` to enforce that fit. Returns the entry or null.
  */
-export function pickLandmark(place, landscape) {
+export function pickLandmark(place, landscape, biomeId) {
   var name = normalize(place && place.name);
   var full = normalize((place && place.name) + " " + (place && place.admin1));
+  function fits(lm) { return !biomeId || !lm.biomes || lm.biomes.indexOf(biomeId) !== -1; }
   if (name) {
     for (var i = 0; i < LANDMARKS.length; i++) {
       var lm = LANDMARKS[i];
-      if (!lm.cities) continue;
+      if (!lm.cities || !fits(lm)) continue;
       for (var c = 0; c < lm.cities.length; c++) {
         var city = lm.cities[c];
         if (name.indexOf(city) !== -1 || city.indexOf(name) !== -1 || full.indexOf(city) !== -1) return lm;
@@ -35,7 +38,7 @@ export function pickLandmark(place, landscape) {
   if (landscape) {
     for (var j = 0; j < LANDMARKS.length; j++) {
       var l2 = LANDMARKS[j];
-      if (l2.landscapes && l2.landscapes.indexOf(landscape.id) !== -1) return l2;
+      if (l2.landscapes && l2.landscapes.indexOf(landscape.id) !== -1 && fits(l2)) return l2;
     }
   }
   return null;

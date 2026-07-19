@@ -4,6 +4,31 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com) and the project uses
 [Semantic Versioning](https://semver.org). Every change bumps the version and adds an entry below.
 
+## [0.4.0] - 2026-07-19
+
+Making cities feel like cities, more of the world, and a smarter search.
+
+### Added
+- **Urban density.** A city's population now drives a built-up overlay
+  (`urbanLayer`) on *any* biome: a distant hazy skyline plus, for denser places,
+  a taller near row of buildings — with the gaps between them still showing the
+  biome's nature, so the built-vs-nature ratio reads at a glance. Street trees
+  thin and traffic thickens with density. Fixes big cities (Zürich, Mumbai,
+  Moscow…) that used to look pastoral. New `population` / `density` options.
+- **More classic landmarks:** St. Basil's Cathedral (Moscow), Tokyo Tower,
+  Burj Khalifa, Marina Bay, Petronas Towers, Sagrada Família, Brandenburg Gate,
+  and the Great Wall — for wider worldwide coverage.
+- **Search autocomplete.** The demo's search box now suggests places as you type
+  (name + admin + country) via Open-Meteo geocoding, with keyboard navigation.
+  New exported `geocodeSuggest()`.
+
+### Changed / Fixed
+- **No more Mount Fuji inside a city.** The landmark picker is now biome-aware —
+  a landmark only appears where its biome fits — and Tokyo maps to Tokyo Tower.
+- **Honest labels for uncurated places.** A city that fell through to the biome
+  guess now shows its biome's name (e.g. "Forest", "Savanna") instead of an
+  unrelated named preset like "Pacific Northwest".
+
 ## [0.3.0] - 2026-07-19
 
 Second feedback pass — polish, a thousand cities, and a discoverable site.

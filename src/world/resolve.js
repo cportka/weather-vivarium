@@ -67,9 +67,12 @@ export function resolveScene(place, opts) {
 
   var biomeId = opts.biome || (landscape && landscape.biome) || guessBiome(place);
   if (!BIOMES[biomeId]) biomeId = "coast";
-  if (!landscape) landscape = landscapeForBiome(biomeId);
-
   var biome = getBiome(biomeId);
+  // Uncurated places (fell through to the biome guess) get an honest, biome-named
+  // landscape — so a big city that guessed "forest" reads as "Forest", not as some
+  // unrelated named preset like "Pacific Northwest". (Density still makes it urban.)
+  if (!landscape) landscape = { id: biomeId, name: biome.name, biome: biomeId };
+
   var coastal = biomeId === "coast" || biomeId === "ocean" || !!landscape.coastal;
 
   var unit = opts.temperatureUnit;
@@ -79,7 +82,7 @@ export function resolveScene(place, opts) {
     place: place,
     biome: biome,
     landscape: landscape,
-    landmark: pickLandmark(place, landscape),
+    landmark: pickLandmark(place, landscape, biomeId),
     latitude: place.latitude || 0,
     coastal: coastal,
     unit: unit
