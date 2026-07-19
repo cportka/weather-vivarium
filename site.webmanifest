@@ -1,0 +1,13 @@
+{
+  "name": "weather-vivarium",
+  "short_name": "vivarium",
+  "description": "A living pixel-art weather diorama for any city.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0e1016",
+  "theme_color": "#0e1016",
+  "icons": [
+    { "src": "apple-touch-icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

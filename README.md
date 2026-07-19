@@ -1,25 +1,27 @@
-# weather-vivarium
+<p align="center">
+  <img src="assets/logo.png" alt="weather-vivarium" width="560" />
+</p>
 
-> **Version:** 0.2.0
+> **Version:** 0.3.0
 
 A tiny **living pixel-art weather diorama** for *any* city — dependency-free, drop
-anywhere. Type a place and its sky, sun, moon, weather, tide, wind, landscape and
-a signature landmark come alive in a 100×100 jewel, driven by the place's real
-current conditions and its own sunrise/sunset.
+anywhere. Give it a place (or let it find yours) and its sky, sun, moon phase,
+weather, tide, wind, landscape and a signature landmark come alive in a 100×100
+jewel, driven by that place's real current conditions and its own sunrise/sunset.
 
 It's the [Los Angeles beach widget from `kevin-website`](https://github.com/cportka/kevin-website)
 generalised: same hand-built vintage-pixel soul, now for the whole world.
 
 <p align="center">
   <a href="https://cportka.github.io/weather-vivarium/gallery.html">
-    <img src="assets/gallery-preview.gif" alt="Twelve live weather-vivarium dioramas — Berkeley, New York, Honolulu, Anchorage, Seattle, Las Vegas, Miami, Austin, Washington, New Orleans, Memphis, Chicago" width="420" />
+    <img src="assets/gallery-preview.gif" alt="Live weather-vivarium dioramas for Berkeley, New York, Honolulu, Anchorage, Seattle, Las Vegas, Miami, Austin, Washington, New Orleans, Memphis and Chicago" width="420" />
   </a>
   <br />
-  <em>Twelve cities, each on its current weather — <a href="https://cportka.github.io/weather-vivarium/gallery.html">open the live gallery →</a></em>
+  <em>A dozen cities, each on its current weather — or wander the <a href="https://cportka.github.io/weather-vivarium/gallery.html">live wall of 1000 →</a></em>
 </p>
 
-**[▶ Try any city (live demo)](https://cportka.github.io/weather-vivarium/)** ·
-**[▶ 12-city gallery](https://cportka.github.io/weather-vivarium/gallery.html)**
+**[▶ Try any city / see yours (live demo)](https://cportka.github.io/weather-vivarium/)** ·
+**[▶ 1000-city gallery](https://cportka.github.io/weather-vivarium/gallery.html)**
 
 ## Quick start
 
@@ -86,12 +88,18 @@ biome, so a diorama is always populated with things that belong there.
 
 ## City database
 
-`data/cities/` holds a precomputed lookup (`us.json`, built by
-`npm run build:cities`) from a city to its resolved vivarium — biome, landscape,
-landmark, category and available content — so known cities render from **only their
-current weather**, no geocoding hop. It ships a curated US seed today; the roadmap
-(US → Mexico/Canada → Europe/Asia → the world, toward the ~5M named places) and the
-GeoNames ingest are in [`data/cities/README.md`](data/cities/README.md).
+`data/cities/` holds precomputed lookups from a city to its resolved vivarium —
+biome, landscape, landmark, category, unit — so a known city renders from **only
+its current weather**, no geocoding hop. Two datasets ship: a curated
+`us.json` (`npm run build:cities`) and a `world.json` of the top 1000 cities
+worldwide (`npm run build:cities -- --world`, from GeoNames via `all-the-cities`,
+with offline timezones from `tz-lookup`). The roadmap (US → Mexico/Canada →
+Europe/Asia → the world, toward the ~5M named places) and the GeoNames ingest are
+in [`data/cities/README.md`](data/cities/README.md).
+
+> Note: for cities not in a curated landscape, the biome is a best-effort guess
+> from latitude/elevation — coastal and climate detection for the long tail is on
+> the roadmap.
 
 ## Development
 

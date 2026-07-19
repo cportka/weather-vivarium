@@ -45,10 +45,11 @@ export function guessBiome(place) {
   var el = place.elevation || 0;
   var fc = String(place.featureCode || "");
   if (el > 1500 || fc.indexOf("MT") === 0) return "mountain";
-  if (lat > 63) return "tundra";
-  if (lat < 15) return "jungle";
-  if (lat < 30) return "savanna";
-  return "plains";
+  if (lat > 66) return "tundra";
+  if (lat < 12) return "jungle";
+  if (lat < 24) return "savanna";
+  if (lat > 58) return "forest";   // boreal
+  return "forest";                 // temperate default (greener/more varied than bare plains)
 }
 
 /**

@@ -4,10 +4,24 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>weather-vivarium — a living weather diorama for any city</title>
-<meta name="description" content="A tiny living pixel-art weather diorama for any city. Type a place and watch its sky, sun, weather, landscape and landmark come alive in real time." />
+<meta name="description" content="A tiny living pixel-art weather diorama for any city. Type a place — or see your own — and watch its sky, sun, weather, landscape and landmark come alive in real time." />
 <meta name="color-scheme" content="dark light" />
+<meta name="theme-color" content="#0e1016" />
+<link rel="canonical" href="https://cportka.github.io/weather-vivarium/" />
+<meta property="og:type" content="website" />
 <meta property="og:title" content="weather-vivarium" />
 <meta property="og:description" content="A living pixel-art weather diorama for any city." />
+<meta property="og:url" content="https://cportka.github.io/weather-vivarium/" />
+<meta property="og:image" content="https://cportka.github.io/weather-vivarium/assets/social-preview.png" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://cportka.github.io/weather-vivarium/assets/social-preview.png" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self' https://*.open-meteo.com https://ipapi.co https://ipwho.is; base-uri 'self'; form-action 'none'; object-src 'none'" />
+<link rel="icon" href="favicon.svg" type="image/svg+xml" />
+<link rel="apple-touch-icon" href="apple-touch-icon.png" />
+<link rel="manifest" href="site.webmanifest" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebApplication","name":"weather-vivarium","description":"A tiny living pixel-art weather diorama for any city, driven by real current weather, sun, moon phase and time of day.","url":"https://cportka.github.io/weather-vivarium/","image":"https://cportka.github.io/weather-vivarium/assets/social-preview.png","applicationCategory":"UtilityApplication","operatingSystem":"Any (web browser)","browserRequirements":"Requires JavaScript and HTML canvas.","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Person","name":"Chris Portka","url":"https://github.com/cportka"},"license":"https://opensource.org/licenses/MIT","isBasedOn":"https://github.com/cportka/weather-vivarium"}
+</script>
 <style>
   :root { --bg:#0e1016; --panel:#171a22; --ink:#e6e9ef; --muted:#9aa2b1; --accent:#4a9eff; --line:#252a35; }
   * { box-sizing: border-box; }
@@ -16,8 +30,8 @@
   header { text-align:center; padding:28px 16px 6px; }
   h1 { margin:0; font-size:22px; letter-spacing:.5px; }
   header p { margin:6px 0 0; color:var(--muted); font-size:13px; }
-  main { max-width:760px; margin:0 auto; padding:16px; }
-  .stage { display:flex; flex-direction:column; align-items:center; gap:14px; }
+  main { max-width:900px; margin:0 auto; padding:16px; }
+  .stage { display:flex; flex-direction:column; align-items:center; gap:14px; max-width:760px; margin:0 auto; }
   #mount { min-height:300px; display:flex; align-items:center; justify-content:center; }
   .controls { width:100%; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:14px; }
   .row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
@@ -33,6 +47,16 @@
   input[type=range] { flex:1; accent-color:var(--accent); }
   .readout { color:var(--muted); font-size:12.5px; text-align:center; line-height:1.6; min-height:3em; }
   .readout b { color:var(--ink); }
+  section.showcase { margin-top:26px; }
+  section.showcase h2 { font-size:14px; color:var(--muted); text-align:center; font-weight:600; margin:0 0 12px; }
+  .strip { display:grid; grid-template-columns:repeat(5, 1fr); gap:14px; }
+  @media (max-width:720px){ .strip { grid-template-columns:repeat(3,1fr); } }
+  @media (max-width:440px){ .strip { grid-template-columns:repeat(2,1fr); } }
+  .tile { background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:10px;
+    display:flex; flex-direction:column; align-items:center; gap:6px; cursor:pointer; }
+  .tile .mount2 { width:140px; height:140px; max-width:100%; display:flex; align-items:center; justify-content:center; }
+  .tile .name { font-size:12px; font-weight:600; text-align:center; }
+  .tile .meta { font-size:10.5px; color:var(--muted); text-align:center; min-height:2.6em; line-height:1.25; }
   a { color:var(--accent); text-decoration:none; }
   footer { text-align:center; color:var(--muted); font-size:12px; padding:24px; }
 </style>
@@ -40,15 +64,15 @@
 <body>
 <header>
   <h1>weather-vivarium</h1>
-  <p>a tiny living weather diorama for any city — click it to zoom</p>
+  <p>a tiny living weather diorama for any city — starting with yours. click any scene to zoom</p>
 </header>
 <main>
   <div class="stage">
     <div id="mount"></div>
-    <div class="readout" id="readout">Loading…</div>
+    <div class="readout" id="readout">Finding your city…</div>
     <div class="controls">
       <div class="row">
-        <input id="city" type="text" placeholder="Type a city — Kyoto, Reykjavík, Cusco…" value="Los Angeles" />
+        <input id="city" type="text" placeholder="Type a city — Kyoto, Reykjavík, Cusco…" />
         <button class="primary" id="go">Go</button>
         <button id="unit" title="Toggle °F / °C">°F/°C</button>
       </div>
@@ -59,18 +83,23 @@
         <label class="mut"><input type="checkbox" id="live" checked /> live</label>
       </div>
     </div>
-    <p style="color:var(--muted);font-size:12px">See the <a href="gallery.html">24-city gallery →</a></p>
   </div>
 
-  <section id="nearby-panel" style="margin-top:22px">
-    <h2 style="font-size:14px;color:var(--muted);text-align:center;font-weight:600;margin:0 0 12px">Near you, right now</h2>
-    <div id="nearby" style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px"></div>
-    <p id="nearby-note" style="color:var(--muted);font-size:11px;text-align:center;margin-top:10px"></p>
+  <section class="showcase">
+    <h2 id="near-title">Interesting cities within 400 miles</h2>
+    <div class="strip" id="row-near"></div>
   </section>
+  <section class="showcase">
+    <h2>Interesting cities around the world</h2>
+    <div class="strip" id="row-world"></div>
+  </section>
+  <p style="text-align:center;color:var(--muted);font-size:12.5px;margin-top:22px">
+    Hungry for more? Wander the <a href="gallery.html">wall of 1000 cities →</a>
+  </p>
 </main>
 <footer>
   weather-vivarium · pixel-art weather for anywhere ·
-  data from <a href="https://open-meteo.com">Open-Meteo</a> ·
+  data from <a href="https://open-meteo.com">Open-Meteo</a> &amp; <a href="https://geonames.org">GeoNames</a> ·
   <a href="https://github.com/cportka/weather-vivarium">source</a>
 </footer>
 
@@ -84,11 +113,11 @@
   const liveEl = document.getElementById("live");
   let unit = "auto", instance = null;
 
-  const presets = ["Tokyo", "Reykjavík", "Cairo", "Rio de Janeiro", "Zurich", "Nairobi", "Sydney", "New Orleans", "Kathmandu"];
+  const presets = ["Tokyo", "Reykjavík", "Cairo", "Rio de Janeiro", "Zurich", "Nairobi", "Sydney", "New Orleans", "Cusco"];
   const pc = document.getElementById("presets");
   presets.forEach(name => {
     const b = document.createElement("button"); b.textContent = name;
-    b.onclick = () => { cityInput.value = name; load(name); };
+    b.onclick = () => load(name);
     pc.appendChild(b);
   });
 
@@ -97,71 +126,33 @@
     const r = inst.resolution, w = inst.weather;
     const u = r.unit === "celsius" ? "C" : "F";
     readout.innerHTML = `<b>${(r.place.name || cityInput.value)}${r.place.admin1 ? ", " + r.place.admin1 : ""}</b> — ` +
-      `${w.temp == null ? "…" : w.temp + "°" + u} · ` +
-      `<b>${r.landscape.name}</b> (${r.biome.id})` +
+      `${w.temp == null ? "…" : w.temp + "°" + u} · <b>${r.landscape.name}</b> (${r.biome.id})` +
       (r.landmark ? ` · landmark: <b>${r.landmark.name}</b>` : "");
   }
-
-  function load(city) {
+  function load(place) {
     if (instance) instance.destroy();
-    readout.textContent = "Resolving " + city + "…";
-    instance = createVivarium(mount, { city, size: 300, interactive: true, temperatureUnit: unit });
-    applyTime();
-    describe(instance);
-    instance.ready.then(() => {
-      describe(instance);
-      // keep the readout current as async weather lands
-      const t = setInterval(() => describe(instance), 1500);
-      setTimeout(() => clearInterval(t), 12000);
-    });
+    const opts = { size: 300, interactive: true, temperatureUnit: unit };
+    if (typeof place === "string") { opts.city = place; cityInput.value = place; }
+    else { Object.assign(opts, { city: place.city, lat: place.lat, lon: place.lon, timezone: place.tz, country: place.country }); cityInput.value = place.city || ""; }
+    readout.textContent = "Resolving " + (opts.city || "your area") + "…";
+    instance = createVivarium(mount, opts);
+    applyTime(); describe(instance);
+    instance.ready.then(() => { describe(instance); const t = setInterval(() => describe(instance), 1500); setTimeout(() => clearInterval(t), 12000); });
   }
   function applyTime() {
     if (!instance) return;
-    if (liveEl.checked) instance.setTimeOverride(undefined);
-    else instance.setTimeOverride(+timeEl.value);
+    instance.setTimeOverride(liveEl.checked ? undefined : +timeEl.value);
   }
-
   document.getElementById("go").onclick = () => load(cityInput.value.trim() || "Los Angeles");
   cityInput.addEventListener("keydown", e => { if (e.key === "Enter") load(cityInput.value.trim() || "Los Angeles"); });
   document.getElementById("unit").onclick = () => {
     unit = unit === "fahrenheit" ? "celsius" : unit === "celsius" ? "auto" : "fahrenheit";
-    load(cityInput.value.trim() || "Los Angeles");
+    if (instance && instance.resolution) load({ city: instance.resolution.place.name, lat: instance.resolution.place.latitude, lon: instance.resolution.place.longitude, tz: instance.resolution.place.timezone, country: instance.resolution.place.country });
   };
   timeEl.addEventListener("input", () => { liveEl.checked = false; applyTime(); });
   liveEl.addEventListener("change", applyTime);
 
-  load("Los Angeles");
-
-  /* ---- "Near you" panel: your best-guess city + the 2 most populous within
-     200 miles. Location comes from a keyless IP lookup (no permission prompt);
-     the candidate pool is the shipped US city DB plus major world metros. ---- */
-  const WORLD = [
-    ["Tokyo", 35.68, 139.65, "Asia/Tokyo", "Japan", 13960000],
-    ["London", 51.51, -0.13, "Europe/London", "United Kingdom", 8980000],
-    ["Paris", 48.85, 2.35, "Europe/Paris", "France", 2140000],
-    ["Sydney", -33.87, 151.21, "Australia/Sydney", "Australia", 5312000],
-    ["Cairo", 30.04, 31.24, "Africa/Cairo", "Egypt", 9540000],
-    ["Rio de Janeiro", -22.91, -43.17, "America/Sao_Paulo", "Brazil", 6748000],
-    ["Reykjavík", 64.15, -21.94, "Atlantic/Reykjavik", "Iceland", 131000],
-    ["Nairobi", -1.29, 36.82, "Africa/Nairobi", "Kenya", 4397000],
-    ["Zürich", 47.37, 8.54, "Europe/Zurich", "Switzerland", 421000],
-    ["Dubai", 25.20, 55.27, "Asia/Dubai", "United Arab Emirates", 3331000],
-    ["Vancouver", 49.28, -123.12, "America/Vancouver", "Canada", 675000],
-    ["Cusco", -13.53, -71.97, "America/Lima", "Peru", 428000],
-    ["Mexico City", 19.43, -99.13, "America/Mexico_City", "Mexico", 9210000],
-    ["Toronto", 43.65, -79.38, "America/Toronto", "Canada", 2930000],
-    ["Berlin", 52.52, 13.40, "Europe/Berlin", "Germany", 3645000],
-    ["Madrid", 40.42, -3.70, "Europe/Madrid", "Spain", 3223000],
-    ["Rome", 41.90, 12.50, "Europe/Rome", "Italy", 2873000],
-    ["Istanbul", 41.01, 28.98, "Europe/Istanbul", "Turkey", 15460000],
-    ["Mumbai", 19.08, 72.88, "Asia/Kolkata", "India", 12440000],
-    ["Shanghai", 31.23, 121.47, "Asia/Shanghai", "China", 24870000],
-    ["Moscow", 55.76, 37.62, "Europe/Moscow", "Russia", 12500000],
-    ["São Paulo", -23.55, -46.63, "America/Sao_Paulo", "Brazil", 12330000],
-    ["Bangkok", 13.76, 100.50, "Asia/Bangkok", "Thailand", 10540000],
-    ["Singapore", 1.35, 103.82, "Asia/Singapore", "Singapore", 5686000]
-  ].map(([name, lat, lon, tz, country, population]) => ({ name, lat, lon, tz, country, population }));
-
+  /* ---- location + showcase rows ---- */
   function haversineMi(a, b) {
     const R = 3958.8, toR = x => x * Math.PI / 180;
     const dLat = toR(b.lat - a.lat), dLon = toR(b.lon - a.lon);
@@ -181,56 +172,66 @@
     return null;
   }
   async function loadPool() {
-    const pool = WORLD.slice();
-    try {
-      const r = await fetch("data/cities/us.json");
-      if (r.ok) { const db = await r.json(); for (const c of db.cities) pool.push({ name: c.name, state: c.state, lat: c.lat, lon: c.lon, tz: c.tz, elevation: c.elevation, country: "United States", population: c.population }); }
-    } catch (e) {}
-    return pool;
+    const map = new Map();
+    async function add(url, ccOf) {
+      try { const db = await (await fetch(url)).json();
+        for (const c of db.cities) {
+          const cc = ccOf(c), key = (c.name + "|" + cc).toLowerCase();
+          if (map.has(key)) continue;
+          map.set(key, { name: c.name, cc, lat: c.lat, lon: c.lon, tz: c.tz, population: c.population || 1000,
+            biome: c.biome, landscape: c.landscape, landmark: c.landmark, unit: c.unit, key });
+        }
+      } catch (e) {}
+    }
+    await add("data/cities/us.json", () => "US");
+    await add("data/cities/world.json", c => c.cc);
+    return [...map.values()];
   }
-  function renderTrio(trio, note) {
-    const host = document.getElementById("nearby");
-    host.innerHTML = "";
-    document.getElementById("nearby-note").textContent = note || "";
-    for (const c of trio) {
-      const tile = document.createElement("div");
-      tile.style.cssText = "background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px;display:flex;flex-direction:column;align-items:center;gap:6px";
-      const m = document.createElement("div"); m.style.cssText = "width:150px;height:150px;display:flex;align-items:center;justify-content:center";
-      const name = document.createElement("div"); name.style.cssText = "font-size:12px;font-weight:600"; name.textContent = c.label;
-      const meta = document.createElement("div"); meta.style.cssText = "font-size:11px;color:var(--muted);text-align:center;min-height:2.2em"; meta.textContent = "…";
+  const BIOME_SCORE = { coast: 3, canyon: 3, tundra: 3, mountain: 3, lake: 2.5, desert: 2.5, wetland: 2, savanna: 1.6, jungle: 1.6, farmland: 1.5, city: 1.3, plains: 1, forest: 1 };
+  function score(c, preferLandmark) {
+    return (c.landmark ? (preferLandmark ? 6 : 3) : 0) + Math.log10(c.population || 1000) + (BIOME_SCORE[c.biome] || 1);
+  }
+  function pickInteresting(pool, n, exclude, preferLandmark, diverseCountry) {
+    const scored = pool.filter(c => !exclude.has(c.key)).map(c => ({ c, s: score(c, preferLandmark) })).sort((a, b) => b.s - a.s);
+    const picked = [], seenBiome = new Set(), seenCC = new Set();
+    // first pass: distinct biomes (and, for the world row, distinct countries)
+    for (const { c } of scored) {
+      if (picked.length >= n) break;
+      if (seenBiome.has(c.biome) || (diverseCountry && seenCC.has(c.cc))) continue;
+      picked.push(c); seenBiome.add(c.biome); seenCC.add(c.cc);
+    }
+    // fill any remaining slots by score
+    for (const { c } of scored) { if (picked.length >= n) break; if (!picked.includes(c)) picked.push(c); }
+    return picked.slice(0, n);
+  }
+  function renderRow(id, list) {
+    const host = document.getElementById(id); host.innerHTML = "";
+    for (const c of list) {
+      const tile = document.createElement("div"); tile.className = "tile";
+      const m = document.createElement("div"); m.className = "mount2";
+      const name = document.createElement("div"); name.className = "name"; name.textContent = c.name + ", " + c.cc;
+      const meta = document.createElement("div"); meta.className = "meta"; meta.textContent = c.landscape + (c.landmark ? " · " + c.landmark : "");
       tile.append(m, name, meta); host.appendChild(tile);
-      const inst = createVivarium(m, { city: c.city, lat: c.lat, lon: c.lon, timezone: c.tz, elevation: c.elevation, country: c.country, size: 150, interactive: true });
-      const paint = () => { const r = inst.resolution, w = inst.weather; if (!r) return; const u = r.unit === "celsius" ? "C" : "F"; meta.innerHTML = (w.temp == null ? "…" : w.temp + "°" + u) + " · " + r.landscape.name + (r.landmark ? " · " + r.landmark.name : ""); };
-      paint(); const t = setInterval(paint, 1500); setTimeout(() => clearInterval(t), 14000);
+      const inst = createVivarium(m, { city: c.name, lat: c.lat, lon: c.lon, timezone: c.tz, biome: c.biome, landscape: c.landscape, temperatureUnit: c.unit, size: 140, interactive: true, minimalData: true, refreshMs: 0 });
+      tile.onclick = e => { if (!m.contains(e.target)) load({ city: c.name, lat: c.lat, lon: c.lon, tz: c.tz }); };
+      const u = c.unit === "celsius" ? "C" : "F";
+      const paint = () => { const w = inst.weather; meta.textContent = (w.temp == null ? "…" : w.temp + "°" + u) + " · " + c.landscape + (c.landmark ? " · " + c.landmark : ""); };
+      paint(); const t = setInterval(paint, 1500); setTimeout(() => clearInterval(t), 12000);
     }
   }
-  async function initNearby() {
-    const me = await ipLocate();
-    if (!me) {
-      renderTrio([
-        { label: "Berkeley, CA", city: "Berkeley", lat: 37.87, lon: -122.27, tz: "America/Los_Angeles", country: "United States" },
-        { label: "San Francisco, CA", city: "San Francisco", lat: 37.77, lon: -122.42, tz: "America/Los_Angeles", country: "United States" },
-        { label: "San Jose, CA", city: "San Jose", lat: 37.34, lon: -121.89, tz: "America/Los_Angeles", country: "United States" }
-      ], "Couldn't detect your location — showing a Bay Area trio.");
-      return;
-    }
+  (async () => {
     const pool = await loadPool();
-    const others = pool
-      .filter(c => (c.name || "").toLowerCase() !== (me.name || "").toLowerCase())
-      .map(c => ({ ...c, dist: haversineMi(me, c) }))
-      .sort((a, b) => a.dist - b.dist);
-    const within = others.filter(c => c.dist <= 200).sort((a, b) => b.population - a.population);
-    const pick = within.slice(0, 2);
-    for (const c of others) { if (pick.length >= 2) break; if (!pick.includes(c)) pick.push(c); }
-    const note = within.length >= 2
-      ? "Your city, then the two most populous within 200 miles."
-      : "Your city, then the nearest large cities (few within 200 miles).";
-    renderTrio([
-      { label: me.name + (me.country && me.country !== "United States" ? ", " + me.country : ""), city: me.name, lat: me.lat, lon: me.lon, tz: me.tz, country: me.country },
-      ...pick.map(c => ({ label: c.name + (c.state ? ", " + c.state : ""), city: c.name, lat: c.lat, lon: c.lon, tz: c.tz, elevation: c.elevation, country: c.country }))
-    ], note);
-  }
-  initNearby();
+    let here = await ipLocate();
+    if (here) { load({ city: here.name, lat: here.lat, lon: here.lon, tz: here.tz, country: here.country }); }
+    else { load("Los Angeles"); here = { name: "Los Angeles", lat: 34.05, lon: -118.24 }; document.getElementById("near-title").textContent = "Interesting cities within 400 miles of Los Angeles"; }
+    const excl = new Set([(here.name + "|US").toLowerCase(), (here.name + "|").toLowerCase()]);
+    const near = pool.filter(c => haversineMi(here, c) <= 400);
+    const rowNear = pickInteresting(near.length >= 5 ? near : pool, 5, excl, false);
+    rowNear.forEach(c => excl.add(c.key));
+    const rowWorld = pickInteresting(pool, 5, excl, true, true);
+    renderRow("row-near", rowNear);
+    renderRow("row-world", rowWorld);
+  })();
 </script>
 </body>
 </html>

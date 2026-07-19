@@ -62,6 +62,37 @@ function fromSeed() {
   return raw.rows.map((r) => enrich(r[0], r[1], r[2], r[3], r[4], r[5], r[6]));
 }
 
+// Countries that conventionally use Fahrenheit, by ISO2 code.
+var FAHRENHEIT_CC = new Set(["US", "BS", "BZ", "KY", "LR", "PW", "FM", "MH", "PR", "GU", "VI", "AS"]);
+
+// Build from the bundled `all-the-cities` dataset (GeoNames, pop >= 1000, MIT):
+// take the top `limit` by population and enrich each. Timezone comes from
+// `tz-lookup` (offline). Dependencies are loaded lazily so the default seed
+// build stays dependency-free.
+async function fromAllTheCities(limit) {
+  const allCities = (await import("all-the-cities")).default;
+  const tzlookup = (await import("tz-lookup")).default;
+  const top = allCities
+    .slice()
+    .sort((a, b) => b.population - a.population)
+    .slice(0, limit);
+  const out = [];
+  for (const c of top) {
+    const lat = c.loc.coordinates[1], lon = c.loc.coordinates[0];
+    let tz = "UTC";
+    try { tz = tzlookup(lat, lon); } catch (e) { /* rare coords miss → UTC */ }
+    const unit = FAHRENHEIT_CC.has(c.country) ? "fahrenheit" : "celsius";
+    const place = { name: c.name, admin1: c.adminCode || "", country: c.country, latitude: lat, longitude: lon, elevation: 0, featureCode: c.featureCode, population: c.population };
+    const res = resolveScene(place, { temperatureUnit: unit });
+    out.push({
+      name: c.name, cc: c.country, lat: Math.round(lat * 1000) / 1000, lon: Math.round(lon * 1000) / 1000,
+      tz, population: c.population, biome: res.biome.id, landscape: res.landscape.id,
+      landmark: res.landmark ? res.landmark.id : null, category: category(res, c.population), unit
+    });
+  }
+  return out;
+}
+
 // Parse a GeoNames "cities" TSV (feature class P). Columns are documented at
 // https://download.geonames.org/export/dump/readme.txt
 function fromGeonames(file, countryFilter) {
@@ -78,8 +109,35 @@ function fromGeonames(file, countryFilter) {
   return out;
 }
 
-function main() {
+function summarize(outPath, cities) {
+  const byBiome = {};
+  for (const c of cities) byBiome[c.biome] = (byBiome[c.biome] || 0) + 1;
+  console.log(`Wrote ${outPath}: ${cities.length} cities`);
+  console.log("By biome:", JSON.stringify(byBiome));
+  console.log(`With a landmark: ${cities.filter((c) => c.landmark).length}/${cities.length}`);
+}
+
+async function main() {
   const args = process.argv.slice(2);
+  mkdirSync(OUT_DIR, { recursive: true });
+
+  // --world [limit]: build data/cities/world.json from the top cities worldwide.
+  const wi = args.indexOf("--world");
+  if (wi !== -1) {
+    const limit = parseInt(args[wi + 1], 10) || 1000;
+    const cities = await fromAllTheCities(limit);
+    cities.sort((a, b) => b.population - a.population);
+    const outPath = path.join(OUT_DIR, "world.json");
+    writeFileSync(outPath, JSON.stringify({
+      generatedBy: "scripts/build-cities.mjs --world " + limit,
+      source: "all-the-cities (GeoNames, pop>=1000, CC BY 4.0 — geonames.org)",
+      count: cities.length, cities
+    }, null, 0) + "\n");
+    summarize(outPath, cities);
+    return;
+  }
+
+  // Default / --geonames: the US database.
   let cities, source;
   const gi = args.indexOf("--geonames");
   if (gi !== -1 && args[gi + 1]) {
@@ -90,23 +148,11 @@ function main() {
     source = "curated seed (data/cities/us-seed.raw.json)";
   }
   cities.sort((a, b) => b.population - a.population);
-  mkdirSync(OUT_DIR, { recursive: true });
-  const db = {
-    generatedBy: "scripts/build-cities.mjs",
-    source,
-    country: "US",
-    count: cities.length,
-    cities
-  };
   const outPath = path.join(OUT_DIR, "us.json");
-  writeFileSync(outPath, JSON.stringify(db, null, 0) + "\n");
-  // a quick summary
-  const byBiome = {};
-  for (const c of cities) byBiome[c.biome] = (byBiome[c.biome] || 0) + 1;
-  console.log(`Wrote ${outPath}: ${cities.length} US cities`);
-  console.log("By biome:", JSON.stringify(byBiome));
-  const withLandmark = cities.filter((c) => c.landmark).length;
-  console.log(`With a landmark: ${withLandmark}/${cities.length}`);
+  writeFileSync(outPath, JSON.stringify({
+    generatedBy: "scripts/build-cities.mjs", source, country: "US", count: cities.length, cities
+  }, null, 0) + "\n");
+  summarize(outPath, cities);
 }
 
-main();
+main().catch((e) => { console.error(e); process.exit(1); });

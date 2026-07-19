@@ -4,6 +4,37 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com) and the project uses
 [Semantic Versioning](https://semver.org). Every change bumps the version and adds an entry below.
 
+## [0.3.0] - 2026-07-19
+
+Second feedback pass — polish, a thousand cities, and a discoverable site.
+
+### Added
+- **A thousand-city gallery.** `gallery.html` grows from 24 to **1000** live
+  cities (top by population, from GeoNames via `all-the-cities`), virtualised
+  with an `IntersectionObserver` so only the on-screen tiles run a render loop —
+  plus a name/country filter. New `data/cities/world.json` (built by
+  `npm run build:cities -- --world`) and offline timezones via `tz-lookup`.
+- **The main page leads with your city.** The hero diorama now defaults to your
+  IP-located city, followed by two rows of five: *interesting cities within 400
+  miles* and *interesting cities around the world* (biome- and country-diverse).
+- **Widget performance options** for dense grids: `minimalData` (skip the
+  air-quality request) and `refreshMs: 0` (no auto-refresh).
+- **Brand + social.** A logo (`assets/logo.png`), app icon, `favicon.svg`, and a
+  1280×640 GitHub **social preview** (`assets/social-preview.png`), all rendered
+  from the vivarium's own art.
+- **Full SEO / discoverability pass** (Portka app-website-evaluator: 85 → 100):
+  JSON-LD, `robots.txt`, `sitemap.xml`, `llms.txt`, `site.webmanifest`,
+  apple-touch-icon, a `<meta>` CSP, and `/.well-known/security.txt`.
+
+### Fixed
+- **Natural moon.** The phase is now drawn per-pixel with a proper terminator —
+  a softly shaded sphere with earthshine — instead of a hard offset disc that
+  read as a double circle.
+- **Las Vegas.** The casino is pure neon celebration (chasing marquee, a
+  searchlight sweep) with no temperature; the temperature moves to a "Welcome to
+  Las Vegas"-style sign (silver diamond crown, starburst, classic red digits),
+  paired to the casino via a landmark `pairedSign` hint.
+
 ## [0.2.0] - 2026-07-19
 
 Feedback pass after the first cut.

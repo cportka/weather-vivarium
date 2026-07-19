@@ -13,6 +13,39 @@ import { createScene } from "../src/scene/compositor.js";
 import { defaultState } from "../src/data/weather.js";
 import { seedFrom } from "../src/engine/random.js";
 import { moonIllumination, dayFactor } from "../src/engine/astronomy.js";
+import { drawMoon } from "../src/engine/celestial.js";
+
+// Moon phase strip: waxing new→full→waning across a night sky, to check phases
+// read naturally (no double-circle).
+window.moonSheet = function () {
+  const phases = [
+    ["new", { fraction: 0.04, waxing: true }],
+    ["cresc+", { fraction: 0.25, waxing: true }],
+    ["quarter+", { fraction: 0.5, waxing: true }],
+    ["gibbous+", { fraction: 0.75, waxing: true }],
+    ["full", { fraction: 1.0, waxing: true }],
+    ["gibbous-", { fraction: 0.75, waxing: false }],
+    ["quarter-", { fraction: 0.5, waxing: false }],
+    ["cresc-", { fraction: 0.22, waxing: false }]
+  ];
+  const cell = 60, cols = phases.length;
+  const out = document.getElementById("out");
+  out.width = cols * cell; out.height = cell + 16;
+  const octx = out.getContext("2d"); octx.imageSmoothingEnabled = false;
+  const buf = document.createElement("canvas"); buf.width = L; buf.height = L;
+  const b = buf.getContext("2d"); b.imageSmoothingEnabled = false;
+  const P = createPainter(b, L);
+  const sky = { top: "#0a1230", hor: "#243056" };
+  phases.forEach(([label, illum], i) => {
+    b.fillStyle = sky.top; b.fillRect(0, 0, L, L);
+    // a few stars for context
+    for (let s = 0; s < 8; s++) b.fillStyle = "#dfe6ff", b.fillRect((s * 13) % L, (s * 7) % 20, 1, 1);
+    drawMoon(P, { x: 25, y: 22 }, illum, sky);
+    octx.drawImage(buf, 0, 0, L, L, i * cell, 0, cell, cell);
+    octx.fillStyle = "#bbb"; octx.font = "9px monospace"; octx.fillText(label, i * cell + 3, cell + 11);
+  });
+  return { w: out.width, h: out.height };
+};
 
 const L = 50, GEOM = { L, horizon: 24, groundTop: 37, roadBot: 46 };
 
@@ -130,6 +163,70 @@ window.previewFrame = function (f) {
     octx.fillText(t.label, cx + 4, cy + tile + lab / 2);
   });
   return { f };
+};
+
+// ---- branding assets (icon / logo / social preview) ----
+function roundRect(c, x, y, w, h, r) {
+  c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r);
+  c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath();
+}
+const HERO = {
+  coast: { place: { name: "Malibu", country: "United States", latitude: 34.02, longitude: -118.49 }, wx: { temp: 72, code: 0, waveM: 1.1 }, now: 1150 },
+  city: { place: { name: "New York", country: "United States", latitude: 40.71, longitude: -74.01 }, wx: { temp: 61, code: 2 }, now: 70 },
+  desert: { place: { name: "Las Vegas", country: "United States", latitude: 36.17, longitude: -115.14, elevation: 610 }, wx: { temp: 104, code: 0 }, now: 1180 },
+  mountain: { place: { name: "Zurich", country: "Switzerland", latitude: 47.37, longitude: 8.54, elevation: 408 }, wx: { temp: 24, code: 73, cloud: 90 }, now: 620 }
+};
+function renderHero(octx, spec, dx, dy, dw, dh, frame, radius, dim) {
+  const s = buildScene(spec);
+  for (let f = 0; f <= frame; f++) s.scene.render(f, s.now, s.dayT);   // warm a little life in
+  octx.save();
+  if (radius) { roundRect(octx, dx, dy, dw, dh, radius); octx.clip(); }
+  octx.imageSmoothingEnabled = false;
+  octx.drawImage(s.buf, 0, 0, L, L, dx, dy, dw, dh);
+  if (dim) { octx.fillStyle = "rgba(14,16,22," + dim + ")"; octx.fillRect(dx, dy, dw, dh); }
+  octx.restore();
+}
+window.brand = function (kind) {
+  const out = document.getElementById("out");
+  const octx = out.getContext("2d");
+  if (kind === "icon") {
+    const S = 512; out.width = S; out.height = S;
+    octx.imageSmoothingEnabled = false;
+    renderHero(octx, HERO.coast, 0, 0, S, S, 16, 64, 0);
+    octx.strokeStyle = "rgba(255,255,255,0.10)"; octx.lineWidth = 8; roundRect(octx, 4, 4, S - 8, S - 8, 60); octx.stroke();
+    return { w: S, h: S };
+  }
+  if (kind === "logo") {
+    const W = 1024, H = 256; out.width = W; out.height = H;
+    octx.fillStyle = "#0e1016"; roundRect(octx, 0, 0, W, H, 40); octx.fill();
+    renderHero(octx, HERO.coast, 24, 28, 200, 200, 16, 28, 0);
+    octx.textBaseline = "middle";
+    octx.fillStyle = "#eef2f6"; octx.font = "bold 76px ui-monospace, Menlo, monospace";
+    octx.fillText("weather-vivarium", 250, 108);
+    octx.fillStyle = "#9aa2b1"; octx.font = "30px ui-monospace, Menlo, monospace";
+    octx.fillText("a living weather diorama for any city", 252, 168);
+    return { w: W, h: H };
+  }
+  if (kind === "social") {
+    const W = 1280, H = 640; out.width = W; out.height = H;
+    octx.fillStyle = "#0e1016"; octx.fillRect(0, 0, W, H);
+    // filmstrip of four biomes across the top, dimmed
+    const panels = ["coast", "city", "desert", "mountain"], pw = W / 4;
+    panels.forEach((k, i) => renderHero(octx, HERO[k], i * pw, 0, pw, H, 16, 0, 0.18));
+    // gradient scrim toward the centre for legibility
+    const g = octx.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, "rgba(14,16,22,0.35)"); g.addColorStop(0.5, "rgba(14,16,22,0.72)"); g.addColorStop(1, "rgba(14,16,22,0.88)");
+    octx.fillStyle = g; octx.fillRect(0, 0, W, H);
+    octx.textAlign = "center"; octx.textBaseline = "middle";
+    octx.fillStyle = "#f2f6fa"; octx.font = "bold 108px ui-monospace, Menlo, monospace";
+    octx.fillText("weather-vivarium", W / 2, H / 2 - 40);
+    octx.fillStyle = "#cdd6e2"; octx.font = "40px ui-monospace, Menlo, monospace";
+    octx.fillText("a living pixel-art weather diorama for any city", W / 2, H / 2 + 34);
+    octx.fillStyle = "#7fd0ff"; octx.font = "30px ui-monospace, Menlo, monospace";
+    octx.fillText("1000 cities  ·  real weather + sun + moon  ·  dependency-free", W / 2, H / 2 + 96);
+    octx.textAlign = "left";
+    return { w: W, h: H };
+  }
 };
 
 window.CATALOG = CATALOG;

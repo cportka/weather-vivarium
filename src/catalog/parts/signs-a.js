@@ -155,5 +155,28 @@ export default [
       P.text(s, tx, ty, lit);
       if (neon > 0.3) P.withAlpha(0.15 * neon, function () { P.rect(x + 1, top + 4, pw - 2, 7, "#ff7a3a"); });
     }
+  },
+  {
+    // A nod to the "Welcome to Fabulous Las Vegas" sign — silver diamond crown
+    // with a starburst, a marquee-bulb border, and the temperature in classic
+    // red. Weighted heavily so desert cities (Vegas, Reno) tend to show it.
+    id: "vegas-welcome", name: "Welcome sign", biomes: ["desert"],
+    tags: ["sign", "neon", "americana"], w: 20, h: 21, anchor: "baseline", rarity: 2.4,
+    draw: function (P, x, yb, env) {
+      var neon = P.clamp(1 - (env.dayT || 0), 0, 1), f = env.frame || 0, w = 20, bh = 11, top = yb - 18;
+      var silver = env.col("#cbd0d6"), body = P.mix("#ece4d6", "#161c30", neon), pole = env.col("#9098a0");
+      var bulbs = ["#ff4a7a", "#ffd24a", "#4affd2"];
+      function bulb(i) { return neon > 0.25 ? bulbs[(i + (f >> 1)) % 3] : env.col("#6a5a4a"); }
+      P.rect(x + 5, yb - 7, 2, 7, pole); P.rect(x + w - 7, yb - 7, 2, 7, pole);   // twin poles
+      var cx = x + (w >> 1), cy = top - 2, star = neon > 0.3 ? "#ffe14a" : env.col("#c9a24a");
+      P.disc(cx, cy, 1, star); P.px(cx, cy - 2, star); P.px(cx, cy + 2, star); P.px(cx - 2, cy, star); P.px(cx + 2, cy, star);
+      P.rect(x, top, w, bh, silver);                       // silver frame
+      P.rect(x + 1, top + 1, w - 2, bh - 2, body);         // panel
+      var bi = 0, bx, by;
+      for (bx = x; bx < x + w; bx += 2) { P.px(bx, top, bulb(bi++)); P.px(bx, top + bh - 1, bulb(bi++)); }
+      for (by = top + 2; by < top + bh - 2; by += 2) { P.px(x, by, bulb(bi++)); P.px(x + w - 1, by, bulb(bi++)); }
+      var s = env.text || "--", wpx = s.length * 4 - 1, tx = x + Math.round((w - wpx) / 2), ty = top + Math.round((bh - 5) / 2) + 1;
+      P.text(s, tx, ty, P.mix("#bf332a", "#ff5a4a", neon));
+    }
   }
 ];

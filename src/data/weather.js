@@ -79,8 +79,10 @@ export function fetchWeather(place, state, opts) {
       .then(function (d) { if (d && d.current && typeof d.current.wave_height === "number") { state.waveM = d.current.wave_height; onUpdate(state); } });
   }
 
-  j("https://air-quality-api.open-meteo.com/v1/air-quality?latitude=" + lat + "&longitude=" + lon + "&current=us_aqi" + tz)
-    .then(function (d) { if (d && d.current && typeof d.current.us_aqi === "number") { state.aqi = d.current.us_aqi; onUpdate(state); } });
+  if (opts.airQuality !== false) {
+    j("https://air-quality-api.open-meteo.com/v1/air-quality?latitude=" + lat + "&longitude=" + lon + "&current=us_aqi" + tz)
+      .then(function (d) { if (d && d.current && typeof d.current.us_aqi === "number") { state.aqi = d.current.us_aqi; onUpdate(state); } });
+  }
 
   return primary;
 }
