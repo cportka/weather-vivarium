@@ -89,18 +89,31 @@ export default [
     tags: ["statue", "hill", "arms-out", "landmark"],
     w: 14, h: 20, anchor: "baseline",
     draw: function (P, x, yb, env) {
-      var hill = env.col("#3f6a3a"), stone = env.col("#c8ccce"), dk = env.col("#9aa0a4");
-      // green hilltop
+      var hill = env.col("#3f6a3a"), hillDk = env.col("#33562f"),
+          stone = env.col("#d2d6d8"), shade = env.col("#a6acb0"), dk = env.col("#868c90");
+      // Corcovado — a steep, rounded green peak rising to the summit platform.
       for (var i = 0; i < 14; i++) {
-        var hh = Math.round(4 - Math.abs(i - 7) * 0.4);
+        var d = i - 7;
+        var hh = Math.round(6 - d * d * 0.11);
         if (hh < 1) hh = 1;
-        P.rect(x + i, yb - hh, 1, hh, hill);
+        P.rect(x + i, yb - hh, 1, hh, (i & 3) === 0 ? hillDk : hill);
       }
-      P.rect(x + 5, yb - 8, 4, 4, dk);                 // pedestal
-      P.rect(x + 6, yb - 18, 2, 10, stone);            // robed body
-      P.rect(x + 2, yb - 15, 10, 1, stone);            // outstretched arms
-      P.px(x + 2, yb - 14, dk); P.px(x + 11, yb - 14, dk); // sleeve drape
-      P.px(x + 6, yb - 19, stone); P.px(x + 7, yb - 19, stone); // head
+      var base = yb - 6;                                // summit platform (peak top row)
+      P.rect(x + 5, base - 3, 4, 3, dk);               // pedestal
+      P.rect(x + 5, base - 3, 4, 1, shade);            // pedestal cap
+      // Robed body — a slim column flaring to a draped hem.
+      P.rect(x + 6, base - 12, 2, 9, stone);
+      P.px(x + 5, base - 4, stone); P.px(x + 8, base - 4, stone);   // robe hem flare
+      P.px(x + 5, base - 5, shade); P.px(x + 8, base - 5, shade);
+      P.px(x + 8, base - 8, shade);                    // fold shadow down one side
+      // Outstretched arms — the iconic cross, tapering to draped sleeve tips.
+      P.rect(x + 1, base - 11, 12, 1, stone);          // full arm span
+      P.rect(x + 5, base - 10, 4, 1, stone);           // chest / shoulders (2px-thick centre)
+      P.px(x + 1, base - 10, shade); P.px(x + 12, base - 10, shade);  // sleeve tips droop
+      P.px(x + 2, base - 10, stone); P.px(x + 11, base - 10, stone);
+      // Head.
+      P.px(x + 6, base - 13, stone); P.px(x + 7, base - 13, stone);
+      P.px(x + 6, base - 14, shade);
     }
   },
   {

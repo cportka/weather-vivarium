@@ -19,32 +19,40 @@ This database:
 
 ## Files
 
-- `us-seed.raw.json` — the hand-curated **input**: `[name, state, lat, lon, tz,
-  elevation_m, population]` rows for notable US cities (a seed, not yet exhaustive).
-- `us.json` — the **built** database (generated; do not edit by hand). Produced by
-  `npm run build:cities`.
+Two datasets ship, **disjoint by country** so their union is exactly their sum
+(**10,000** places across **175** countries):
 
-## Record shape (built `us.json`)
+- `us.json` — the top **5,000** US cities by population.
+- `world.json` — the top **5,000** cities **outside** the US. (US cities live in
+  `us.json`; keeping them out here avoids double-counting.)
+
+Both are **generated** (do not edit by hand) from [GeoNames](https://geonames.org)
+via the `all-the-cities` package (pop ≥ 1000), with offline timezones from
+`tz-lookup`. `us-seed.raw.json` is a small hand-curated US seed kept as an
+alternate input (`[name, state, lat, lon, tz, elevation_m, population]` rows).
+
+## Record shape
 
 ```json
 {
-  "name": "Las Vegas", "state": "NV", "country": "United States",
-  "lat": 36.17, "lon": -115.14, "tz": "America/Los_Angeles",
-  "elevation": 610, "population": 646790,
+  "name": "Las Vegas", "cc": "US", "admin": "NV",
+  "lat": 36.175, "lon": -115.137, "tz": "America/Los_Angeles",
+  "population": 623747,
   "biome": "desert", "landscape": "sonoran", "landmark": "casino",
-  "category": "desert", "unit": "fahrenheit",
-  "content": { "trees": 6, "vehicles": 31, "people": 12, "animals": 18, "birds": 7, "signs": 8 }
+  "category": "desert", "unit": "fahrenheit"
 }
 ```
 
-`content` is the count of catalog entries valid for the city's biome — the trees,
-vehicles, people, animals, birds and signs that can appear there.
+`cc` is the ISO country code, `admin` the state/region code (so same-named cities
+in different states stay distinct). A client renders the city from this plus its
+current weather — no geocoding hop.
 
 ## Building
 
 ```
-npm run build:cities                 # build us.json from us-seed.raw.json
-node scripts/build-cities.mjs --geonames path/to/US.txt   # (future) full GeoNames ingest
+npm run build:cities -- --us-top 5000   # build us.json — top 5,000 US cities
+npm run build:cities -- --world 5000    # build world.json — top 5,000 non-US cities
+npm run build:cities                     # (alt) build us.json from the curated seed
 ```
 
 ## Roadmap

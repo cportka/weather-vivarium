@@ -4,6 +4,38 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com) and the project uses
 [Semantic Versioning](https://semver.org). Every change bumps the version and adds an entry below.
 
+## [0.5.0] - 2026-07-19
+
+Real settlements, real variety, and ten thousand cities.
+
+### Added
+- **Settlement styles by biome.** How a place is *built* is now a biome-appropriate
+  architecture (`src/catalog/settlements.js`), not a generic wall of towers: swamps
+  get stilt shacks, deserts low adobe, mountains chalets, jungle hillsides stacked
+  favela boxes, savanna round huts, and so on — plus a wider world set (gulf-modern
+  glass, medinas, nordic gables, shophouses, pagoda towns, ports, apartment blocks,
+  brownstones, oil towns, lake lodges, resorts, pueblos). Each biome has several
+  candidate styles; a city picks one deterministically from its seed, so cities of
+  the same biome vary while any one city is stable.
+- **Coarse climate biomes for the long tail.** Uncurated cities now guess their biome
+  from lon/lat boxes over the world's big arid / grassland / alpine belts (US
+  Southwest desert, Great Plains, Rockies, Corn Belt, Sahara + Arabia, Andes, Pampas,
+  Central Asia, the Outback…), not latitude alone — so the map isn't a monotone wall
+  of "forest".
+- **More people and animals** across the catalogs (street life and a wider bestiary —
+  savanna, jungle, mountain and wetland species).
+- **10,000 precomputed cities** (175 countries): `us.json` is now the top **5,000** US
+  cities and `world.json` the top **5,000** cities outside the US — disjoint by
+  country, so the total is exact. The gallery is a true 10,000-city wall.
+
+### Changed
+- **Density recalibrated.** Population drives a genuine spectrum — pastoral → rural →
+  town → city → metropolis — capped per style so nature always shows between
+  buildings, with a hazy distant skyline only behind genuinely large cities. Fixes
+  the "big buildings everywhere" over every biome (Berkeley, Moscow, New Orleans).
+- **Christ the Redeemer** redrawn to read clearly as the iconic cross-shaped Corcovado
+  silhouette.
+
 ## [0.4.1] - 2026-07-19
 
 ### Added

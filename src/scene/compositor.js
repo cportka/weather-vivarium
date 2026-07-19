@@ -15,6 +15,7 @@ import { sunPosition, moonPosition } from "../engine/astronomy.js";
 import { intensity as wmoIntensity, isPrecip, isSnow, isStorm, isRain, isFog } from "../data/wmo.js";
 import { EFFECTS } from "./weatherfx.js";
 import { makeRng, pickWeighted } from "../engine/random.js";
+import { styleForBiome } from "../catalog/settlements.js";
 
 var LANE_NEAR = 43, LANE_FAR = 39;
 
@@ -40,49 +41,51 @@ function drawClouds(P, env, frame, sky) {
 }
 
 // ---- urbanisation overlay -----------------------------------------------
-// Buildings whose count/height/coverage scale with env.density, laid over ANY
-// biome so a dense mountain or delta city reads as a city — while the gaps
-// between buildings keep showing the biome's nature, conveying the built-up-to-
-// nature ratio. A distant hazy back row plus, for denser places, a taller near
-// row. Stable per frame via env.srng.
-function oneBuilding(P, x, w, top, bot, wall, lit, rng) {
-  P.rect(x, top, w, bot - top, wall);
-  P.rect(x, top, w, 1, mix(wall, "#000000", 0.22));           // parapet
-  for (var wy = top + 2; wy < bot - 1; wy += 2) {
-    for (var wx = x + 1; wx < x + w - 1; wx += 2) {
-      P.px(wx, wy, (lit && rng() < 0.55) ? "#ffe58a" : mix(wall, "#000000", 0.28));
-    }
+// Two restrained layers so a place reads on a real spectrum (pastoral → town →
+// city → metropolis) WITHOUT turning every biome into glass towers:
+//   1. a hazy, sparse DISTANT skyline near the horizon (the wider city behind),
+//   2. a LOCAL settlement in biome-appropriate style (stilt / adobe / chalet /
+//      favela / …) whose height is capped per style, so a swamp or a desert town
+//      stays low. Both leave generous gaps where the biome's nature shows.
+function distantSkyline(P, env, rng) {
+  var hy = env.horizon, d = env.density, lit = env.night || env.dayT < 0.42;
+  if (d < 0.34) return;
+  var cov = clamp((d - 0.32) * 0.75, 0, 0.5);   // always leaves ≥ half the horizon as sky
+  var x = 0;
+  while (x < P.L) {
+    if (rng() < cov) {
+      var w = 2 + Math.floor(rng() * 3);
+      var h = Math.round(2 + d * (hy - 8) + rng() * 3);
+      var wall = mix(env.col(mix("#3a4150", "#525c68", rng())), "#8b95a4", 0.5 - d * 0.25); // hazy, recedes
+      P.rect(x, hy - h, w, h, wall);
+      for (var wy = hy - h + 1; wy < hy - 1; wy += 2)
+        for (var wx = x + 1; wx < x + w - 1; wx += 2) if (lit && rng() < 0.35) P.px(wx, wy, "#ffe08a");
+      x += w + 1 + Math.floor(rng() * 3);
+    } else { x += 3 + Math.floor(rng() * 4); }
+  }
+}
+function localSettlement(P, env, rng) {
+  var style = styleForBiome(env.biomeId, env.seed);
+  if (!style) return;
+  var d = env.density, lit = env.night || env.dayT < 0.42;
+  var tier = d < 0.36 ? 0 : d < 0.7 ? 1 : 2;                 // town / city / metropolis
+  var hcap = style.heights[tier];
+  var cov = clamp((d - 0.08) * 0.72, 0, style.maxCoverage);  // sparse when small, still gapped when huge
+  var fx = 0;
+  while (fx < P.L) {
+    if (rng() < cov) {
+      var w = style.width ? style.width(rng) : (3 + Math.floor(rng() * 3));
+      var h = Math.max(2, Math.round(hcap * (0.55 + rng() * 0.45)));
+      style.building(P, fx, w, h, env, lit, rng);
+      fx += w + 1 + Math.floor(rng() * 3);                   // gap after each building
+    } else { fx += 3 + Math.floor(rng() * 5); }              // nature gap
   }
 }
 function urbanLayer(P, env) {
-  var d = env.density || 0;
-  if (d < 0.12) return;
+  if ((env.density || 0) < 0.1) return;
   var rng = env.srng || env.rng;
-  var hy = env.horizon, gt = env.groundTop, lit = env.night || env.dayT < 0.42;
-  // back row — distant, hazier, denser coverage with density
-  var x = 0;
-  while (x < P.L) {
-    if (rng() < 0.3 + d * 0.65) {
-      var w = 3 + Math.floor(rng() * 4);
-      var h = Math.round(3 + d * (hy - 5) + rng() * 3);
-      var wall = mix(env.col(mix("#3a4150", "#59636f", rng())), "#8791a0", 0.28 * (1 - d));
-      oneBuilding(P, x, w, hy - h, hy + 1, wall, lit, rng);
-      x += w + 1;
-    } else { x += 2 + Math.floor(rng() * 3); }               // gap → the biome shows through
-  }
-  // near row — taller, in front, only for denser places
-  if (d > 0.42) {
-    var fx = 0;
-    while (fx < P.L) {
-      if (rng() < (d - 0.38) * 1.5) {
-        var fw = 4 + Math.floor(rng() * 5);
-        var fh = Math.round(6 + (d - 0.4) * 22 + rng() * 4);
-        var ftop = Math.max(2, (gt - 1) - fh);
-        oneBuilding(P, fx, fw, ftop, gt - 1, env.col(mix("#2c333d", "#454f5b", rng())), lit, rng);
-        fx += fw + 1;
-      } else { fx += 5 + Math.floor(rng() * 7); }             // wide gap → street frontage / nature
-    }
-  }
+  distantSkyline(P, env, rng);
+  localSettlement(P, env, rng);
 }
 
 // gear a strolling figure gears up with in rough weather
@@ -151,7 +154,7 @@ export function createScene(P, world, opts) {
       // (a city skyline, wall graffiti) is laid out identically each frame instead
       // of flickering/"scrolling" as the shared rng advances.
       srng: makeRng(world.seed || 1),
-      density: world.density || 0,
+      density: world.density || 0, biomeId: world.biome.id, seed: world.seed || 1,
       wind: clamp((W.windKph || 0) / 45, 0, 1),
       code: W.code, cloud: W.cloud, aqi: W.aqi, temp: W.temp,
       waveM: W.waveM, tide: W.tide, sunrise: world.sunrise, sunset: world.sunset,
