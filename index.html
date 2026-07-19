@@ -103,7 +103,8 @@
     <div class="strip" id="row-world"></div>
   </section>
   <p style="text-align:center;color:var(--muted);font-size:12.5px;margin-top:22px">
-    Hungry for more? Wander the <a href="gallery.html">wall of 1000 cities →</a>
+    <span id="citycount">1,030 cities</span> precomputed · wander the
+    <a href="gallery.html">wall of 1000 →</a> · or type <em>any</em> city on Earth
   </p>
 </main>
 <footer>
@@ -268,6 +269,7 @@
   }
   (async () => {
     const pool = await loadPool();
+    const cc = document.getElementById("citycount"); if (cc && pool.length) cc.textContent = pool.length.toLocaleString() + " cities";
     let here = await ipLocate();
     if (here) { load({ city: here.name, lat: here.lat, lon: here.lon, tz: here.tz, country: here.country }); }
     else { load("Los Angeles"); here = { name: "Los Angeles", lat: 34.05, lon: -118.24 }; document.getElementById("near-title").textContent = "Interesting cities within 400 miles of Los Angeles"; }
