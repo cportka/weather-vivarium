@@ -9,21 +9,24 @@ All notable changes to this project are documented here. The format follows
 Real settlements, real variety, and ten thousand cities.
 
 ### Added
-- **Settlement styles by biome.** How a place is *built* is now a biome-appropriate
-  architecture (`src/catalog/settlements.js`), not a generic wall of towers: swamps
-  get stilt shacks, deserts low adobe, mountains chalets, jungle hillsides stacked
-  favela boxes, savanna round huts, and so on — plus a wider world set (gulf-modern
-  glass, medinas, nordic gables, shophouses, pagoda towns, ports, apartment blocks,
-  brownstones, oil towns, lake lodges, resorts, pueblos). Each biome has several
-  candidate styles; a city picks one deterministically from its seed, so cities of
-  the same biome vary while any one city is stable.
+- **Settlement styles by biome** (**21** total). How a place is *built* is now a
+  biome-appropriate architecture (`src/catalog/settlements.js`), not a generic wall of
+  towers: swamps get stilt shacks, deserts low adobe, mountains chalets, jungle
+  hillsides stacked favela boxes, savanna round huts, and so on — plus a wider world
+  set (gulf-modern glass, medinas, nordic gables, shophouses, pagoda towns, ports,
+  apartment blocks, brownstones, oil towns with a nodding pumpjack, lake lodges,
+  resorts, pueblos). Each biome has several candidate styles; a city picks one
+  deterministically from its seed, so cities of the same biome vary while any one
+  city stays stable.
 - **Coarse climate biomes for the long tail.** Uncurated cities now guess their biome
   from lon/lat boxes over the world's big arid / grassland / alpine belts (US
   Southwest desert, Great Plains, Rockies, Corn Belt, Sahara + Arabia, Andes, Pampas,
   Central Asia, the Outback…), not latitude alone — so the map isn't a monotone wall
   of "forest".
-- **More people and animals** across the catalogs (street life and a wider bestiary —
-  savanna, jungle, mountain and wetland species).
+- **More life:** +13 people (**33** total — street musicians, food vendors, tourists,
+  skaters, shepherds, buskers…) and +21 animals (**65** total — yak, alpaca, ostrich,
+  peacock, capybara, meerkat, rhino, hippo, cheetah, panda, gorilla, plus toucan and
+  parrot in the air) spanning savanna, jungle, mountain and wetland.
 - **10,000 precomputed cities** (175 countries): `us.json` is now the top **5,000** US
   cities and `world.json` the top **5,000** cities outside the US — disjoint by
   country, so the total is exact. The gallery is a true 10,000-city wall.
