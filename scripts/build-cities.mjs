@@ -69,10 +69,14 @@ var FAHRENHEIT_CC = new Set(["US", "BS", "BZ", "KY", "LR", "PW", "FM", "MH", "PR
 // take the top `limit` by population and enrich each. Timezone comes from
 // `tz-lookup` (offline). Dependencies are loaded lazily so the default seed
 // build stays dependency-free.
-async function fromAllTheCities(limit) {
+async function fromAllTheCities(limit, opts) {
+  opts = opts || {};
   const allCities = (await import("all-the-cities")).default;
   const tzlookup = (await import("tz-lookup")).default;
-  const top = allCities
+  let pool = allCities;
+  if (opts.only) pool = pool.filter((c) => c.country === opts.only);
+  if (opts.exclude) pool = pool.filter((c) => c.country !== opts.exclude);
+  const top = pool
     .slice()
     .sort((a, b) => b.population - a.population)
     .slice(0, limit);
@@ -85,7 +89,7 @@ async function fromAllTheCities(limit) {
     const place = { name: c.name, admin1: c.adminCode || "", country: c.country, latitude: lat, longitude: lon, elevation: 0, featureCode: c.featureCode, population: c.population };
     const res = resolveScene(place, { temperatureUnit: unit });
     out.push({
-      name: c.name, cc: c.country, lat: Math.round(lat * 1000) / 1000, lon: Math.round(lon * 1000) / 1000,
+      name: c.name, cc: c.country, admin: c.adminCode || "", lat: Math.round(lat * 1000) / 1000, lon: Math.round(lon * 1000) / 1000,
       tz, population: c.population, biome: res.biome.id, landscape: res.landscape.id,
       landmark: res.landmark ? res.landmark.id : null, category: category(res, c.population), unit
     });
@@ -125,19 +129,40 @@ async function main() {
   const wi = args.indexOf("--world");
   if (wi !== -1) {
     const limit = parseInt(args[wi + 1], 10) || 1000;
-    const cities = await fromAllTheCities(limit);
+    // World = the top cities OUTSIDE the US, so world.json and us.json are
+    // disjoint (US is covered fully by us.json) and their union is exactly the
+    // sum. Keeps the advertised total honest and avoids duplicate tiles.
+    const cities = await fromAllTheCities(limit, { exclude: "US" });
     cities.sort((a, b) => b.population - a.population);
     const outPath = path.join(OUT_DIR, "world.json");
     writeFileSync(outPath, JSON.stringify({
       generatedBy: "scripts/build-cities.mjs --world " + limit,
       source: "all-the-cities (GeoNames, pop>=1000, CC BY 4.0 — geonames.org)",
+      note: "top cities outside the US (US cities live in us.json)",
       count: cities.length, cities
     }, null, 0) + "\n");
     summarize(outPath, cities);
     return;
   }
 
-  // Default / --geonames: the US database.
+  // --us-top [limit]: build data/cities/us.json from the top US cities by
+  // population (from `all-the-cities`), same enriched schema as --world.
+  const ui = args.indexOf("--us-top");
+  if (ui !== -1) {
+    const limit = parseInt(args[ui + 1], 10) || 5000;
+    const cities = await fromAllTheCities(limit, { only: "US" });
+    cities.sort((a, b) => b.population - a.population);
+    const outPath = path.join(OUT_DIR, "us.json");
+    writeFileSync(outPath, JSON.stringify({
+      generatedBy: "scripts/build-cities.mjs --us-top " + limit,
+      source: "all-the-cities (GeoNames, pop>=1000, CC BY 4.0 — geonames.org)",
+      country: "US", count: cities.length, cities
+    }, null, 0) + "\n");
+    summarize(outPath, cities);
+    return;
+  }
+
+  // Default / --geonames: the US database from the curated seed.
   let cities, source;
   const gi = args.indexOf("--geonames");
   if (gi !== -1 && args[gi + 1]) {

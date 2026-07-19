@@ -2,8 +2,8 @@
   <img src="assets/logo.png" alt="weather-vivarium" width="560" />
 </p>
 
-> **Version:** 0.4.1
-> **Cities:** 1,030 precomputed · 140 countries · **any** city on Earth via geocoding
+> **Version:** 0.5.0
+> **Cities:** 10,000 precomputed · 175 countries · **any** city on Earth via geocoding
 
 A tiny **living pixel-art weather diorama** for *any* city — dependency-free, drop
 anywhere. Give it a place (or let it find yours) and its sky, sun, moon phase,
@@ -18,11 +18,11 @@ generalised: same hand-built vintage-pixel soul, now for the whole world.
     <img src="assets/gallery-preview.gif" alt="Live weather-vivarium dioramas for Berkeley, New York, Honolulu, Anchorage, Seattle, Las Vegas, Miami, Austin, Washington, New Orleans, Memphis and Chicago" width="420" />
   </a>
   <br />
-  <em>A dozen cities, each on its current weather — or wander the <a href="https://cportka.github.io/weather-vivarium/gallery.html">live wall of 1000 →</a></em>
+  <em>A dozen cities, each on its current weather — or wander the <a href="https://cportka.github.io/weather-vivarium/gallery.html">live wall of 10,000 →</a></em>
 </p>
 
 **[▶ Try any city / see yours (live demo)](https://cportka.github.io/weather-vivarium/)** ·
-**[▶ 1000-city gallery](https://cportka.github.io/weather-vivarium/gallery.html)**
+**[▶ 10,000-city gallery](https://cportka.github.io/weather-vivarium/gallery.html)**
 
 ## Quick start
 
@@ -97,19 +97,20 @@ biome, so a diorama is always populated with things that belong there.
 
 `data/cities/` holds precomputed lookups from a city to its resolved vivarium —
 biome, landscape, landmark, category, unit — so a known city renders from **only
-its current weather**, no geocoding hop. Two datasets ship — **1,030 cities in
-all, across 140 countries**: a curated **`us.json`** (62 cities;
-`npm run build:cities`) and a **`world.json`** of the top **1,000** cities
-worldwide (`npm run build:cities -- --world`, from GeoNames via `all-the-cities`,
-with offline timezones from `tz-lookup`). Anything not in them still renders via
+its current weather**, no geocoding hop. Two datasets ship — **10,000 cities in
+all, across 175 countries**, disjoint by country so the total is exact: a
+**`us.json`** of the top **5,000** US cities (`npm run build:cities -- --us-top`)
+and a **`world.json`** of the top **5,000** cities outside the US
+(`npm run build:cities -- --world`) — both from GeoNames via `all-the-cities`,
+with offline timezones from `tz-lookup`. Anything not in them still renders via
 live geocoding. The count above is enforced by a test (`tests/cities-count.test.mjs`),
-so it can't drift. The roadmap (US → Mexico/Canada →
-Europe/Asia → the world, toward the ~5M named places) and the GeoNames ingest are
-in [`data/cities/README.md`](data/cities/README.md).
+so it can't drift. The roadmap (toward the ~5M named places) and the GeoNames
+ingest are in [`data/cities/README.md`](data/cities/README.md).
 
 > Note: for cities not in a curated landscape, the biome is a best-effort guess
-> from latitude/elevation — coastal and climate detection for the long tail is on
-> the roadmap.
+> from geography — latitude/elevation plus coarse lon/lat boxes for the world's big
+> arid, grassland and alpine belts (deserts, plains, mountains). Finer coastal and
+> climate detection for the long tail is on the roadmap.
 
 ## Development
 

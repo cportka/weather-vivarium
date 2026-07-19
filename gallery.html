@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>weather-vivarium — 1000 cities, right now</title>
-<meta name="description" content="A living wall of 1000 world cities, each a pixel-art weather diorama driven by that city's current weather, sun, and time of day. Scroll the planet." />
+<title>weather-vivarium — 10,000 cities, right now</title>
+<meta name="description" content="A living wall of 10,000 world cities (5,000 US + 5,000 international), each a pixel-art weather diorama driven by that city's current weather, sun, and time of day. Scroll the planet." />
 <meta name="color-scheme" content="dark" />
 <link rel="canonical" href="https://cportka.github.io/weather-vivarium/gallery.html" />
 <meta property="og:type" content="website" />
-<meta property="og:title" content="weather-vivarium — 1000 cities, right now" />
-<meta property="og:description" content="A living wall of 1000 world cities, each a pixel-art weather diorama on its current weather." />
+<meta property="og:title" content="weather-vivarium — 10,000 cities, right now" />
+<meta property="og:description" content="A living wall of 10,000 world cities (5,000 US + 5,000 international), each a pixel-art weather diorama on its current weather." />
 <meta property="og:url" content="https://cportka.github.io/weather-vivarium/gallery.html" />
 <meta property="og:image" content="https://cportka.github.io/weather-vivarium/assets/social-preview.png" />
 <meta name="twitter:card" content="summary_large_image" />
@@ -20,7 +20,7 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png" />
 <link rel="manifest" href="site.webmanifest" />
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"CollectionPage","name":"weather-vivarium — 1000 cities","description":"A live wall of 1000 world cities, each a pixel-art weather diorama on its current weather.","url":"https://cportka.github.io/weather-vivarium/gallery.html","isPartOf":{"@type":"WebApplication","name":"weather-vivarium","url":"https://cportka.github.io/weather-vivarium/"},"image":"https://cportka.github.io/weather-vivarium/assets/social-preview.png"}
+{"@context":"https://schema.org","@type":"CollectionPage","name":"weather-vivarium — 10,000 cities","description":"A live wall of 10,000 world cities, each a pixel-art weather diorama on its current weather.","url":"https://cportka.github.io/weather-vivarium/gallery.html","isPartOf":{"@type":"WebApplication","name":"weather-vivarium","url":"https://cportka.github.io/weather-vivarium/"},"image":"https://cportka.github.io/weather-vivarium/assets/social-preview.png"}
 </script>
 <style>
   body { margin:0; background:radial-gradient(1200px 700px at 50% -10%, #1a2030, #0e1016); color:#e6e9ef;
@@ -48,14 +48,14 @@
 </head>
 <body>
 <header>
-  <h1>weather-vivarium — a thousand cities, right now</h1>
+  <h1>weather-vivarium — ten thousand cities, right now</h1>
   <p><a href="index.html">← any city / your city</a> · each tile is live on that city's current weather · scroll to wake them</p>
   <input id="q" type="search" placeholder="filter — city or country code (e.g. Tokyo, JP)…" autocomplete="off" />
   <span id="count"></span>
 </header>
 <div class="grid" id="grid"></div>
 <footer>
-  1000 most-populous cities · biome is a best-effort guess where a city isn't curated ·
+  10,000 most-populous cities (5,000 US · 5,000 international) · biome is a best-effort guess where a city isn't curated ·
   data from <a href="https://open-meteo.com">Open-Meteo</a> &amp; <a href="https://geonames.org">GeoNames</a> ·
   <a href="https://github.com/cportka/weather-vivarium">source</a>
 </footer>
@@ -65,12 +65,22 @@
 
   const grid = document.getElementById("grid");
   const countEl = document.getElementById("count");
-  const db = await (await fetch("data/cities/world.json")).json();
-  const cities = db.cities;
+  // Merge both shipped datasets (disjoint by country): US cities + the rest of
+  // the world. Sorted by population so the biggest cities wake first.
+  async function load(url, ccOf) {
+    try { const db = await (await fetch(url)).json();
+      return db.cities.map((c) => ({ ...c, cc: ccOf(c) }));
+    } catch (e) { return []; }
+  }
+  const [usC, worldC] = await Promise.all([
+    load("data/cities/us.json", () => "US"),
+    load("data/cities/world.json", (c) => c.cc)
+  ]);
+  const cities = usC.concat(worldC).sort((a, b) => (b.population || 0) - (a.population || 0));
   const active = new Map();
 
   // Mount a live diorama only while a tile is near the viewport; destroy on exit
-  // so at most a few dozen render loops run at once (1000 at once would melt).
+  // so at most a few dozen render loops run at once (10,000 at once would melt).
   const io = new IntersectionObserver((entries) => {
     for (const e of entries) e.isIntersecting ? mount(e.target) : unmount(e.target);
   }, { rootMargin: "400px 0px" });

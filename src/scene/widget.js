@@ -38,10 +38,11 @@ function tempText(state, unit) {
   return String(state.temp) + "°";
 }
 
-// Urbanisation 0..1 from population: ~1k → 0, ~100k → 0.42, ~1M → 0.68, ~10M → 0.95.
+// Urbanisation 0..1 from population (gentle curve — most places are towns, not
+// metropolises): ~8k → 0.08, ~100k → 0.33, ~1M → 0.57, ~10M → 0.81, ~25M → 0.90.
 function densityFrom(pop) {
   if (!pop || pop <= 0) return null;
-  var d = (Math.log(pop) / Math.LN10 - 3.4) / 3.8;
+  var d = (Math.log(pop) / Math.LN10 - 3.6) / 4.2;
   return d < 0 ? 0 : d > 1 ? 1 : d;
 }
 
@@ -87,7 +88,7 @@ export function createVivarium(target, options) {
     // urbanisation: population if we have it, else a modest default; city biomes
     // are urban by definition, so floor them well above pastoral.
     var density = options.density != null ? options.density
-      : Math.max(pd != null ? pd : 0.25, res.biome.id === "city" ? 0.72 : 0);
+      : Math.max(pd != null ? pd : 0.22, res.biome.id === "city" ? 0.5 : 0);
     var w = {
       geometry: GEOMETRY, biome: res.biome, landscape: res.landscape, landmark: res.landmark,
       latitude: res.latitude, coastal: res.coastal, unit: res.unit, density: density,
