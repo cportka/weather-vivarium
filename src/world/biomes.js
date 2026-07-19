@@ -37,7 +37,7 @@ function farMountains(P, env, base, snow) {
 
 function skyline(P, env) {
   var hy = env.horizon;
-  var rng = env.rng;
+  var rng = env.srng || env.rng;   // stable per-frame → the skyline doesn't flicker
   var x = 0;
   var lit = env.night || env.dayT < 0.4;
   while (x < P.L) {

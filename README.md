@@ -1,6 +1,6 @@
 # weather-vivarium
 
-> **Version:** 0.1.0
+> **Version:** 0.2.0
 
 A tiny **living pixel-art weather diorama** for *any* city — dependency-free, drop
 anywhere. Type a place and its sky, sun, moon, weather, tide, wind, landscape and

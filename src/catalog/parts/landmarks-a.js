@@ -59,24 +59,29 @@ export default [
   {
     id: "opera-house", name: "Sydney Opera House", cities: ["sydney"], biomes: ["coast", "city"],
     tags: ["sails", "modern", "waterfront", "landmark"],
-    w: 20, h: 12, anchor: "baseline",
+    w: 21, h: 14, anchor: "baseline",
     draw: function (P, x, yb, env) {
-      var sail = env.col("#eef2f4"), rim = env.col("#c8d2d8"), base = env.col("#aab2b8");
-      P.rect(x, yb - 2, 20, 2, base);                  // podium
-      // a cluster of quarter-ellipse shell sails, leaning to and fro
-      function shell(sx, sw, maxH, tallLeft) {
+      var sail = env.col("#f2f5f7"), rim = env.col("#c4ced4"), base = env.col("#9aa2a8");
+      P.rect(x, yb - 2, 21, 2, base);                  // podium
+      P.rect(x, yb - 1, 21, 1, env.col("#828a90"));    // waterline shadow
+      // Each shell is a quarter-ellipse: a straight tall back edge on the right,
+      // its leading edge curving down to the left — the sails all lean the same
+      // way. Drawn back (short) to front (tall) so they overlap like the real roof.
+      function shell(sx, sw, maxH) {
         for (var i = 0; i < sw; i++) {
-          var f = tallLeft ? i / sw : (sw - 1 - i) / sw;
+          var f = (sw - 1 - i) / sw;                   // 0 at the tall right edge → 1 at the left tip
           var hh = Math.round(maxH * Math.sqrt(Math.max(0, 1 - f * f)));
           if (hh < 1) hh = 1;
-          P.rect(sx + i, yb - 2 - hh, 1, hh, sail);
-          P.px(sx + i, yb - 2 - hh, rim);              // shaded upper rim
+          var top = yb - 2 - hh;
+          P.rect(sx + i, top, 1, hh, sail);
+          P.px(sx + i, top, rim);                      // curved leading rim
         }
+        P.rect(sx + sw - 1, yb - 2 - maxH, 1, maxH, rim); // straight back spine
       }
-      shell(x, 8, 10, true);
-      shell(x + 5, 7, 8, false);
-      shell(x + 9, 7, 9, true);
-      shell(x + 14, 6, 6, false);
+      shell(x + 0, 6, 5);                              // small trailing sail (left pod)
+      shell(x + 3, 8, 11);                             // tall main sail
+      shell(x + 10, 5, 4);                             // small trailing sail (right pod)
+      shell(x + 12, 8, 9);                             // second tall sail
     }
   },
   {

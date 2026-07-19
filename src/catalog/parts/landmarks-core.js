@@ -216,16 +216,21 @@ export default [
   },
   {
     id: "pyramid", name: "Pyramids", cities: ["cairo", "giza", "luxor"], landscapes: ["sahara"], biomes: ["desert"],
-    w: 20, h: 12, anchor: "baseline",
+    w: 22, h: 15, anchor: "baseline",
     draw: function (P, x, yb, env) {
-      var lit = env.col("#e0b878"), shade = env.col("#b88a4a");
+      var lit = env.col("#f0d08a"), shade = env.col("#a06d34"), edge = env.col("#7a5326");
+      // two solid triangles: wide base on row yb, converging to an apex on top.
+      // Brighter sunlit face + a dark left edge so they read against the dunes.
       for (var p = 0; p < 2; p++) {
-        var bx = x + p * 9, h = p ? 9 : 11;
+        var h = p ? 10 : 13;                      // second pyramid a touch shorter/behind
+        var bx = x + p * 10, apex = bx + (h - 1);
         for (var y = 0; y < h; y++) {
-          var w = (y + 1) * 2 - 1;
-          P.rect(bx + (h - 1) - ((w - 1) >> 1), yb - y, w, 1, y & 1 ? lit : lit);
-          P.px(bx + (h - 1), yb - y, lit); // sunlit edge
-          P.rect(bx + h, yb - y, (w >> 1), 1, shade); // shaded face
+          var w = (h - y) * 2 - 1;                // widest at the base, 1px at the top
+          var left = apex - ((w - 1) >> 1);
+          P.rect(left, yb - y, w, 1, lit);
+          var half = w >> 1;
+          if (half > 0) P.rect(left + w - half, yb - y, half, 1, shade); // shaded right face
+          P.px(left, yb - y, edge);               // crisp left silhouette edge
         }
       }
     }

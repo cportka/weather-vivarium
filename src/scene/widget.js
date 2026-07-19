@@ -153,25 +153,36 @@ export function createVivarium(target, options) {
     elevation: options.elevation != null ? options.elevation : null
   } : DEFAULT_PLACE;
 
-  setPlace(initialPlace);
-  renderOnce();
-  if (typeof requestAnimationFrame !== "undefined") requestAnimationFrame(function () { wrap.classList.add("is-ready"); });
-  else wrap.classList.add("is-ready");
+  // Bring the widget to life for a resolved place: set the scene, paint the
+  // first frame, fade in, and start the loop + data.
+  function boot(place) {
+    setPlace(place);
+    renderOnce();
+    if (typeof requestAnimationFrame !== "undefined") requestAnimationFrame(function () { wrap.classList.add("is-ready"); });
+    else wrap.classList.add("is-ready");
+    startData();
+    if (!reduce) start();
+  }
 
   var ready;
-  if (options.city && !explicitCoords) {
-    ready = geocode(options.city, { language: options.language }).then(function (place) {
-      if (place) { setPlace(place); }
-      startData();
-      return place;
-    });
-  } else {
-    startData();
+  if (explicitCoords) {
+    boot(initialPlace);
     ready = Promise.resolve(initialPlace);
+  } else if (options.city) {
+    // City given without coordinates: hold the (still-invisible, opacity:0)
+    // widget until geocoding resolves, so it fades straight in on the RIGHT city
+    // instead of flashing the Los Angeles default first. Fall back to the default
+    // only if geocoding fails.
+    ready = geocode(options.city, { language: options.language }).then(function (place) {
+      boot(place || DEFAULT_PLACE);
+      return place || DEFAULT_PLACE;
+    }, function () { boot(DEFAULT_PLACE); return DEFAULT_PLACE; });
+  } else {
+    boot(DEFAULT_PLACE);
+    ready = Promise.resolve(DEFAULT_PLACE);
   }
 
   if (options.interactive) wireZoom(wrap, doc, reduce);
-  if (!reduce) start();
 
   return {
     el: wrap, canvas: cv, ready: ready,

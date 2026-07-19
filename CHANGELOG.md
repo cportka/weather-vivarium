@@ -4,6 +4,37 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com) and the project uses
 [Semantic Versioning](https://semver.org). Every change bumps the version and adds an entry below.
 
+## [0.2.0] - 2026-07-19
+
+Feedback pass after the first cut.
+
+### Added
+- **Demo "Near you" panel** — a 1×3 row of your best-guess city (keyless IP
+  lookup, no permission prompt) plus the two most populous cities within 200
+  miles, drawn from the shipped US city DB and a world-metro pool.
+- **24-city gallery** — the live gallery grows from 12 to 24, now spanning the
+  globe (Tokyo, London, Sydney, Cairo, Reykjavík, Cusco, …) with each place's
+  country driving its °F/°C default.
+
+### Fixed
+- **City skyline no longer flickers.** The skyline was re-randomised every frame
+  (it read as a background "moving way too fast"); it now uses a per-frame stable
+  RNG (`env.srng`) so buildings — and the graffiti mural — hold still. Same fix
+  applied to any static scenery.
+- **Pyramids are right-side up** in Cairo (the triangles were inverted), and a
+  touch bigger/brighter with a crisp edge so they read against the dunes.
+- **Signs fit the temperature.** Widened the narrow boards (route shield, hanging
+  shop sign, trail post, milestone, sandwich board, fuel totem) and centred the
+  text so 3–4 digit readings (e.g. `104°`, `-15°`) don't overflow — fixes the
+  cramped signs seen in Zürich and Nairobi.
+- **Sydney Opera House** redrawn as recognisable overlapping white sail shells.
+- **Landmark z-order.** A landmark now draws after the water cast, so a passing
+  boat no longer floats in front of it (seen at the Opera House), while
+  foreground trees/actors still layer over it.
+- **No Los Angeles flash** when switching cities: a city-only widget now holds
+  its (invisible) canvas until geocoding resolves and fades straight in on the
+  correct city, instead of briefly showing the LA default.
+
 ## [0.1.0] - 2026-07-18
 
 The first cut: generalise the one-off Los Angeles beach widget from

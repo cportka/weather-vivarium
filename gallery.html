@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>weather-vivarium — 12 cities, right now</title>
-<meta name="description" content="Twelve live weather-vivarium dioramas — Berkeley, New York, Honolulu, Anchorage, Seattle, Las Vegas, Miami, Austin, Washington, New Orleans, Memphis and Chicago — driven by each city's current weather." />
+<title>weather-vivarium — 24 cities, right now</title>
+<meta name="description" content="Twenty-four live weather-vivarium dioramas from around the world — driven by each city's current weather." />
 <meta name="color-scheme" content="dark" />
 <style>
   body { margin:0; background:radial-gradient(1200px 700px at 50% -10%, #1a2030, #0e1016); color:#e6e9ef;
@@ -27,7 +27,7 @@
 </head>
 <body>
 <header>
-  <h1>weather-vivarium — twelve cities, right now</h1>
+  <h1>weather-vivarium — twenty-four cities, right now</h1>
   <p>each diorama runs on its city's <b>current</b> weather · <a href="index.html">try any city →</a></p>
 </header>
 <div class="grid" id="grid"></div>
@@ -37,23 +37,36 @@
   import { createVivarium } from "./src/index.js";
 
   // Explicit coords so each place is unambiguous; weather is still fetched live.
+  // [label, lat, lon, IANA tz, elevation m, country].
   const CITIES = [
-    ["Berkeley, CA", 37.87, -122.27, "America/Los_Angeles", 52],
-    ["New York, NY", 40.71, -74.01, "America/New_York", 10],
-    ["Honolulu, HI", 21.31, -157.86, "Pacific/Honolulu", 6],
-    ["Anchorage, AK", 61.22, -149.90, "America/Anchorage", 30],
-    ["Seattle, WA", 47.61, -122.33, "America/Los_Angeles", 56],
-    ["Las Vegas, NV", 36.17, -115.14, "America/Los_Angeles", 610],
-    ["Miami, FL", 25.76, -80.19, "America/New_York", 2],
-    ["Austin, TX", 30.27, -97.74, "America/Chicago", 149],
-    ["Washington, DC", 38.90, -77.04, "America/New_York", 7],
-    ["New Orleans, LA", 29.95, -90.07, "America/Chicago", 1],
-    ["Memphis, TN", 35.15, -90.05, "America/Chicago", 78],
-    ["Chicago, IL", 41.88, -87.63, "America/Chicago", 181]
+    ["Berkeley, CA", 37.87, -122.27, "America/Los_Angeles", 52, "United States"],
+    ["New York, NY", 40.71, -74.01, "America/New_York", 10, "United States"],
+    ["Honolulu, HI", 21.31, -157.86, "Pacific/Honolulu", 6, "United States"],
+    ["Anchorage, AK", 61.22, -149.90, "America/Anchorage", 30, "United States"],
+    ["Seattle, WA", 47.61, -122.33, "America/Los_Angeles", 56, "United States"],
+    ["Las Vegas, NV", 36.17, -115.14, "America/Los_Angeles", 610, "United States"],
+    ["Miami, FL", 25.76, -80.19, "America/New_York", 2, "United States"],
+    ["Austin, TX", 30.27, -97.74, "America/Chicago", 149, "United States"],
+    ["Washington, DC", 38.90, -77.04, "America/New_York", 7, "United States"],
+    ["New Orleans, LA", 29.95, -90.07, "America/Chicago", 1, "United States"],
+    ["Memphis, TN", 35.15, -90.05, "America/Chicago", 78, "United States"],
+    ["Chicago, IL", 41.88, -87.63, "America/Chicago", 181, "United States"],
+    ["Tokyo, JP", 35.68, 139.65, "Asia/Tokyo", 40, "Japan"],
+    ["London, UK", 51.51, -0.13, "Europe/London", 11, "United Kingdom"],
+    ["Paris, FR", 48.85, 2.35, "Europe/Paris", 35, "France"],
+    ["Sydney, AU", -33.87, 151.21, "Australia/Sydney", 3, "Australia"],
+    ["Cairo, EG", 30.04, 31.24, "Africa/Cairo", 23, "Egypt"],
+    ["Rio de Janeiro, BR", -22.91, -43.17, "America/Sao_Paulo", 2, "Brazil"],
+    ["Reykjavík, IS", 64.15, -21.94, "Atlantic/Reykjavik", 40, "Iceland"],
+    ["Nairobi, KE", -1.29, 36.82, "Africa/Nairobi", 1795, "Kenya"],
+    ["Zürich, CH", 47.37, 8.54, "Europe/Zurich", 408, "Switzerland"],
+    ["Dubai, AE", 25.20, 55.27, "Asia/Dubai", 5, "United Arab Emirates"],
+    ["Vancouver, CA", 49.28, -123.12, "America/Vancouver", 70, "Canada"],
+    ["Cusco, PE", -13.53, -71.97, "America/Lima", 3399, "Peru"]
   ];
 
   const grid = document.getElementById("grid");
-  for (const [label, lat, lon, tz, elev] of CITIES) {
+  for (const [label, lat, lon, tz, elev, country] of CITIES) {
     const tile = document.createElement("div"); tile.className = "tile";
     const m = document.createElement("div"); m.className = "mount";
     const name = document.createElement("div"); name.className = "name"; name.textContent = label;
@@ -61,7 +74,7 @@
     tile.append(m, name, meta); grid.appendChild(tile);
 
     const city = label.split(",")[0];
-    const inst = createVivarium(m, { city, lat, lon, timezone: tz, elevation: elev, country: "United States", size: 180, interactive: true });
+    const inst = createVivarium(m, { city, lat, lon, timezone: tz, elevation: elev, country, size: 180, interactive: true });
     const paint = () => {
       const r = inst.resolution, w = inst.weather;
       if (!r) return;

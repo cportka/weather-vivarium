@@ -59,8 +59,14 @@
         <label class="mut"><input type="checkbox" id="live" checked /> live</label>
       </div>
     </div>
-    <p style="color:var(--muted);font-size:12px">See the <a href="gallery.html">12-city gallery →</a></p>
+    <p style="color:var(--muted);font-size:12px">See the <a href="gallery.html">24-city gallery →</a></p>
   </div>
+
+  <section id="nearby-panel" style="margin-top:22px">
+    <h2 style="font-size:14px;color:var(--muted);text-align:center;font-weight:600;margin:0 0 12px">Near you, right now</h2>
+    <div id="nearby" style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px"></div>
+    <p id="nearby-note" style="color:var(--muted);font-size:11px;text-align:center;margin-top:10px"></p>
+  </section>
 </main>
 <footer>
   weather-vivarium · pixel-art weather for anywhere ·
@@ -125,6 +131,106 @@
   liveEl.addEventListener("change", applyTime);
 
   load("Los Angeles");
+
+  /* ---- "Near you" panel: your best-guess city + the 2 most populous within
+     200 miles. Location comes from a keyless IP lookup (no permission prompt);
+     the candidate pool is the shipped US city DB plus major world metros. ---- */
+  const WORLD = [
+    ["Tokyo", 35.68, 139.65, "Asia/Tokyo", "Japan", 13960000],
+    ["London", 51.51, -0.13, "Europe/London", "United Kingdom", 8980000],
+    ["Paris", 48.85, 2.35, "Europe/Paris", "France", 2140000],
+    ["Sydney", -33.87, 151.21, "Australia/Sydney", "Australia", 5312000],
+    ["Cairo", 30.04, 31.24, "Africa/Cairo", "Egypt", 9540000],
+    ["Rio de Janeiro", -22.91, -43.17, "America/Sao_Paulo", "Brazil", 6748000],
+    ["Reykjavík", 64.15, -21.94, "Atlantic/Reykjavik", "Iceland", 131000],
+    ["Nairobi", -1.29, 36.82, "Africa/Nairobi", "Kenya", 4397000],
+    ["Zürich", 47.37, 8.54, "Europe/Zurich", "Switzerland", 421000],
+    ["Dubai", 25.20, 55.27, "Asia/Dubai", "United Arab Emirates", 3331000],
+    ["Vancouver", 49.28, -123.12, "America/Vancouver", "Canada", 675000],
+    ["Cusco", -13.53, -71.97, "America/Lima", "Peru", 428000],
+    ["Mexico City", 19.43, -99.13, "America/Mexico_City", "Mexico", 9210000],
+    ["Toronto", 43.65, -79.38, "America/Toronto", "Canada", 2930000],
+    ["Berlin", 52.52, 13.40, "Europe/Berlin", "Germany", 3645000],
+    ["Madrid", 40.42, -3.70, "Europe/Madrid", "Spain", 3223000],
+    ["Rome", 41.90, 12.50, "Europe/Rome", "Italy", 2873000],
+    ["Istanbul", 41.01, 28.98, "Europe/Istanbul", "Turkey", 15460000],
+    ["Mumbai", 19.08, 72.88, "Asia/Kolkata", "India", 12440000],
+    ["Shanghai", 31.23, 121.47, "Asia/Shanghai", "China", 24870000],
+    ["Moscow", 55.76, 37.62, "Europe/Moscow", "Russia", 12500000],
+    ["São Paulo", -23.55, -46.63, "America/Sao_Paulo", "Brazil", 12330000],
+    ["Bangkok", 13.76, 100.50, "Asia/Bangkok", "Thailand", 10540000],
+    ["Singapore", 1.35, 103.82, "Asia/Singapore", "Singapore", 5686000]
+  ].map(([name, lat, lon, tz, country, population]) => ({ name, lat, lon, tz, country, population }));
+
+  function haversineMi(a, b) {
+    const R = 3958.8, toR = x => x * Math.PI / 180;
+    const dLat = toR(b.lat - a.lat), dLon = toR(b.lon - a.lon);
+    const s = Math.sin(dLat / 2) ** 2 + Math.cos(toR(a.lat)) * Math.cos(toR(b.lat)) * Math.sin(dLon / 2) ** 2;
+    return 2 * R * Math.asin(Math.sqrt(s));
+  }
+  async function ipLocate() {
+    for (const url of ["https://ipapi.co/json/", "https://ipwho.is/"]) {
+      try {
+        const r = await fetch(url); if (!r.ok) continue; const d = await r.json();
+        const lat = d.latitude ?? d.lat, lon = d.longitude ?? d.lon;
+        if (typeof lat !== "number" || typeof lon !== "number") continue;
+        const tz = (d.timezone && d.timezone.id) || d.timezone || (d.time_zone && d.time_zone.id) || "UTC";
+        return { name: d.city || "Your area", lat, lon, tz, country: d.country_name || d.country || "" };
+      } catch (e) {}
+    }
+    return null;
+  }
+  async function loadPool() {
+    const pool = WORLD.slice();
+    try {
+      const r = await fetch("data/cities/us.json");
+      if (r.ok) { const db = await r.json(); for (const c of db.cities) pool.push({ name: c.name, state: c.state, lat: c.lat, lon: c.lon, tz: c.tz, elevation: c.elevation, country: "United States", population: c.population }); }
+    } catch (e) {}
+    return pool;
+  }
+  function renderTrio(trio, note) {
+    const host = document.getElementById("nearby");
+    host.innerHTML = "";
+    document.getElementById("nearby-note").textContent = note || "";
+    for (const c of trio) {
+      const tile = document.createElement("div");
+      tile.style.cssText = "background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px;display:flex;flex-direction:column;align-items:center;gap:6px";
+      const m = document.createElement("div"); m.style.cssText = "width:150px;height:150px;display:flex;align-items:center;justify-content:center";
+      const name = document.createElement("div"); name.style.cssText = "font-size:12px;font-weight:600"; name.textContent = c.label;
+      const meta = document.createElement("div"); meta.style.cssText = "font-size:11px;color:var(--muted);text-align:center;min-height:2.2em"; meta.textContent = "…";
+      tile.append(m, name, meta); host.appendChild(tile);
+      const inst = createVivarium(m, { city: c.city, lat: c.lat, lon: c.lon, timezone: c.tz, elevation: c.elevation, country: c.country, size: 150, interactive: true });
+      const paint = () => { const r = inst.resolution, w = inst.weather; if (!r) return; const u = r.unit === "celsius" ? "C" : "F"; meta.innerHTML = (w.temp == null ? "…" : w.temp + "°" + u) + " · " + r.landscape.name + (r.landmark ? " · " + r.landmark.name : ""); };
+      paint(); const t = setInterval(paint, 1500); setTimeout(() => clearInterval(t), 14000);
+    }
+  }
+  async function initNearby() {
+    const me = await ipLocate();
+    if (!me) {
+      renderTrio([
+        { label: "Berkeley, CA", city: "Berkeley", lat: 37.87, lon: -122.27, tz: "America/Los_Angeles", country: "United States" },
+        { label: "San Francisco, CA", city: "San Francisco", lat: 37.77, lon: -122.42, tz: "America/Los_Angeles", country: "United States" },
+        { label: "San Jose, CA", city: "San Jose", lat: 37.34, lon: -121.89, tz: "America/Los_Angeles", country: "United States" }
+      ], "Couldn't detect your location — showing a Bay Area trio.");
+      return;
+    }
+    const pool = await loadPool();
+    const others = pool
+      .filter(c => (c.name || "").toLowerCase() !== (me.name || "").toLowerCase())
+      .map(c => ({ ...c, dist: haversineMi(me, c) }))
+      .sort((a, b) => a.dist - b.dist);
+    const within = others.filter(c => c.dist <= 200).sort((a, b) => b.population - a.population);
+    const pick = within.slice(0, 2);
+    for (const c of others) { if (pick.length >= 2) break; if (!pick.includes(c)) pick.push(c); }
+    const note = within.length >= 2
+      ? "Your city, then the two most populous within 200 miles."
+      : "Your city, then the nearest large cities (few within 200 miles).";
+    renderTrio([
+      { label: me.name + (me.country && me.country !== "United States" ? ", " + me.country : ""), city: me.name, lat: me.lat, lon: me.lon, tz: me.tz, country: me.country },
+      ...pick.map(c => ({ label: c.name + (c.state ? ", " + c.state : ""), city: c.name, lat: c.lat, lon: c.lon, tz: c.tz, elevation: c.elevation, country: c.country }))
+    ], note);
+  }
+  initNearby();
 </script>
 </body>
 </html>

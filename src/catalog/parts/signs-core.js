@@ -46,41 +46,44 @@ export default [
   },
   {
     id: "trailpost", name: "Wooden trail sign", biomes: ["forest", "mountain", "plains", "tundra", "wetland"],
-    tags: ["sign", "wood"], w: 14, h: 16, anchor: "baseline",
+    tags: ["sign", "wood"], w: 19, h: 16, anchor: "baseline",
     draw: function (P, x, yb, env) {
       var post = env.col("#6a4f2e"), board = env.col("#9a7748"), edge = env.col("#5a4022");
-      P.rect(x + 6, yb - 12, 2, 12, post);
-      P.rect(x, yb - 12, 13, 6, board);            // pointed plank
-      P.px(x + 12, yb - 11, board); P.px(x + 13, yb - 10, board); P.px(x + 12, yb - 8, board);
-      P.rect(x, yb - 12, 13, 1, edge); P.rect(x, yb - 7, 13, 1, edge);
-      P.text(env.text || "", x + 1, yb - 11, env.night ? "#d8c48a" : "#3a2a14");
+      P.rect(x + 8, yb - 11, 2, 11, post);
+      P.rect(x, yb - 13, 17, 7, board);            // pointed plank (wide enough for 3-4 digits)
+      P.px(x + 17, yb - 12, board); P.px(x + 18, yb - 11, board); P.px(x + 17, yb - 8, board);
+      P.rect(x, yb - 13, 17, 1, edge); P.rect(x, yb - 7, 17, 1, edge);
+      var s = env.text || "", wpx = s.length * 4 - 1, tx = x + Math.round((17 - wpx) / 2);
+      P.text(s, tx, yb - 12, env.night ? "#d8c48a" : "#3a2a14");
     }
   },
   {
     id: "shield", name: "Route shield", biomes: ["desert", "plains", "city", "coast", "farmland"],
-    tags: ["sign", "road"], w: 11, h: 15, anchor: "baseline",
+    tags: ["sign", "road"], w: 18, h: 15, anchor: "baseline",
     draw: function (P, x, yb, env) {
-      var post = env.col("#9098a0");
-      P.rect(x + 4, yb - 9, 2, 9, post);
-      P.rect(x, yb - 15, 11, 8, env.col("#2f6a34"));    // green highway sign
-      P.rect(x, yb - 15, 11, 1, env.col("#eaf0ea")); P.rect(x, yb - 8, 11, 1, env.col("#eaf0ea"));
-      P.rect(x, yb - 15, 1, 8, env.col("#eaf0ea")); P.rect(x + 10, yb - 15, 1, 8, env.col("#eaf0ea"));
-      P.text(env.text || "", x + 2, yb - 13, "#f2f7f2");
+      var post = env.col("#9098a0"), trim = env.col("#eaf0ea");
+      P.rect(x + 8, yb - 9, 2, 9, post);
+      P.rect(x, yb - 15, 18, 8, env.col("#2f6a34"));    // green highway sign
+      P.rect(x, yb - 15, 18, 1, trim); P.rect(x, yb - 8, 18, 1, trim);
+      P.rect(x, yb - 15, 1, 8, trim); P.rect(x + 17, yb - 15, 1, 8, trim);
+      var s = env.text || "", wpx = s.length * 4 - 1, tx = x + Math.round((18 - wpx) / 2);
+      P.text(s, tx, yb - 13, "#f2f7f2");
     }
   },
   {
     id: "hangshop", name: "Hanging shop sign", biomes: ["city", "coast"],
-    tags: ["sign", "shop"], w: 13, h: 16, anchor: "baseline",
+    tags: ["sign", "shop"], w: 20, h: 16, anchor: "baseline",
     draw: function (P, x, yb, env) {
       var neon = P.clamp(1 - env.dayT, 0, 1);
       var bracket = env.col("#3a3a42");
       P.rect(x, yb - 15, 2, 15, bracket);              // wall bracket post
-      P.rect(x + 1, yb - 15, 8, 1, bracket);           // arm
-      P.rect(x + 7, yb - 14, 6, 8, P.mix("#f0e2c2", "#221830", neon)); // hanging board
-      P.rect(x + 7, yb - 14, 1, 8, bracket); P.px(x + 7, yb - 14, bracket);
+      P.rect(x + 1, yb - 15, 6, 1, bracket);           // arm
+      P.rect(x + 6, yb - 14, 14, 8, P.mix("#f0e2c2", "#221830", neon)); // hanging board
+      P.rect(x + 6, yb - 14, 1, 8, bracket);
       var col = P.mix("#b0432a", "#ffd24a", neon);
-      P.text(env.text || "", x + 8, yb - 12, col);
-      if (neon > 0.3) P.withAlpha(0.25 * neon, function () { P.rect(x + 6, yb - 15, 8, 10, "#ffd24a"); });
+      var s = env.text || "", wpx = s.length * 4 - 1, tx = x + 6 + Math.round((14 - wpx) / 2);
+      P.text(s, tx, yb - 12, col);
+      if (neon > 0.3) P.withAlpha(0.25 * neon, function () { P.rect(x + 5, yb - 15, 16, 10, "#ffd24a"); });
     }
   }
 ];

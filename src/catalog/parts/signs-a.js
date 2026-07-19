@@ -58,7 +58,7 @@ export default [
     tags: ["sign", "mural", "graffiti"], w: 22, h: 14, anchor: "baseline", rarity: 1,
     draw: function (P, x, yb, env) {
       var w = 22, h = 14, top = yb - h;
-      var rng = env.rng || function () { return 0.5; };
+      var rng = env.srng || env.rng || function () { return 0.5; };
       var wall = env.col("#c2bcae"), cap = env.col("#d8d2c4"), base = env.col("#9a9486");
       P.rect(x, top, w, h, wall);
       P.rect(x, top, w, 1, cap);                 // top cap
@@ -85,15 +85,15 @@ export default [
   },
   {
     id: "milestone", name: "Milestone marker", biomes: ["plains", "forest", "mountain", "farmland", "savanna", "canyon"],
-    tags: ["sign", "stone", "path"], w: 15, h: 12, anchor: "baseline", rarity: 1,
+    tags: ["sign", "stone", "path"], w: 18, h: 12, anchor: "baseline", rarity: 1,
     draw: function (P, x, yb, env) {
       var top = yb - 12;
       var stone = env.col("#dcd6c6"), cap = env.col("#c23a2a"), sh = env.col("#b0a890");
-      P.disc(x + 7, top + 5, 5, cap);            // painted rounded dome
-      P.rect(x + 2, top + 6, 11, 6, stone);       // pale body
-      P.rect(x + 11, top + 6, 1, 6, sh);          // right shade
+      P.disc(x + 8, top + 5, 5, cap);            // painted rounded dome
+      P.rect(x + 1, top + 6, 16, 6, stone);       // pale body (wide enough for 3-4 digits)
+      P.rect(x + 16, top + 6, 1, 6, sh);          // right shade
       var s = env.text || "--", wpx = s.length * 4 - 1;
-      var tx = (x + 2) + Math.round((11 - wpx) / 2), ty = top + 6;
+      var tx = (x + 1) + Math.round((16 - wpx) / 2), ty = top + 6;
       P.text(s, tx, ty, env.col("#3a2e1e"));
     }
   },
@@ -122,30 +122,30 @@ export default [
   },
   {
     id: "sandwich-board", name: "A-frame sandwich board", biomes: ["city", "coast"],
-    tags: ["sign", "chalkboard", "a-frame"], w: 16, h: 12, anchor: "baseline", rarity: 1,
+    tags: ["sign", "chalkboard", "a-frame"], w: 20, h: 12, anchor: "baseline", rarity: 1,
     draw: function (P, x, yb, env) {
       var top = yb - 12;
       var frame = env.col("#6a4a2a"), board = env.col("#2c322c"), foot = env.col("#3a2a18");
-      P.line(x + 11, top + 1, x + 15, yb, env.col("#5a3a22"));  // back kickstand leg
-      P.rect(x, top, 13, 10, frame);                            // frame
-      P.rect(x + 1, top + 1, 11, 8, board);                     // chalk surface
-      P.rect(x, yb - 1, 13, 1, foot);                           // feet
+      P.line(x + 16, top + 1, x + 20, yb, env.col("#5a3a22"));  // back kickstand leg
+      P.rect(x, top, 18, 10, frame);                            // frame
+      P.rect(x + 1, top + 1, 16, 8, board);                     // chalk surface
+      P.rect(x, yb - 1, 18, 1, foot);                           // feet
       var s = env.text || "--", wpx = s.length * 4 - 1;
-      var tx = Math.max(x, (x + 1) + Math.round((11 - wpx) / 2)), ty = top + 3;
+      var tx = (x + 1) + Math.round((16 - wpx) / 2), ty = top + 3;
       P.text(s, tx, ty, env.night ? "#e6efdc" : "#f4f8ec");     // chalk
-      P.withAlpha(0.7, function () { P.line(x + 2, top + 8, x + 10, top + 8, "#c8d2bc"); }); // chalk underline
+      P.withAlpha(0.7, function () { P.line(x + 3, top + 8, x + 14, top + 8, "#c8d2bc"); }); // chalk underline
     }
   },
   {
     id: "gas-price", name: "Fuel price totem", biomes: ["city", "plains", "desert", "farmland", "coast", "savanna"],
-    tags: ["sign", "fuel", "price"], w: 15, h: 20, anchor: "baseline", rarity: 1,
+    tags: ["sign", "fuel", "price"], w: 17, h: 20, anchor: "baseline", rarity: 1,
     draw: function (P, x, yb, env) {
-      var h = 20, top = yb - h, pw = 14, ph = 12;
+      var h = 20, top = yb - h, pw = 17, ph = 12;
       var neon = P.clamp(1 - (env.dayT || 0), 0, 1);
-      var pole = env.col("#b0b6be"), poleSh = env.col("#8a9098"), poleX = x + 6;
+      var pole = env.col("#b0b6be"), poleSh = env.col("#8a9098"), poleX = x + 7;
       P.rect(poleX, yb - 8, 3, 8, pole);
       P.rect(poleX, yb - 8, 1, 8, poleSh);
-      P.rect(x + 4, yb - 1, 6, 2, env.col("#5a6068"));          // base
+      P.rect(x + 5, yb - 1, 6, 2, env.col("#5a6068"));          // base
       P.rect(x, top, pw, ph, env.col("#d43a2a"));               // brand box
       P.rect(x, top, pw, 3, env.col("#f2c23a"));                // header stripe
       P.rect(x + 1, top + 4, pw - 2, 7, "#101410");             // price display
