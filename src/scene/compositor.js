@@ -175,8 +175,14 @@ export function createScene(P, world, opts) {
   function draw(entry, x, yb, env, dir) {
     env.dir = 1;
     if (dir < 0) {
-      var x0 = entry.anchor === "center" ? x - (entry.w >> 1) : x;
-      P.flip(x0, entry.w, function () { entry.draw(P, x, yb, env); });
+      if (entry.anchor === "center") {
+        // reflect exactly about the anchor column x (widen the window by 1 for even
+        // widths so the mirror axis lands on x, not x-0.5 → no sideways shift).
+        var fw = (entry.w & 1) ? entry.w : entry.w + 1;
+        P.flip(x - (entry.w >> 1), fw, function () { entry.draw(P, x, yb, env); });
+      } else {
+        P.flip(x, entry.w, function () { entry.draw(P, x, yb, env); });
+      }
     } else {
       entry.draw(P, x, yb, env);
     }
@@ -331,6 +337,9 @@ export function createScene(P, world, opts) {
     // temperature sign — auto-grounded so every sign shares the same base row as
     // the trees, landmark and the strolling figure (no lone 1px-low outliers).
     if (props.sign) props.sign.entry.draw(P, props.sign.x, G.groundTop - 1 + groundOffset(props.sign.entry), env);
+
+    // the strolling figure, when it's at the road edge, walks in FRONT of the sign
+    if (!reduce && walker && walker.fy >= G.groundTop - 1) paintWalker(env);
 
     // road traffic (in front)
     if (!reduce && world.pools.roadVehicles.length && world.biome.road.kind !== "none") {

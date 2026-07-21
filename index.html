@@ -221,12 +221,14 @@
     }
     return null;
   }
+  let INDEXED_TOTAL = 0;   // total precomputed cities across both datasets (advertised count)
   async function loadPool() {
     const map = new Map();
     async function add(url, ccOf) {
       try { const db = await (await fetch(url)).json();
+        INDEXED_TOTAL += (db.count || db.cities.length);
         for (const c of db.cities) {
-          const cc = ccOf(c), key = (c.name + "|" + cc).toLowerCase();
+          const cc = ccOf(c), key = (c.name + "|" + (c.admin || "") + "|" + cc).toLowerCase();
           if (map.has(key)) continue;
           map.set(key, { name: c.name, cc, lat: c.lat, lon: c.lon, tz: c.tz, population: c.population || 1000,
             biome: c.biome, landscape: c.landscape, landmark: c.landmark, unit: c.unit, key });
@@ -271,7 +273,7 @@
   }
   (async () => {
     const pool = await loadPool();
-    const cc = document.getElementById("citycount"); if (cc && pool.length) cc.textContent = pool.length.toLocaleString() + " cities";
+    const cc = document.getElementById("citycount"); if (cc && INDEXED_TOTAL) cc.textContent = INDEXED_TOTAL.toLocaleString() + " cities";
     let here = await ipLocate();
     if (here) { load({ city: here.name, lat: here.lat, lon: here.lon, tz: here.tz, country: here.country }); }
     else { load("Los Angeles"); here = { name: "Los Angeles", lat: 34.05, lon: -118.24 }; document.getElementById("near-title").textContent = "Interesting cities within 400 miles of Los Angeles"; }

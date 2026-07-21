@@ -31,8 +31,7 @@ export function pickLandmark(place, landscape, biomeId) {
       var lm = LANDMARKS[i];
       if (!lm.cities || !fits(lm)) continue;
       for (var c = 0; c < lm.cities.length; c++) {
-        var city = lm.cities[c];
-        if (name.indexOf(city) !== -1 || city.indexOf(name) !== -1 || full.indexOf(city) !== -1) return lm;
+        if (cityNames(lm.cities[c], name, full)) return lm;   // whole-word (so "reno" ≠ g[reno]ble)
       }
     }
   }

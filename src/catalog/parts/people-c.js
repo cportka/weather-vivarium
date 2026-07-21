@@ -22,11 +22,12 @@ function legs(P, x, yb, pants, step) {
   else { P.px(x + 3, yb - 2, pants); P.px(x + 3, yb - 1, pants); P.px(x + 3, yb, pants); P.px(x + 2, yb, pants); }
 }
 
-var UNIVERSAL = ["city", "coast", "plains", "forest", "mountain", "desert"];
-
+// No `biomes` list → biome-universal: a person belongs anywhere, and the real
+// gate is `require:"cannabis"` (compositor drops these unless world.cannabis), so
+// they must be able to reach cannabis cities of ANY biome (e.g. jungle Kingston).
 export default [
   {
-    id: "hippie", name: "Hippie", require: "cannabis", biomes: UNIVERSAL,
+    id: "hippie", name: "Hippie", require: "cannabis",
     tags: ["person", "chill", "cannabis"], w: 5, h: 8, anchor: "baseline", layer: "ground", rarity: 1.1,
     draw: function (P, x, yb, env) {
       var skin = "#cf9560", hair = env.col("#4a2f1a"), band = env.col("#c23a6a");
@@ -44,7 +45,7 @@ export default [
     }
   },
   {
-    id: "stoner", name: "Stoner", require: "cannabis", biomes: UNIVERSAL,
+    id: "stoner", name: "Stoner", require: "cannabis",
     tags: ["person", "chill", "cannabis"], w: 5, h: 8, anchor: "baseline", layer: "ground", rarity: 1.1,
     draw: function (P, x, yb, env) {
       var skin = "#c88a56", beanie = env.col("#3a6a4a"), hoodie = env.col("#556070"), pants = env.col("#33383f");
@@ -61,7 +62,7 @@ export default [
     }
   },
   {
-    id: "rasta", name: "Rasta", require: "cannabis", biomes: UNIVERSAL,
+    id: "rasta", name: "Rasta", require: "cannabis",
     tags: ["person", "chill", "cannabis"], w: 5, h: 9, anchor: "baseline", layer: "ground", rarity: 1.0,
     draw: function (P, x, yb, env) {
       var skin = "#7a4a2a", tamR = env.col("#c23a2a"), tamY = env.col("#d8b23a"), tamG = env.col("#3a8a4a");
