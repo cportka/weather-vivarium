@@ -105,7 +105,7 @@ window.sceneStrip = function (placeOpts, weatherOver, nowMin, frames) {
   const lt = { year: 2026, month: 7, day: 18 };
   const world = {
     geometry: GEOM, biome: res.biome, landscape: res.landscape, landmark: res.landmark,
-    latitude: res.latitude, coastal: res.coastal, unit: res.unit, density: densFrom(place, res),
+    latitude: res.latitude, coastal: res.coastal, unit: res.unit, density: densFrom(place, res), cannabis: res.cannabis,
     pools: pools(res.biome.id), W, sunrise: W.sunrise, sunset: W.sunset,
     moon: moonIllumination(lt.year, lt.month, lt.day), seed: seedFrom(place.name + place.latitude),
     place, tempText: () => (W.temp == null ? "--" : W.temp + "°")
@@ -135,7 +135,7 @@ function buildScene(spec) {
   const W = Object.assign(defaultState(), spec.wx || {});
   const world = {
     geometry: GEOM, biome: res.biome, landscape: res.landscape, landmark: res.landmark,
-    latitude: res.latitude, coastal: res.coastal, unit: res.unit, density: densFrom(place, res),
+    latitude: res.latitude, coastal: res.coastal, unit: res.unit, density: densFrom(place, res), cannabis: res.cannabis,
     pools: pools(res.biome.id), W, sunrise: W.sunrise, sunset: W.sunset,
     moon: moonIllumination(2026, 7, 18), seed: seedFrom(place.name + place.latitude),
     place, tempText: () => (W.temp == null ? "--" : W.temp + "°")

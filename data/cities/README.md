@@ -20,11 +20,14 @@ This database:
 ## Files
 
 Two datasets ship, **disjoint by country** so their union is exactly their sum
-(**10,000** places across **175** countries):
+(**15,000** places across **191** countries):
 
 - `us.json` — the top **5,000** US cities by population.
-- `world.json` — the top **5,000** cities **outside** the US. (US cities live in
+- `world.json` — the top **10,000** cities **outside** the US. (US cities live in
   `us.json`; keeping them out here avoids double-counting.)
+
+The [gallery](../../gallery.html) hangs the 10,000 most-populous of the combined
+set on its wall; everything precomputed is still reachable by search on the demo.
 
 Both are **generated** (do not edit by hand) from [GeoNames](https://geonames.org)
 via the `all-the-cities` package (pop ≥ 1000), with offline timezones from
@@ -50,8 +53,8 @@ current weather — no geocoding hop.
 ## Building
 
 ```
-npm run build:cities -- --us-top 5000   # build us.json — top 5,000 US cities
-npm run build:cities -- --world 5000    # build world.json — top 5,000 non-US cities
+npm run build:cities -- --us-top 5000    # build us.json — top 5,000 US cities
+npm run build:cities -- --world 10000    # build world.json — top 10,000 non-US cities
 npm run build:cities                     # (alt) build us.json from the curated seed
 ```
 

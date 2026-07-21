@@ -3,6 +3,7 @@
 import core from "./parts/landmarks-core.js";
 import a from "./parts/landmarks-a.js";
 import b from "./parts/landmarks-b.js";
+import { cityNames } from "../world/match.js";
 
 export var LANDMARKS = [].concat(core, a, b);
 

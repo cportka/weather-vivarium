@@ -1,0 +1,31 @@
+name: "🌆 Suggest a city / vivarium"
+description: Ask for a city to be added or featured, or suggest a new landscape, landmark, or scene idea.
+title: "[city] "
+labels: ["feedback", "city-request"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping the little worlds grow! Any city on Earth already renders live —
+        this is for cities you'd like **precomputed/curated**, or a signature look you think one deserves.
+  - type: input
+    id: city
+    attributes:
+      label: City
+      description: City and country (and state/region if it helps).
+      placeholder: "e.g. Reno, Nevada, USA"
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What should it look like?
+      description: A landmark, landscape, biome, or vibe you'd expect — the more specific, the better.
+      placeholder: "e.g. high-desert basin with the Reno arch; casinos but retro, not Vegas."
+    validations:
+      required: false
+  - type: input
+    id: link
+    attributes:
+      label: Reference (optional)
+      description: A photo or link that captures the look.

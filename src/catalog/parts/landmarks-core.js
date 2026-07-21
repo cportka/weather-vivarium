@@ -22,7 +22,7 @@ export default [
     }
   },
   {
-    id: "casino", name: "Casino", cities: ["las vegas", "reno", "atlantic city", "macau", "monte carlo"], biomes: ["desert", "city"],
+    id: "casino", name: "Casino", cities: ["las vegas", "atlantic city", "macau", "monte carlo"], biomes: ["desert", "city"],
     pairedSign: "vegas-welcome", w: 16, h: 22, anchor: "baseline",
     draw: function (P, x, yb, env) {
       var neon = P.clamp(1 - env.dayT, 0, 1), f = env.frame || 0;

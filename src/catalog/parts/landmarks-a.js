@@ -8,6 +8,37 @@
 
 export default [
   {
+    // Reno's neon arch over a low casino — warm, retro, unmistakably NOT the tall
+    // cool-purple Vegas tower. "The Biggest Little City in the World."
+    id: "casino-reno", name: "Reno Arch", cities: ["reno"], biomes: ["desert", "city", "mountain"],
+    tags: ["casino", "neon", "arch", "landmark"],
+    w: 20, h: 17, anchor: "baseline",
+    draw: function (P, x, yb, env) {
+      var neon = P.clamp(1 - env.dayT, 0, 1), f = env.frame || 0;
+      var warm = ["#ffcf4a", "#ff5a4a", "#4affd2", "#ffffff"];
+      function chase(i) { return neon > 0.25 ? warm[((i % warm.length) + (f >> 1)) % warm.length] : env.col("#7a6a4a"); }
+      // low casino block behind the arch, with lit gold windows
+      P.rect(x + 4, yb - 8, 12, 9, env.col("#5a3340"));
+      P.rect(x + 4, yb - 8, 12, 1, env.col("#6a3f4a"));
+      for (var wy = yb - 6; wy < yb - 1; wy += 2)
+        for (var wx = x + 6; wx < x + 15; wx += 3) P.px(wx, wy, neon > 0.3 ? "#ffe58a" : env.col("#5a5240"));
+      // two arch posts in front, rising above the block
+      P.rect(x + 2, yb - 12, 2, 13, env.col("#3a3f4a"));
+      P.rect(x + 16, yb - 12, 2, 13, env.col("#3a3f4a"));
+      // the arched top beam (bows up toward the middle), ringed with chasing bulbs
+      for (var ax = 0; ax <= 14; ax++) {
+        var t = ax / 14, bow = Math.round(Math.sin(t * Math.PI) * 3);
+        P.px(x + 3 + ax, yb - 12 - bow, chase(ax));
+      }
+      // a bright marquee band slung under the beam (celebration, not a number)
+      for (var bx = x + 5; bx <= x + 14; bx++) P.px(bx, yb - 10, chase(bx + 1));
+      // starburst crowning the arch
+      var sx = x + 10, sy = yb - 16, star = neon > 0.3 ? "#fff2b0" : env.col("#8a7a5a");
+      P.px(sx, sy, star); P.px(sx - 1, sy + 1, star); P.px(sx, sy + 1, star); P.px(sx + 1, sy + 1, star);
+      if (neon > 0.4) { P.px(sx - 2, sy + 1, star); P.px(sx + 2, sy + 1, star); P.px(sx, sy - 1, star); }
+    }
+  },
+  {
     id: "eiffel", name: "Eiffel Tower", cities: ["paris"], biomes: ["city", "plains"],
     tags: ["tower", "iron", "lattice", "landmark"],
     w: 14, h: 31, anchor: "baseline",
@@ -136,28 +167,46 @@ export default [
     }
   },
   {
+    // A DISTANT bridge across the strait, placed by the compositor over the water
+    // (place:"water") — San Francisco is a peninsula, so the honest view is from
+    // the beach, across the water, to the bridge linking two headlands far off.
     id: "golden-gate", name: "Golden Gate Bridge", cities: ["san francisco"], biomes: ["coast", "city"],
-    tags: ["bridge", "suspension", "red", "landmark"],
-    w: 26, h: 20, anchor: "baseline",
+    tags: ["bridge", "suspension", "red", "landmark"], place: "water",
+    w: 48, h: 16, anchor: "baseline",
     draw: function (P, x, yb, env) {
-      var red = env.col("#c1442e"), cable = env.col("#8a2f22"), deck = env.col("#7a3226");
-      P.rect(x, yb - 4, 26, 1, deck);                  // roadway deck
-      // two towers rising from the strait
-      P.rect(x + 5, yb - 18, 2, 18, red);
-      P.rect(x + 20, yb - 18, 2, 18, red);
-      P.rect(x + 5, yb - 12, 2, 1, cable);             // cross braces
-      P.rect(x + 20, yb - 12, 2, 1, cable);
-      P.rect(x + 5, yb - 8, 2, 1, cable);
-      P.rect(x + 20, yb - 8, 2, 1, cable);
-      // main suspension cables (catenary swags)
-      P.line(x, yb - 6, x + 6, yb - 18, cable);
-      P.line(x + 6, yb - 18, x + 13, yb - 9, cable);
-      P.line(x + 13, yb - 9, x + 21, yb - 18, cable);
-      P.line(x + 21, yb - 18, x + 25, yb - 6, cable);
-      // a few hanger ropes down to the deck
-      for (var hx = x + 9; hx < x + 18; hx += 3) {
-        var d = Math.abs(hx - (x + 13));
-        P.line(hx, yb - 4, hx, yb - 9 - d, cable);
+      var W = 48, deckY = yb;
+      var orange = env.col("#c85434"), dk = env.col("#9c3f22"), cable = env.col("#8a3520");
+      var land = env.col("#425a46"), landDk = env.col("#33472f");
+      // the two headlands the bridge connects (far shore, sloping into the strait)
+      for (var i = 0; i < 7; i++) {
+        var lh = 3 - (i >> 1); if (lh < 0) lh = 0;
+        P.rect(x + i, deckY - 1 - lh, 1, 3 + lh, (i % 3) === 0 ? landDk : land);
+        P.rect(x + W - 1 - i, deckY - 1 - lh, 1, 3 + lh, (i % 3) === 0 ? landDk : land);
+      }
+      var lx = x + 6, rx = x + W - 7, mid = x + (W >> 1);
+      var t1 = x + 16, t2 = x + 32, top = deckY - 12;
+      P.rect(lx, deckY, rx - lx + 1, 1, dk);           // roadway deck across the gap
+      // two towers rising from the water
+      P.rect(t1, top, 2, deckY - top, orange); P.rect(t2, top, 2, deckY - top, orange);
+      P.px(t1, top - 1, orange); P.px(t2, top - 1, orange);
+      P.rect(t1, top + 4, 2, 1, dk); P.rect(t2, top + 4, 2, 1, dk);   // cross braces
+      // main suspension cables: shore → tower → mid-sag → tower → shore
+      P.line(lx, deckY - 1, t1, top, cable);
+      P.line(t1 + 1, top, mid, deckY - 4, cable);
+      P.line(mid, deckY - 4, t2, top, cable);
+      P.line(t2 + 1, top, rx, deckY - 1, cable);
+      // hanger ropes, dropped from the cable's actual height at each column
+      function seg(px, x0, y0, x1, y1) { return Math.round(y0 + (y1 - y0) * (px - x0) / (x1 - x0)); }
+      function cableY(px) {
+        if (px <= t1) return seg(px, lx, deckY - 1, t1, top);
+        if (px <= mid) return seg(px, t1, top, mid, deckY - 4);
+        if (px <= t2) return seg(px, mid, deckY - 4, t2, top);
+        return seg(px, t2, top, rx, deckY - 1);
+      }
+      for (var hx = lx + 2; hx < rx; hx += 3) {
+        if (Math.abs(hx - t1) < 2 || Math.abs(hx - t2) < 2) continue;   // not through the towers
+        var cy = cableY(hx);
+        if (cy < deckY - 1) P.line(hx, cy + 1, hx, deckY - 1, cable);
       }
     }
   },

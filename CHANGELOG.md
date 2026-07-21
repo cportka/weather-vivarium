@@ -4,6 +4,43 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com) and the project uses
 [Semantic Versioning](https://semver.org). Every change bumps the version and adds an entry below.
 
+## [0.6.0] - 2026-07-21
+
+Placement, direction, San Francisco, Reno — and a way to tell us.
+
+### Fixed
+- **Sprites face where they're going.** Center-anchored birds and insects (and the
+  odd tropical bird) were drawn facing right no matter which way they flew — a bird
+  moon-walking across the sky. Every moving sprite is now mirrored to its travel
+  direction, mirrored about its own centre so it never drifts.
+- **Road-edge pedestrians pass in FRONT of the sign.** A stroller on the shoulder
+  used to vanish behind the temperature sign; z-order is now decided by depth (feet
+  row), so a figure at the road edge walks in front and one set back walks behind.
+- **No more 1px-floating props.** Many landmarks (and half the trees, and a couple
+  of signs) were authored a pixel above the ground line and appeared to hover. A new
+  measure (`src/catalog/measure.js`) plants every landmark, tree and sign so its
+  lowest pixel lands exactly on the ground — appearance untouched, and future sprites
+  auto-ground too.
+- **No more mid-word city mismatches.** City lookups now match on whole words, so
+  **Reno** no longer inherits g-*reno*-ble's alpine look; it's high desert.
+
+### Added
+- **The Golden Gate spans the water.** San Francisco is a peninsula, so the bridge is
+  now a *distance* feature drawn across the strait between two headlands (with real
+  catenary cables + hanger geometry), viewed from the beach — not a jumble of towers
+  on the sand. The confusing grey skyline piers behind it are suppressed.
+- **Reno gets its own casino** — the warm retro neon arch ("The Biggest Little City
+  in the World"), clearly not the tall cool-purple Vegas tower.
+- **A few weed-smoking strollers** (hippie, stoner, rasta) that only appear in cities
+  with a famous cannabis culture (Amsterdam, Denver, Portland, …).
+- **A feedback form.** GitHub issue templates to suggest a city, report a city that
+  looks wrong, or file a bug — linked from the bottom of the demo page.
+- **15,000 precomputed cities** (191 countries): `world.json` grows to the top 10,000
+  cities outside the US. The gallery wall stays capped at the 10,000 most-populous;
+  the rest are a search away.
+- **Real biomes for the interior West** — a Great Basin box so Reno, Carson City and
+  neighbours read as high desert.
+
 ## [0.5.0] - 2026-07-19
 
 Real settlements, real variety, and ten thousand cities.

@@ -55,7 +55,7 @@
 </header>
 <div class="grid" id="grid"></div>
 <footer>
-  10,000 most-populous cities (5,000 US · 5,000 international) · biome is a best-effort guess where a city isn't curated ·
+  the 10,000 most-populous of 15,000 precomputed cities · biome is a best-effort guess where a city isn't curated ·
   data from <a href="https://open-meteo.com">Open-Meteo</a> &amp; <a href="https://geonames.org">GeoNames</a> ·
   <a href="https://github.com/cportka/weather-vivarium">source</a>
 </footer>
@@ -76,7 +76,13 @@
     load("data/cities/us.json", () => "US"),
     load("data/cities/world.json", (c) => c.cc)
   ]);
-  const cities = usC.concat(worldC).sort((a, b) => (b.population || 0) - (a.population || 0));
+  // We index more cities than we hang on the wall: show the WALL_CAP most-populous
+  // of the full precomputed set (the rest are still one search away on the demo).
+  const WALL_CAP = 10000;
+  const indexed = usC.length + worldC.length;
+  const cities = usC.concat(worldC)
+    .sort((a, b) => (b.population || 0) - (a.population || 0))
+    .slice(0, WALL_CAP);
   const active = new Map();
 
   // Mount a live diorama only while a tile is near the viewport; destroy on exit
