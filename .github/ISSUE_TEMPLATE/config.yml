@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: "▶ Try any city (live demo)"
+    url: https://cportka.github.io/weather-vivarium/
+    about: Type any city on Earth and watch it come alive before you file — it might already look right.

@@ -91,7 +91,7 @@ export function createVivarium(target, options) {
       : Math.max(pd != null ? pd : 0.22, res.biome.id === "city" ? 0.5 : 0);
     var w = {
       geometry: GEOMETRY, biome: res.biome, landscape: res.landscape, landmark: res.landmark,
-      latitude: res.latitude, coastal: res.coastal, unit: res.unit, density: density,
+      latitude: res.latitude, coastal: res.coastal, unit: res.unit, density: density, cannabis: res.cannabis,
       pools: pools(res.biome.id), W: W, sunrise: W.sunrise, sunset: W.sunset, moon: moon,
       seed: seedFrom(options.seed || (place.name + place.latitude)),
       place: place,

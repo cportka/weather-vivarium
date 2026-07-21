@@ -16,6 +16,7 @@ import { intensity as wmoIntensity, isPrecip, isSnow, isStorm, isRain, isFog } f
 import { EFFECTS } from "./weatherfx.js";
 import { makeRng, pickWeighted } from "../engine/random.js";
 import { styleForBiome } from "../catalog/settlements.js";
+import { groundOffset } from "../catalog/measure.js";
 
 var LANE_NEAR = 43, LANE_FAR = 39;
 
@@ -49,6 +50,7 @@ function drawClouds(P, env, frame, sky) {
 //      stays low. Both leave generous gaps where the biome's nature shows.
 function distantSkyline(P, env, rng) {
   var hy = env.horizon, d = env.density, lit = env.night || env.dayT < 0.42;
+  if (env.waterLandmark) return;   // a distant bridge is already the horizon here
   if (d < 0.34) return;
   var cov = clamp((d - 0.32) * 0.75, 0, 0.5);   // always leaves ≥ half the horizon as sky
   var x = 0;
@@ -165,10 +167,32 @@ export function createScene(P, world, opts) {
     };
   }
 
+  // Draw a sprite facing its travel direction. Sprites are authored facing RIGHT,
+  // so env.dir stays +1 inside the draw and the Painter mirrors left-bound sprites
+  // around their anchor: baseline sprites within [x, x+w); center-anchor sprites
+  // (birds, insects) around their midpoint x. This is what makes a left-flying bird
+  // actually face left instead of moon-walking.
   function draw(entry, x, yb, env, dir) {
-    env.dir = dir;
-    if (dir < 0 && entry.anchor !== "center") P.flip(x, entry.w, function () { entry.draw(P, x, yb, env); });
-    else entry.draw(P, x, yb, env);
+    env.dir = 1;
+    if (dir < 0) {
+      if (entry.anchor === "center") {
+        // reflect exactly about the anchor column x (widen the window by 1 for even
+        // widths so the mirror axis lands on x, not x-0.5 → no sideways shift).
+        var fw = (entry.w & 1) ? entry.w : entry.w + 1;
+        P.flip(x - (entry.w >> 1), fw, function () { entry.draw(P, x, yb, env); });
+      } else {
+        P.flip(x, entry.w, function () { entry.draw(P, x, yb, env); });
+      }
+    } else {
+      entry.draw(P, x, yb, env);
+    }
+  }
+
+  // Paint the strolling figure (+ any weather gear) at its current position.
+  function paintWalker(env) {
+    var wx = Math.round(walker.x);
+    draw(walker.entry, wx, walker.fy, env, walker.dir);
+    if (walker.gear) drawGear(P, wx, walker.fy, walker.gear, env);
   }
 
   // spawn helpers -------------------------------------------------------
@@ -205,6 +229,9 @@ export function createScene(P, world, opts) {
   }
   function spawnWalker(env) {
     var pool = world.pools.people; if (!pool.length) return;
+    // weed-smoking strollers only turn up in cannabis-culture cities
+    if (!world.cannabis) pool = pool.filter(function (p) { return p.require !== "cannabis"; });
+    if (!pool.length) return;
     var e = pickWeighted(rng, pool);
     var gear = null;
     if (env.rough) gear = (env.aqi >= 160 && !isPrecip(env.code)) ? "gasmask" : (env.cold ? "parka" : "umbrella");
@@ -236,6 +263,13 @@ export function createScene(P, world, opts) {
       P.withAlpha(0.55, function () { P.rect(0, G.horizon, P.L, G.groundTop - G.horizon + 1, env.col("#eef4f8")); });
       P.rect(0, G.groundTop - 1, P.L, 1, env.col("#f4f8fb"));
     }
+    // a water-spanning landmark (e.g. the Golden Gate) is a DISTANCE feature:
+    // drawn over the water, behind the near shore and the city fabric. When one is
+    // present it becomes the horizon, so the hazy distant skyline is suppressed
+    // (otherwise those grey towers read as stray bridge piers).
+    env.waterLandmark = !!(props.landmark && props.landmark.entry.place === "water");
+    if (env.waterLandmark) props.landmark.entry.draw(P, 1, G.horizon + 3, env);
+
     // city fabric — buildings scaled by how urban the place is (gaps show nature)
     urbanLayer(P, env);
     if (isFog(env.code)) EFFECTS.fog(P, env);
@@ -270,26 +304,29 @@ export function createScene(P, world, opts) {
 
     // the city's landmark — a structure at the shoreline/midground: drawn AFTER
     // the water cast so a passing boat never floats in front of it, but before
-    // the foreground trees/actors so those still layer over it.
-    if (props.landmark) props.landmark.entry.draw(P, props.landmark.x, G.groundTop - 1, env);
-
-    // fixed trees (behind the road)
-    for (var ti = 0; ti < props.trees.length; ti++) {
-      props.trees[ti].entry.draw(P, props.trees[ti].x, G.groundTop - 1, env);
+    // the foreground trees/actors so those still layer over it. (Water-spanning
+    // landmarks were already drawn as a distance feature, above.)
+    if (props.landmark && props.landmark.entry.place !== "water") {
+      // plant the landmark so its lowest pixel lands exactly on the ground line,
+      // whatever baseline habit the sprite was authored with (no more 1px float).
+      props.landmark.entry.draw(P, props.landmark.x, G.groundTop - 1 + groundOffset(props.landmark.entry), env);
     }
 
-    // ground animals + a strolling figure (behind the road)
+    // fixed trees (behind the road) — auto-grounded like the landmark
+    for (var ti = 0; ti < props.trees.length; ti++) {
+      props.trees[ti].entry.draw(P, props.trees[ti].x, G.groundTop - 1 + groundOffset(props.trees[ti].entry), env);
+    }
+
+    // a strolling figure — advance it here. A pedestrian on the road shoulder
+    // (feet on the front edge, groundTop-1) passes in FRONT of the sign, so it's
+    // painted after the sign below; one further back (feet above the edge) paints
+    // here, behind it. One pixel of depth decides which side of the sign it's on.
     if (!reduce) {
-      if (world.pools.groundAnimals.length && frame >= nextFlit && fliers.length < 1 && rng() < 0.5) {
-        // reuse the flit timer to occasionally send a ground animal across, too
-      }
       if (!walker && world.pools.people.length && frame >= nextWalker) spawnWalker(env);
       if (walker) {
         walker.x += walker.speed * walker.dir;
-        var wx = Math.round(walker.x);
-        draw(walker.entry, wx, walker.fy, env, walker.dir);
-        if (walker.gear) drawGear(P, wx, walker.fy, walker.gear, env);
         if (walker.x > P.L + 10) { walker = null; nextWalker = frame + Math.round(120 + rng() * 120); }
+        else if (walker.fy < G.groundTop - 1) paintWalker(env);   // set back → behind the sign
       }
     }
 
@@ -297,8 +334,12 @@ export function createScene(P, world, opts) {
     drawRoad(P, env);
     world.biome.drawShoulder(P, env);
 
-    // temperature sign
-    if (props.sign) props.sign.entry.draw(P, props.sign.x, G.groundTop, env);
+    // temperature sign — auto-grounded so every sign shares the same base row as
+    // the trees, landmark and the strolling figure (no lone 1px-low outliers).
+    if (props.sign) props.sign.entry.draw(P, props.sign.x, G.groundTop - 1 + groundOffset(props.sign.entry), env);
+
+    // the strolling figure, when it's at the road edge, walks in FRONT of the sign
+    if (!reduce && walker && walker.fy >= G.groundTop - 1) paintWalker(env);
 
     // road traffic (in front)
     if (!reduce && world.pools.roadVehicles.length && world.biome.road.kind !== "none") {

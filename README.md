@@ -2,8 +2,8 @@
   <img src="assets/logo.png" alt="weather-vivarium" width="560" />
 </p>
 
-> **Version:** 0.5.0
-> **Cities:** 10,000 precomputed · 175 countries · **any** city on Earth via geocoding
+> **Version:** 0.6.0
+> **Cities:** 15,000 precomputed · 191 countries · **any** city on Earth via geocoding
 
 A tiny **living pixel-art weather diorama** for *any* city — dependency-free, drop
 anywhere. Give it a place (or let it find yours) and its sky, sun, moon phase,
@@ -97,15 +97,17 @@ biome, so a diorama is always populated with things that belong there.
 
 `data/cities/` holds precomputed lookups from a city to its resolved vivarium —
 biome, landscape, landmark, category, unit — so a known city renders from **only
-its current weather**, no geocoding hop. Two datasets ship — **10,000 cities in
-all, across 175 countries**, disjoint by country so the total is exact: a
+its current weather**, no geocoding hop. Two datasets ship — **15,000 cities in
+all, across 191 countries**, disjoint by country so the total is exact: a
 **`us.json`** of the top **5,000** US cities (`npm run build:cities -- --us-top`)
-and a **`world.json`** of the top **5,000** cities outside the US
-(`npm run build:cities -- --world`) — both from GeoNames via `all-the-cities`,
+and a **`world.json`** of the top **10,000** cities outside the US
+(`npm run build:cities -- --world 10000`) — both from GeoNames via `all-the-cities`,
 with offline timezones from `tz-lookup`. Anything not in them still renders via
-live geocoding. The count above is enforced by a test (`tests/cities-count.test.mjs`),
-so it can't drift. The roadmap (toward the ~5M named places) and the GeoNames
-ingest are in [`data/cities/README.md`](data/cities/README.md).
+live geocoding. The [gallery](https://cportka.github.io/weather-vivarium/gallery.html)
+hangs the 10,000 most-populous of these on its wall; the rest are a search away on
+the demo. The count above is enforced by a test (`tests/cities-count.test.mjs`), so
+it can't drift. The roadmap (toward the ~5M named places) and the GeoNames ingest
+are in [`data/cities/README.md`](data/cities/README.md).
 
 > Note: for cities not in a curated landscape, the biome is a best-effort guess
 > from geography — latitude/elevation plus coarse lon/lat boxes for the world's big

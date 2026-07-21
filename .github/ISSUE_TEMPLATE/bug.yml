@@ -1,0 +1,24 @@
+name: "🐛 Bug / other"
+description: Something's broken, looks off, or doesn't work — not tied to one specific city.
+title: "[bug] "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you did, what you expected, and what actually happened.
+    validations:
+      required: true
+  - type: textarea
+    id: where
+    attributes:
+      label: Where?
+      description: The demo page, the gallery, the embedded widget in your own page, a specific browser/device.
+      placeholder: "e.g. gallery.html on iOS Safari; the wall of tiles never wakes on scroll."
+    validations:
+      required: false
+  - type: input
+    id: link
+    attributes:
+      label: Screenshot or link (optional)

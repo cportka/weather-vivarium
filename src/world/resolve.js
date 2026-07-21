@@ -11,6 +11,7 @@
 import { getBiome, BIOMES } from "./biomes.js";
 import { LANDSCAPES, getLandscape, landscapeForBiome } from "./landscapes.js";
 import { pickLandmark } from "../catalog/landmarks.js";
+import { cityNames } from "./match.js";
 
 // Countries that conventionally use Fahrenheit (rough but practical).
 var FAHRENHEIT = [
@@ -32,8 +33,7 @@ function matchLandscape(place) {
   for (var i = 0; i < LANDSCAPES.length; i++) {
     var ls = LANDSCAPES[i];
     for (var c = 0; c < ls.cities.length; c++) {
-      var city = ls.cities[c];
-      if (name === city || name.indexOf(city) !== -1 || city.indexOf(name) !== -1 || full.indexOf(city) !== -1) return ls;
+      if (cityNames(ls.cities[c], name, full)) return ls;
     }
   }
   return null;
@@ -55,6 +55,7 @@ export function guessBiome(place) {
   function box(la0, la1, lo0, lo1) { return lat >= la0 && lat <= la1 && lon >= lo0 && lon <= lo1; }
   // North America
   if (box(31, 37, -118, -103)) return "desert";     // US Southwest
+  if (box(36, 42, -120, -114)) return "desert";     // Great Basin high desert (Reno, Carson City)
   if (box(37, 49, -114, -105)) return "mountain";   // Rockies / Mountain West
   if (box(31, 49, -104, -96)) return "plains";      // Great Plains
   if (box(37, 49, -96, -82)) return "farmland";     // Corn Belt / Midwest
@@ -75,9 +76,22 @@ export function guessBiome(place) {
   return "forest";                 // temperate / boreal default
 }
 
+// Cities with a famously relaxed cannabis culture — the odd weed-smoking stroller
+// shows up in these (gated so they don't appear everywhere).
+var CANNABIS = [
+  "amsterdam", "denver", "boulder", "portland", "seattle", "oakland", "san francisco",
+  "los angeles", "santa cruz", "eugene", "arcata", "eureka", "humboldt", "vancouver",
+  "kingston", "barcelona", "montevideo", "christiania"
+];
+export function isCannabisCity(place) {
+  var name = norm(place && place.name), full = name + " " + norm(place && place.admin1);
+  for (var i = 0; i < CANNABIS.length; i++) if (cityNames(CANNABIS[i], name, full)) return true;
+  return false;
+}
+
 /**
  * Resolve `place` (needs at least latitude/longitude; name enables city matches)
- * into { place, biome, landscape, landmark, latitude, coastal, unit }.
+ * into { place, biome, landscape, landmark, latitude, coastal, unit, cannabis }.
  * opts: { biome, landscape, temperatureUnit }.
  */
 export function resolveScene(place, opts) {
@@ -108,6 +122,7 @@ export function resolveScene(place, opts) {
     landmark: pickLandmark(place, landscape, biomeId),
     latitude: place.latitude || 0,
     coastal: coastal,
-    unit: unit
+    unit: unit,
+    cannabis: isCannabisCity(place)
   };
 }
