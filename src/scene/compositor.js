@@ -52,26 +52,47 @@ function distantSkyline(P, env, rng) {
   var hy = env.horizon, d = env.density, lit = env.night || env.dayT < 0.42;
   if (env.waterLandmark) return;   // a distant bridge is already the horizon here
   if (d < 0.34) return;
-  var cov = clamp((d - 0.32) * 0.75, 0, 0.5);   // always leaves ≥ half the horizon as sky
+  // On a waterfront the near shore can't carry the city (buildings would stand in
+  // the sea), so the skyline across the bay does that work — start it sooner and
+  // let it grow denser, the way a real bayside city reads from the beach.
+  var water = env.waterBot != null;
+  var cov = water ? clamp((d - 0.24) * 1.0, 0, 0.66)
+                  : clamp((d - 0.32) * 0.75, 0, 0.5);   // always leaves sky between
+  // A far skyline is atmosphere, not architecture: heights vary a lot (a ragged
+  // profile, not a row of monoliths) and everything washes toward the sky at the
+  // horizon, so it reads as distance rather than as dark pillars in the scene.
+  var cap = 3 + d * (hy - 11);                      // tallest tower in the far city
+  var haze = env.sky && env.sky.clearHor ? env.sky.clearHor : "#b9c8d6";
   var x = 0;
   while (x < P.L) {
     if (rng() < cov) {
       var w = 2 + Math.floor(rng() * 3);
-      var h = Math.round(2 + d * (hy - 8) + rng() * 3);
-      var wall = mix(env.col(mix("#3a4150", "#525c68", rng())), "#8b95a4", 0.5 - d * 0.25); // hazy, recedes
+      var h = Math.max(2, Math.round(cap * (0.35 + rng() * rng() * 0.9)));   // mostly low, a few tall
+      var tall = h / (cap || 1);
+      var wall = mix(env.col(mix("#4a5464", "#616c7c", rng())), haze, 0.62 - tall * 0.16);
       P.rect(x, hy - h, w, h, wall);
-      for (var wy = hy - h + 1; wy < hy - 1; wy += 2)
-        for (var wx = x + 1; wx < x + w - 1; wx += 2) if (lit && rng() < 0.35) P.px(wx, wy, "#ffe08a");
+      if (lit) {
+        for (var wy = hy - h + 1; wy < hy - 1; wy += 2)
+          for (var wx = x + 1; wx < x + w - 1; wx += 2) if (rng() < 0.3) P.px(wx, wy, mix("#ffe08a", haze, 0.25));
+      }
       x += w + 1 + Math.floor(rng() * 3);
     } else { x += 3 + Math.floor(rng() * 4); }
   }
 }
 function localSettlement(P, env, rng) {
-  var style = styleForBiome(env.biomeId, env.seed);
-  if (!style) return;
   var d = env.density, lit = env.night || env.dayT < 0.42;
-  var tier = d < 0.36 ? 0 : d < 0.7 ? 1 : 2;                 // town / city / metropolis
+  var style = styleForBiome(env.biomeId, env.seed, d);
+  if (!style) return;
+  var tier = d < 0.36 ? 0 : d < 0.62 ? 1 : 2;                // town / city / metropolis
   var hcap = style.heights[tier];
+  // Never build up through the sea. On a waterfront the near shore is a beach, so
+  // a building standing on it may only rise to the waterline — the city itself
+  // reads from the distant skyline across the bay, not from towers in the surf.
+  if (env.waterBot != null) {
+    var room = env.groundTop - 1 - env.waterBot;
+    if (room < 2) return;
+    if (hcap > room) hcap = room;
+  }
   var cov = clamp((d - 0.08) * 0.72, 0, style.maxCoverage);  // sparse when small, still gapped when huge
   var fx = 0;
   while (fx < P.L) {
@@ -157,6 +178,9 @@ export function createScene(P, world, opts) {
       // of flickering/"scrolling" as the shared rng advances.
       srng: makeRng(world.seed || 1),
       density: world.density || 0, biomeId: world.biome.id, seed: world.seed || 1,
+      // bottom row of the sea, when this biome has one — the near shore starts
+      // below it, so nothing built on the beach may rise past it.
+      waterBot: world.biome.water ? world.biome.water.bot : null,
       wind: clamp((W.windKph || 0) / 45, 0, 1),
       code: W.code, cloud: W.cloud, aqi: W.aqi, temp: W.temp,
       waveM: W.waveM, tide: W.tide, sunrise: world.sunrise, sunset: world.sunset,
@@ -188,11 +212,27 @@ export function createScene(P, world, opts) {
     }
   }
 
-  // Paint the strolling figure (+ any weather gear) at its current position.
+  // Paint the strolling figure (+ any weather gear) at its current position — or
+  // its resting pose while it's stopped (a beachgoer laid out on a towel).
   function paintWalker(env) {
     var wx = Math.round(walker.x);
+    if (walker.resting) { walker.entry.restDraw(P, wx, walker.fy, env); return; }
     draw(walker.entry, wx, walker.fy, env, walker.dir);
     if (walker.gear) drawGear(P, wx, walker.fy, walker.gear, env);
+  }
+
+  // Advance the strolling figure: walk, pause to rest (if this sprite has a
+  // resting pose and the weather is nice), then get up and carry on.
+  function stepWalker(env, frame) {
+    if (walker.resting) {
+      if (frame >= walker.restUntil) { walker.resting = false; walker.rested = true; }
+      return;
+    }
+    walker.x += walker.speed * walker.dir;
+    if (!walker.rested && walker.entry.restDraw && !env.rough && walker.x >= walker.restAt) {
+      walker.resting = true;
+      walker.restUntil = frame + 220 + Math.round(rng() * 260);   // a good long sunbathe
+    }
   }
 
   // spawn helpers -------------------------------------------------------
@@ -235,7 +275,9 @@ export function createScene(P, world, opts) {
     var e = pickWeighted(rng, pool);
     var gear = null;
     if (env.rough) gear = (env.aqi >= 160 && !isPrecip(env.code)) ? "gasmask" : (env.cold ? "parka" : "umbrella");
-    walker = { entry: e, x: -8, dir: 1, fy: G.groundTop - 1, gear: gear, speed: env.rough ? 0.3 : 0.22 };
+    walker = { entry: e, x: -8, dir: 1, fy: G.groundTop - 1, gear: gear, speed: env.rough ? 0.3 : 0.22,
+      // where it stops to rest (if it has a resting pose), and whether it already has
+      restAt: 8 + Math.round(rng() * 22), resting: false, rested: false, restUntil: 0 };
   }
 
   // ---- per-frame --------------------------------------------------------
@@ -324,7 +366,7 @@ export function createScene(P, world, opts) {
     if (!reduce) {
       if (!walker && world.pools.people.length && frame >= nextWalker) spawnWalker(env);
       if (walker) {
-        walker.x += walker.speed * walker.dir;
+        stepWalker(env, frame);
         if (walker.x > P.L + 10) { walker = null; nextWalker = frame + Math.round(120 + rng() * 120); }
         else if (walker.fy < G.groundTop - 1) paintWalker(env);   // set back → behind the sign
       }

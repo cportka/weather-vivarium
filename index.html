@@ -42,7 +42,10 @@
     padding:9px 12px; font:inherit; cursor:pointer; }
   button.primary { background:var(--accent); border-color:var(--accent); color:#08111f; font-weight:600; }
   button:hover { border-color:var(--accent); }
-  .chips button { padding:6px 10px; font-size:12px; }
+  /* Preset cities stay on ONE line — scroll sideways rather than wrapping, and
+     each chip's name never breaks across lines. */
+  .row.chips { flex-wrap:nowrap; overflow-x:auto; scrollbar-width:thin; padding-bottom:2px; }
+  .chips button { padding:6px 10px; font-size:12px; white-space:nowrap; flex:0 0 auto; }
   label.mut { color:var(--muted); font-size:12px; }
   input[type=range] { flex:1; accent-color:var(--accent); }
   .readout { color:var(--muted); font-size:12.5px; text-align:center; line-height:1.6; min-height:3em; }
@@ -83,6 +86,7 @@
           <ul id="ac" hidden></ul>
         </div>
         <button class="primary" id="go">Go</button>
+        <button id="random" title="Show a random city from the precomputed set">🎲 Random</button>
         <button id="unit" title="Toggle °F / °C">°F/°C</button>
       </div>
       <div class="row chips" id="presets"></div>
@@ -116,7 +120,7 @@
 </footer>
 
 <script type="module">
-  import { createVivarium, geocodeSuggest } from "./src/index.js";
+  import { createVivarium, geocodeSuggest, decodeCities, cityCount } from "./src/index.js";
 
   const mount = document.getElementById("mount");
   const readout = document.getElementById("readout");
@@ -156,6 +160,26 @@
     instance.setTimeOverride(liveEl.checked ? undefined : +timeEl.value);
   }
   document.getElementById("go").onclick = () => { hideAC(); load(cityInput.value.trim() || "Los Angeles"); };
+
+  /* ---- 🎲 Random: leap to any city in the precomputed set ---- */
+  let POOL = null;                     // filled once the city datasets load
+  const RANDOM_FALLBACK = ["Kyoto", "Valparaíso", "Tromsø", "Marrakesh", "Queenstown", "Hoi An", "Ushuaia", "Zanzibar"];
+  document.getElementById("random").onclick = () => {
+    hideAC();
+    if (POOL && POOL.length) {
+      // Bias a little toward places with some life in them (a landmark, or simply
+      // somewhere people live) so "random" rarely lands on an empty dot.
+      let c = null;
+      for (let i = 0; i < 6; i++) {
+        const p = POOL[Math.floor(Math.random() * POOL.length)];
+        if (!c || (p.landmark && !c.landmark) || (p.population || 0) > (c.population || 0) * 4) c = p;
+        if (c.landmark) break;
+      }
+      load({ city: c.name, lat: c.lat, lon: c.lon, tz: c.tz, population: c.population });
+    } else {
+      load(RANDOM_FALLBACK[Math.floor(Math.random() * RANDOM_FALLBACK.length)]);
+    }
+  };
 
   /* ---- search autocomplete (Open-Meteo geocoding: name + admin + country) ---- */
   const acWrap = document.getElementById("acwrap"), ac = document.getElementById("ac");
@@ -226,8 +250,8 @@
     const map = new Map();
     async function add(url, ccOf) {
       try { const db = await (await fetch(url)).json();
-        INDEXED_TOTAL += (db.count || db.cities.length);
-        for (const c of db.cities) {
+        INDEXED_TOTAL += cityCount(db);
+        for (const c of decodeCities(db)) {
           const cc = ccOf(c), key = (c.name + "|" + (c.admin || "") + "|" + cc).toLowerCase();
           if (map.has(key)) continue;
           map.set(key, { name: c.name, cc, lat: c.lat, lon: c.lon, tz: c.tz, population: c.population || 1000,
@@ -273,6 +297,7 @@
   }
   (async () => {
     const pool = await loadPool();
+    POOL = pool;
     const cc = document.getElementById("citycount"); if (cc && INDEXED_TOTAL) cc.textContent = INDEXED_TOTAL.toLocaleString() + " cities";
     let here = await ipLocate();
     if (here) { load({ city: here.name, lat: here.lat, lon: here.lon, tz: here.tz, country: here.country }); }

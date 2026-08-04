@@ -20,10 +20,10 @@ This database:
 ## Files
 
 Two datasets ship, **disjoint by country** so their union is exactly their sum
-(**15,000** places across **191** countries):
+(**25,000** places across **202** countries):
 
-- `us.json` — the top **5,000** US cities by population.
-- `world.json` — the top **10,000** cities **outside** the US. (US cities live in
+- `us.json` — the top **10,000** US cities by population.
+- `world.json` — the top **15,000** cities **outside** the US. (US cities live in
   `us.json`; keeping them out here avoids double-counting.)
 
 The [gallery](../../gallery.html) hangs the 10,000 most-populous of the combined
@@ -53,8 +53,8 @@ current weather — no geocoding hop.
 ## Building
 
 ```
-npm run build:cities -- --us-top 5000    # build us.json — top 5,000 US cities
-npm run build:cities -- --world 10000    # build world.json — top 10,000 non-US cities
+npm run build:cities -- --us-top 10000   # build us.json — top 10,000 US cities
+npm run build:cities -- --world 15000    # build world.json — top 15,000 non-US cities
 npm run build:cities                     # (alt) build us.json from the curated seed
 ```
 

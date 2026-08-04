@@ -68,6 +68,12 @@ export function guessBiome(place) {
   // Asia
   if (box(35, 48, 55, 95)) return "desert";         // Central Asian steppe / desert
   if (box(27, 40, 70, 88)) return "mountain";       // Himalaya / Tibetan fringe
+  if (box(20, 32, 68, 76)) return "desert";         // Thar / Rajasthan
+  // Monsoon Asia is wet and green, not dry savanna — India's south + the Deccan,
+  // Indochina, the Malay archipelago, south China and Taiwan.
+  if (box(5, 28, 72, 90)) return "jungle";          // peninsular India / Bengal
+  if (box(-11, 28, 92, 128)) return "jungle";       // Indochina, Malaysia, Indonesia, Philippines
+  if (box(20, 31, 100, 123)) return "jungle";       // south China / Taiwan
   // Australia
   if (box(-30, -20, 118, 145)) return "desert";     // Outback
 

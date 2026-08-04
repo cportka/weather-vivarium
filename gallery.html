@@ -55,13 +55,13 @@
 </header>
 <div class="grid" id="grid"></div>
 <footer>
-  the 10,000 most-populous of 15,000 precomputed cities · biome is a best-effort guess where a city isn't curated ·
+  the 10,000 most-populous of 25,000 precomputed cities · biome is a best-effort guess where a city isn't curated ·
   data from <a href="https://open-meteo.com">Open-Meteo</a> &amp; <a href="https://geonames.org">GeoNames</a> ·
   <a href="https://github.com/cportka/weather-vivarium">source</a>
 </footer>
 
 <script type="module">
-  import { createVivarium } from "./src/index.js";
+  import { createVivarium, decodeCities } from "./src/index.js";
 
   const grid = document.getElementById("grid");
   const countEl = document.getElementById("count");
@@ -69,7 +69,7 @@
   // the world. Sorted by population so the biggest cities wake first.
   async function load(url, ccOf) {
     try { const db = await (await fetch(url)).json();
-      return db.cities.map((c) => ({ ...c, cc: ccOf(c) }));
+      return decodeCities(db).map((c) => ({ ...c, cc: ccOf(c) }));
     } catch (e) { return []; }
   }
   const [usC, worldC] = await Promise.all([
@@ -139,7 +139,10 @@
       t.classList.toggle("hide", !hit);
       if (hit) shown++; else unmount(t);
     }
-    countEl.textContent = term ? shown + " / " + cities.length : cities.length + " cities";
+    const n = (v) => v.toLocaleString("en-US");
+    countEl.textContent = term
+      ? n(shown) + " / " + n(cities.length)
+      : n(cities.length) + " on the wall · " + n(indexed) + " precomputed";
   }
   q.addEventListener("input", applyFilter);
   applyFilter();

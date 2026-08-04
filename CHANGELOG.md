@@ -4,6 +4,44 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com) and the project uses
 [Semantic Versioning](https://semver.org). Every change bumps the version and adds an entry below.
 
+## [0.7.0] - 2026-07-22
+
+The 1.0 runway: big cities that look big, 25,000 of them, and a package ready to publish.
+
+### Fixed
+- **No more buildings standing in the sea.** On a waterfront the near shore is a
+  beach, so anything built on it now stops at the waterline; the city reads from the
+  skyline across the bay instead. Fixes the long-standing Los Angeles bug where
+  towers grew straight up through the ocean.
+- **Big cities look big.** Settlement style now follows the density tier, so a
+  metropolis builds like one whatever biome it sits in — **Taipei**, **Bangkok**,
+  **Bengaluru**, **Mumbai** and **Jakarta** were rendering as villages of low houses.
+  Towns and mid-size cities keep their vernacular (New Orleans still a stilt-house
+  swamp, Zurich still chalets, Aspen still pastoral).
+- **Monsoon Asia is green, not dry.** Peninsular India, Indochina, the Malay
+  archipelago, south China and Taiwan now resolve as wet/tropical rather than
+  savanna — **Bengaluru**, the Garden City, is no longer brown. Added the Thar to
+  the arid set so the dry parts stay dry.
+- **A hazier distant skyline.** Far towers vary in height and wash toward the sky at
+  the horizon, so they read as distance instead of dark pillars planted in the scene.
+- **The beachgoer sunbathes.** She now lies out on a striped towel for a good while
+  before getting up and strolling on, instead of marching past without pause.
+
+### Added
+- **25,000 precomputed cities** across **202 countries** (10,000 US + 15,000
+  international, disjoint by country).
+- **A compact dataset format.** Columnar rows with dictionary-encoded string columns
+  (`src/data/cities.js` decodes it, and is exported for consumers). 25,000 cities now
+  ship in **1.4 MB — less than half** what 15,000 cities cost before.
+- **🎲 Random** button on the demo — leap to any city in the set.
+- **TypeScript declarations** (`src/index.d.ts`) for the whole public API, and npm
+  metadata (`types`, `exports` with types, `unpkg`/`jsdelivr`, `publishConfig`). The
+  published tarball is ~109 kB, 59 files, and has **zero runtime dependencies**.
+- **Sponsor button** — `.github/FUNDING.yml`.
+
+### Changed
+- Preset city chips stay on one line (scroll sideways) instead of wrapping.
+
 ## [0.6.0] - 2026-07-21
 
 Placement, direction, San Francisco, Reno — and a way to tell us.
