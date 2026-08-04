@@ -6,7 +6,7 @@
    painter/compositor) is exported for the demo, the gallery, tests, and anyone
    who wants to build their own scene.
    ========================================================================= */
-export var VERSION = "0.6.0";
+export var VERSION = "0.7.0";
 
 // The one-liner.
 export { createVivarium } from "./scene/widget.js";
@@ -24,6 +24,7 @@ export { CATALOG, pools, forBiome, byLayer, counts } from "./catalog/index.js";
 export { geocode, geocodeSuggest, GEOCODE_ORIGIN } from "./data/geocode.js";
 export { fetchWeather, defaultState, modelTide, WEATHER_ORIGINS } from "./data/weather.js";
 export { describe as describeWeather, category as weatherCategory } from "./data/wmo.js";
+export { decodeCities, cityCount, loadCities } from "./data/cities.js";
 
 // Engine (advanced / for building custom renderers, contact sheets, galleries).
 export { createPainter, mix, clamp, lerp, hex } from "./engine/painter.js";

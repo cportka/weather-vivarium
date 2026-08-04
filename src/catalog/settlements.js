@@ -144,9 +144,22 @@ var BIOME_STYLES = {
   canyon: ["adobe"], farmland: ["farmstead", "lowrise"]
 };
 
-export function styleForBiome(biomeId, seed) {
-  var list = BIOME_STYLES[biomeId];
-  if (!list || !list.length) return null;
+// Genuinely urban architecture. A big city is a big city whatever biome it sits
+// in — Taipei, Bengaluru and Jakarta are metropolises, not villages with jungle
+// around them — so once a place is dense enough these become candidates too, and
+// the biome keeps showing through in the gaps and the background.
+var URBAN = ["towers", "midrise", "apartment-blocks", "gulf-modern"];
+
+export function styleForBiome(biomeId, seed, density) {
+  var list = BIOME_STYLES[biomeId] || [];
+  var d = density || 0;
+  var urban = URBAN.filter(function (id) { return STYLES[id]; });
+  // Weight by the same tiers the compositor uses: a town builds in its own
+  // vernacular; a city mixes; a metropolis is mostly genuinely urban (with one
+  // vernacular style kept as local flavour) so a big city never reads as a village.
+  if (d >= 0.62) list = urban.concat(list.slice(0, 1));
+  else if (d >= 0.52) list = list.concat(urban);
+  if (!list.length) return null;
   return STYLES[list[(seed >>> 0) % list.length]] || null;
 }
 

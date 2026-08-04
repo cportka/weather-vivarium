@@ -6,22 +6,33 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { decodeCities, cityCount } from "../src/data/cities.js";
 
 const url = (p) => new URL(p, import.meta.url);
 const world = JSON.parse(readFileSync(url("../data/cities/world.json"), "utf8"));
 const us = JSON.parse(readFileSync(url("../data/cities/us.json"), "utf8"));
 const readme = readFileSync(url("../README.md"), "utf8");
 
-const total = () => us.count + world.count;
+const worldCities = decodeCities(world), usCities = decodeCities(us);
+const total = () => cityCount(us) + cityCount(world);
 const fmt = (n) => n.toLocaleString("en-US");
 
 test("each dataset's count matches its rows", () => {
-  assert.equal(world.cities.length, world.count, "world.json count vs rows");
-  assert.equal(us.cities.length, us.count, "us.json count vs rows");
+  assert.equal(worldCities.length, world.count, "world.json count vs rows");
+  assert.equal(usCities.length, us.count, "us.json count vs rows");
+});
+
+test("the compact datasets decode into complete records", () => {
+  for (const [label, list] of [["world", worldCities], ["us", usCities]]) {
+    const c = list[0];
+    assert.ok(c && c.name && typeof c.lat === "number" && typeof c.lon === "number",
+      `${label}.json first row should decode to a real city`);
+    assert.ok(c.tz && c.biome && c.unit, `${label}.json row should carry tz/biome/unit`);
+  }
 });
 
 test("the datasets are disjoint by country (no US in world.json)", () => {
-  assert.ok(!world.cities.some((c) => c.cc === "US"), "world.json must not contain US cities");
+  assert.ok(!worldCities.some((c) => c.cc === "US"), "world.json must not contain US cities");
 });
 
 test("README **Cities:** equals the US + world total", () => {

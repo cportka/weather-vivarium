@@ -8,6 +8,22 @@ export default [
   {
     id: "beachgoer", name: "Beachgoer", biomes: ["coast"],
     tags: ["person", "summer"], w: 4, h: 7, anchor: "baseline", layer: "ground",
+    // A beachgoer doesn't just march past: `restDraw` is the sunbathing pose the
+    // compositor holds partway across — lying on a towel for a good while, one
+    // knee lazily rocking, before getting up and strolling on.
+    restW: 7,
+    restDraw: function (P, x, yb, env) {
+      var skin = "#e8b98f", hair = "#5a3a1e", suit = "#e0445a", towel = env.col("#3aa0c8"), towel2 = env.col("#f0f0e6");
+      var slow = (env.frame >> 4) & 1;                      // a slow, drowsy shift
+      for (var i = 0; i < 7; i++) P.px(x + i, yb, (i & 1) ? towel : towel2);   // striped towel
+      P.px(x + 1, yb - 1, hair); P.px(x + 2, yb - 1, hair);  // head + hair spread
+      P.px(x + 3, yb - 1, skin);                             // face
+      P.px(x + 4, yb - 1, suit);                             // torso
+      P.px(x + 5, yb - 1, skin);                             // hips
+      P.px(x + 6, yb - 1, slow ? skin : towel);              // outstretched leg
+      if (slow) P.px(x + 6, yb - 2, skin);                   // knee drawn up
+      P.px(x + 2, yb - 2, hair);                             // hair on the towel
+    },
     draw: function (P, x, yb, env) {
       var skin = "#e8b98f", hair = "#5a3a1e", suit = "#e0445a";
       var step = (env.frame >> 2) & 1;
