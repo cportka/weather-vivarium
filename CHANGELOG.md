@@ -4,6 +4,53 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com) and the project uses
 [Semantic Versioning](https://semver.org). Every change bumps the version and adds an entry below.
 
+## [0.8.0] - 2026-08-05
+
+Nothing built on water, architecture that belongs where it stands, and a standing
+50-city reference set to judge every future change against.
+
+### Fixed
+- **Never a building on open water.** Placement is now a real rule rather than a
+  height cap: a settlement stands on dry land, a style meant to sit over water
+  (stilt houses on a marsh) declares it, and anything else steps back above the
+  waterline. Looking out to sea there's no land to build on, so the horizon stays
+  clean sea and sky — **Los Angeles** is a beach again, with no grey pillars
+  standing in the ocean and no shrunken houses cluttering the sand.
+- **No buildings shorter than the people.** A building has to be at least 7px —
+  taller than a person or a bird — or the shore simply stays open. That's what
+  removed LA's tiny sand-huts instead of merely shrinking them.
+- **Stilt houses came back.** The 0.7.0 waterline cap had silently suppressed
+  settlements in wetland and canyon scenes (New Orleans lost its swamp shacks).
+- **Architecture belongs where it stands.** Vernacular styles are now pinned to a
+  cultural region, so no more pagoda roofs in **Denver**, oil derricks in
+  **Reykjavík**, **Tromsø** or **Alice Springs**, or pyramids in **Marrakesh** and
+  **Timbuktu** (the pyramids are Giza's alone now). Anywhere a region has no fitting
+  vernacular, ordinary low/mid-rise fills in rather than nothing.
+- **Less traffic, tiered by size.** Roughly half the previous flow: a metropolis
+  runs up to 3 cars with a short gap, a city 2, a town or village 1 with a long
+  quiet stretch between them. The road frames the scene instead of dominating it.
+- **Mexico City** is a highland metropolis again — the Mexican volcanic belt and the
+  Central American highlands resolve as green mountains, not dry savanna — and it
+  gets **El Ángel de la Independencia** as its landmark.
+- **Venice and Havana** read as the water cities they are (new `lagoon` landscape).
+
+### Added
+- **The 50-city reference set** (`verify/reference-cities.mjs`) — a deliberately
+  diverse standing set spanning every biome, the full density range, both
+  hemispheres, coastal and inland, curated and long-tail. `npm run verify:reference`
+  renders the day + night contact sheets, and `tests/reference-cities.test.mjs` locks
+  each city's biome, region, tier, style and landmark so no tweak can quietly change
+  one. Regenerate deliberately with `npm run update:reference`.
+- **Attributes info card.** Expanding any scene now shows a card listing everything
+  the diorama knows — place, coordinates, local time, light, conditions, cloud, wind,
+  air quality, swell/tide, sunrise/sunset, moon, biome, landscape, landmark,
+  settlement size, population. The demo shows the same card for the current city, and
+  `instance.attributes()` exposes the rows to any consumer.
+
+### Changed
+- Preset city chips fit on one line with no scrollbar (the list was trimmed to short
+  names).
+
 ## [0.7.0] - 2026-07-22
 
 The 1.0 runway: big cities that look big, 25,000 of them, and a package ready to publish.

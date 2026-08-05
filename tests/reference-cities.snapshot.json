@@ -1,0 +1,355 @@
+{
+  "note": "Locked expectations for the 50 reference cities. Regenerate deliberately with: node scripts/update-reference-snapshot.mjs",
+  "cities": {
+    "Los Angeles": {
+      "biome": "coast",
+      "region": "north-america",
+      "tier": "metropolis",
+      "style": "midrise",
+      "landmark": null
+    },
+    "Santa Monica": {
+      "biome": "coast",
+      "region": "north-america",
+      "tier": "town",
+      "style": "port",
+      "landmark": null
+    },
+    "San Francisco": {
+      "biome": "coast",
+      "region": "north-america",
+      "tier": "city",
+      "style": "midrise",
+      "landmark": "golden-gate"
+    },
+    "Honolulu": {
+      "biome": "coast",
+      "region": "north-america",
+      "tier": "city",
+      "style": "midrise",
+      "landmark": "diamond-head"
+    },
+    "Seattle": {
+      "biome": "forest",
+      "region": "north-america",
+      "tier": "city",
+      "style": "midrise",
+      "landmark": "space-needle"
+    },
+    "New York City": {
+      "biome": "city",
+      "region": "north-america",
+      "tier": "metropolis",
+      "style": "gulf-modern",
+      "landmark": "liberty"
+    },
+    "Chicago": {
+      "biome": "city",
+      "region": "north-america",
+      "tier": "metropolis",
+      "style": "apartment-blocks",
+      "landmark": "skyscraper"
+    },
+    "Las Vegas": {
+      "biome": "desert",
+      "region": "north-america",
+      "tier": "city",
+      "style": "oil-town",
+      "landmark": "casino"
+    },
+    "Reno": {
+      "biome": "desert",
+      "region": "north-america",
+      "tier": "city",
+      "style": "pueblo",
+      "landmark": "casino-reno"
+    },
+    "Denver": {
+      "biome": "mountain",
+      "region": "north-america",
+      "tier": "city",
+      "style": "nordic",
+      "landmark": null
+    },
+    "Aspen": {
+      "biome": "mountain",
+      "region": "north-america",
+      "tier": "rural",
+      "style": "chalet",
+      "landmark": null
+    },
+    "Santa Fe": {
+      "biome": "desert",
+      "region": "north-america",
+      "tier": "town",
+      "style": "oil-town",
+      "landmark": null
+    },
+    "New Orleans": {
+      "biome": "wetland",
+      "region": "latin-america",
+      "tier": "city",
+      "style": "stilt",
+      "landmark": "riverboat"
+    },
+    "Anchorage": {
+      "biome": "forest",
+      "region": "north-america",
+      "tier": "city",
+      "style": "lowrise",
+      "landmark": "snowpeak"
+    },
+    "Berkeley": {
+      "biome": "coast",
+      "region": "north-america",
+      "tier": "town",
+      "style": "midrise",
+      "landmark": "belltower"
+    },
+    "Miami": {
+      "biome": "wetland",
+      "region": "latin-america",
+      "tier": "city",
+      "style": "stilt",
+      "landmark": null
+    },
+    "Mexico City": {
+      "biome": "city",
+      "region": "latin-america",
+      "tier": "metropolis",
+      "style": "towers",
+      "landmark": "angel-independencia"
+    },
+    "Rio de Janeiro": {
+      "biome": "coast",
+      "region": "latin-america",
+      "tier": "metropolis",
+      "style": "apartment-blocks",
+      "landmark": "christ-redeemer"
+    },
+    "Cusco": {
+      "biome": "mountain",
+      "region": "latin-america",
+      "tier": "city",
+      "style": "adobe",
+      "landmark": null
+    },
+    "Ushuaia": {
+      "biome": "forest",
+      "region": "latin-america",
+      "tier": "town",
+      "style": "lowrise",
+      "landmark": null
+    },
+    "Havana": {
+      "biome": "coast",
+      "region": "latin-america",
+      "tier": "metropolis",
+      "style": "midrise",
+      "landmark": null
+    },
+    "Vancouver": {
+      "biome": "forest",
+      "region": "north-america",
+      "tier": "city",
+      "style": "lake-lodge",
+      "landmark": null
+    },
+    "London": {
+      "biome": "city",
+      "region": "europe",
+      "tier": "metropolis",
+      "style": "apartment-blocks",
+      "landmark": "ferris-wheel"
+    },
+    "Paris": {
+      "biome": "city",
+      "region": "europe",
+      "tier": "metropolis",
+      "style": "apartment-blocks",
+      "landmark": "eiffel"
+    },
+    "Reykjavík": {
+      "biome": "tundra",
+      "region": "europe",
+      "tier": "city",
+      "style": "nordic",
+      "landmark": null
+    },
+    "Zurich": {
+      "biome": "mountain",
+      "region": "europe",
+      "tier": "city",
+      "style": "nordic",
+      "landmark": null
+    },
+    "Moscow": {
+      "biome": "forest",
+      "region": "europe",
+      "tier": "metropolis",
+      "style": "towers",
+      "landmark": "st-basils"
+    },
+    "Barcelona": {
+      "biome": "coast",
+      "region": "europe",
+      "tier": "metropolis",
+      "style": "apartment-blocks",
+      "landmark": "sagrada"
+    },
+    "Tromsø": {
+      "biome": "tundra",
+      "region": "europe",
+      "tier": "town",
+      "style": "chalet",
+      "landmark": null
+    },
+    "Venice": {
+      "biome": "coast",
+      "region": "europe",
+      "tier": "city",
+      "style": "brownstone",
+      "landmark": "belltower"
+    },
+    "Cairo": {
+      "biome": "desert",
+      "region": "africa",
+      "tier": "metropolis",
+      "style": "midrise",
+      "landmark": "pyramid"
+    },
+    "Nairobi": {
+      "biome": "savanna",
+      "region": "africa",
+      "tier": "metropolis",
+      "style": "apartment-blocks",
+      "landmark": null
+    },
+    "Marrakesh": {
+      "biome": "desert",
+      "region": "africa",
+      "tier": "city",
+      "style": "apartment-blocks",
+      "landmark": null
+    },
+    "Cape Town": {
+      "biome": "coast",
+      "region": "africa",
+      "tier": "metropolis",
+      "style": "midrise",
+      "landmark": "lighthouse"
+    },
+    "Lagos": {
+      "biome": "jungle",
+      "region": "africa",
+      "tier": "metropolis",
+      "style": "apartment-blocks",
+      "landmark": null
+    },
+    "Dubai": {
+      "biome": "desert",
+      "region": "middle-east",
+      "tier": "metropolis",
+      "style": "midrise",
+      "landmark": "burj-khalifa"
+    },
+    "Timbuktu": {
+      "biome": "desert",
+      "region": "africa",
+      "tier": "town",
+      "style": "medina",
+      "landmark": null
+    },
+    "Tokyo": {
+      "biome": "city",
+      "region": "east-asia",
+      "tier": "metropolis",
+      "style": "towers",
+      "landmark": "tokyo-tower"
+    },
+    "Kyoto": {
+      "biome": "forest",
+      "region": "east-asia",
+      "tier": "city",
+      "style": "towers",
+      "landmark": null
+    },
+    "Taipei": {
+      "biome": "city",
+      "region": "east-asia",
+      "tier": "metropolis",
+      "style": "towers",
+      "landmark": null
+    },
+    "Bengaluru": {
+      "biome": "jungle",
+      "region": "south-asia",
+      "tier": "metropolis",
+      "style": "towers",
+      "landmark": null
+    },
+    "Mumbai": {
+      "biome": "jungle",
+      "region": "south-asia",
+      "tier": "metropolis",
+      "style": "midrise",
+      "landmark": null
+    },
+    "Bangkok": {
+      "biome": "city",
+      "region": "southeast-asia",
+      "tier": "metropolis",
+      "style": "midrise",
+      "landmark": null
+    },
+    "Hong Kong": {
+      "biome": "city",
+      "region": "southeast-asia",
+      "tier": "metropolis",
+      "style": "towers",
+      "landmark": null
+    },
+    "Kathmandu": {
+      "biome": "mountain",
+      "region": "south-asia",
+      "tier": "city",
+      "style": "pagoda-town",
+      "landmark": null
+    },
+    "Ulaanbaatar": {
+      "biome": "forest",
+      "region": "north-asia",
+      "tier": "city",
+      "style": "lowrise",
+      "landmark": null
+    },
+    "Jakarta": {
+      "biome": "jungle",
+      "region": "southeast-asia",
+      "tier": "metropolis",
+      "style": "towers",
+      "landmark": null
+    },
+    "Sydney": {
+      "biome": "coast",
+      "region": "oceania",
+      "tier": "metropolis",
+      "style": "apartment-blocks",
+      "landmark": "opera-house"
+    },
+    "Queenstown": {
+      "biome": "lake",
+      "region": "oceania",
+      "tier": "rural",
+      "style": "chalet",
+      "landmark": null
+    },
+    "Alice Springs": {
+      "biome": "desert",
+      "region": "oceania",
+      "tier": "rural",
+      "style": "lowrise",
+      "landmark": null
+    }
+  }
+}

@@ -1,6 +1,6 @@
 {
   "name": "weather-vivarium",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "A tiny living pixel-art weather diorama for any city — dependency-free, driven by real conditions (sun, rain, wind, tide, time of day, landscape, landmark).",
   "type": "module",
   "main": "src/index.js",
@@ -30,7 +30,9 @@
     "test": "bash tests/run-tests.sh",
     "test:node": "node --test",
     "verify:render": "node verify/render.mjs",
-    "build:cities": "node scripts/build-cities.mjs"
+    "build:cities": "node scripts/build-cities.mjs",
+    "verify:reference": "node verify/reference.mjs",
+    "update:reference": "node scripts/update-reference-snapshot.mjs"
   },
   "keywords": [
     "weather",

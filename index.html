@@ -42,10 +42,18 @@
     padding:9px 12px; font:inherit; cursor:pointer; }
   button.primary { background:var(--accent); border-color:var(--accent); color:#08111f; font-weight:600; }
   button:hover { border-color:var(--accent); }
-  /* Preset cities stay on ONE line — scroll sideways rather than wrapping, and
-     each chip's name never breaks across lines. */
-  .row.chips { flex-wrap:nowrap; overflow-x:auto; scrollbar-width:thin; padding-bottom:2px; }
-  .chips button { padding:6px 10px; font-size:12px; white-space:nowrap; flex:0 0 auto; }
+  /* Preset cities are a single line that always fits: no wrapping, no scrollbar.
+     The list is kept short enough (and the chips tight enough) to fit the panel. */
+  .row.chips { flex-wrap:nowrap; overflow:hidden; }
+  .chips button { padding:6px 9px; font-size:12px; white-space:nowrap; flex:0 1 auto; min-width:0; }
+  /* Attributes card for the current city (mirrors the expanded-scene card). */
+  .infocard { width:100%; background:var(--panel); border:1px solid var(--line); border-radius:12px;
+    padding:10px 14px; margin-top:12px; font-size:12px; line-height:1.5;
+    display:grid; grid-template-columns:repeat(auto-fit, minmax(190px, 1fr)); gap:0 20px; }
+  .infocard .r { display:flex; justify-content:space-between; gap:10px; padding:2px 0;
+    border-top:1px solid rgba(255,255,255,.05); }
+  .infocard .k { color:var(--muted); white-space:nowrap; }
+  .infocard .v { text-align:right; font-weight:600; }
   label.mut { color:var(--muted); font-size:12px; }
   input[type=range] { flex:1; accent-color:var(--accent); }
   .readout { color:var(--muted); font-size:12.5px; text-align:center; line-height:1.6; min-height:3em; }
@@ -79,6 +87,7 @@
   <div class="stage">
     <div id="mount"></div>
     <div class="readout" id="readout">Finding your city…</div>
+    <div class="infocard" id="infocard" hidden></div>
     <div class="controls">
       <div class="row">
         <div id="acwrap" style="position:relative;flex:1 1 220px">
@@ -129,7 +138,8 @@
   const liveEl = document.getElementById("live");
   let unit = "auto", instance = null;
 
-  const presets = ["Tokyo", "Reykjavík", "Cairo", "Rio de Janeiro", "Zurich", "Nairobi", "Sydney", "New Orleans", "Cusco"];
+  // Short names only, and few enough to sit on one line without a scrollbar.
+  const presets = ["Tokyo", "Cairo", "Zurich", "Nairobi", "Sydney", "Cusco", "Reykjavík"];
   const pc = document.getElementById("presets");
   presets.forEach(name => {
     const b = document.createElement("button"); b.textContent = name;
@@ -137,6 +147,20 @@
     pc.appendChild(b);
   });
 
+  const infocard = document.getElementById("infocard");
+  function paintCard(inst) {
+    if (!inst || !inst.attributes) return;
+    const rows = inst.attributes();
+    if (!rows.length) { infocard.hidden = true; return; }
+    infocard.textContent = "";
+    for (const { label, value } of rows) {
+      const r = document.createElement("div"); r.className = "r";
+      const k = document.createElement("span"); k.className = "k"; k.textContent = label;
+      const v = document.createElement("span"); v.className = "v"; v.textContent = value;
+      r.append(k, v); infocard.appendChild(r);
+    }
+    infocard.hidden = false;
+  }
   function describe(inst) {
     if (!inst || !inst.resolution) return;
     const r = inst.resolution, w = inst.weather;
@@ -144,6 +168,7 @@
     readout.innerHTML = `<b>${(r.place.name || cityInput.value)}${r.place.admin1 ? ", " + r.place.admin1 : ""}</b> — ` +
       `${w.temp == null ? "…" : w.temp + "°" + u} · <b>${r.landscape.name}</b> (${r.biome.id})` +
       (r.landmark ? ` · landmark: <b>${r.landmark.name}</b>` : "");
+    paintCard(inst);
   }
   function load(place) {
     if (instance) instance.destroy();

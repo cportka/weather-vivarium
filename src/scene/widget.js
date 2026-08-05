@@ -91,7 +91,7 @@ export function createVivarium(target, options) {
       : Math.max(pd != null ? pd : 0.22, res.biome.id === "city" ? 0.5 : 0);
     var w = {
       geometry: GEOMETRY, biome: res.biome, landscape: res.landscape, landmark: res.landmark,
-      latitude: res.latitude, coastal: res.coastal, unit: res.unit, density: density, cannabis: res.cannabis,
+      latitude: res.latitude, coastal: res.coastal, unit: res.unit, density: density, cannabis: res.cannabis, region: res.region,
       pools: pools(res.biome.id), W: W, sunrise: W.sunrise, sunset: W.sunset, moon: moon,
       seed: seedFrom(options.seed || (place.name + place.latitude)),
       place: place,
@@ -117,6 +117,50 @@ export function createVivarium(target, options) {
       (W.temp == null ? "—" : W.temp + "°" + u) + ", " + wmoWord(W.code) + ", " + tod +
       " — a pixel-art " + world.landscape.name + " weather diorama.";
     wrap.setAttribute("aria-label", label);
+  }
+
+  // Everything the diorama knows about this place, as labelled rows — what the
+  // info card shows when a scene is expanded (and what the demo shows for the
+  // current city). Values are already formatted for display; anything unknown is
+  // simply left out rather than shown as a blank.
+  function attributes() {
+    if (!world || !resolution) return [];
+    var lt = localTime(world.place.timezone, nowOverride);
+    var dT = dayFactor(lt.minutes, W.sunrise, W.sunset);
+    var u = resolution.unit === "celsius" ? "C" : "F";
+    var p = world.place, rows = [];
+    function add(label, value) { if (value != null && value !== "") rows.push({ label: label, value: String(value) }); }
+    function hhmm(mins) {
+      if (mins == null) return null;
+      var h = Math.floor(mins / 60) % 24, m = Math.round(mins % 60);
+      return (h < 10 ? "0" : "") + h + ":" + (m < 10 ? "0" : "") + m;
+    }
+    var where = [p.admin1, p.country].filter(Boolean).join(", ");
+    add("Place", p.name || "Unknown");
+    add("Region", where);
+    add("Coordinates", p.latitude.toFixed(2) + "°, " + p.longitude.toFixed(2) + "°");
+    add("Local time", hhmm(lt.minutes) + " (" + (world.place.timezone || "UTC") + ")");
+    add("Light", dT >= 1 ? "daylight" : dT <= 0 ? "night" : "twilight");
+    add("Temperature", W.temp == null ? null : W.temp + "°" + u);
+    add("Conditions", wmoWord(W.code));
+    add("Cloud cover", W.cloud == null ? null : Math.round(W.cloud) + "%");
+    add("Wind", W.windKph == null ? null : Math.round(W.windKph) + " km/h");
+    add("Air quality", W.aqi == null ? null : "AQI " + Math.round(W.aqi));
+    if (resolution.coastal) {
+      add("Swell", W.waveM == null ? null : W.waveM.toFixed(1) + " m");
+      add("Tide", W.tide == null ? null : (W.tide > 0.66 ? "high" : W.tide < 0.33 ? "low" : "mid"));
+    }
+    add("Sunrise", hhmm(W.sunrise));
+    add("Sunset", hhmm(W.sunset));
+    add("Moon", world.moon && world.moon.name ? world.moon.name : null);
+    add("Biome", world.biome.name);
+    add("Landscape", world.landscape.name);
+    add("Landmark", world.landmark ? world.landmark.name : "none");
+    var d = world.density || 0;
+    add("Settlement", d >= 0.78 ? "metropolis" : d >= 0.62 ? "big city" : d >= 0.36 ? "city"
+      : d >= 0.2 ? "town" : d >= 0.08 ? "village" : "rural");
+    add("Population", p.population ? Number(p.population).toLocaleString("en-US") : null);
+    return rows;
   }
 
   // --- render loop ------------------------------------------------------
@@ -198,12 +242,14 @@ export function createVivarium(target, options) {
     ready = Promise.resolve(DEFAULT_PLACE);
   }
 
-  if (options.interactive) wireZoom(wrap, doc, reduce);
+  if (options.interactive) wireZoom(wrap, doc, reduce, attributes);
 
   return {
     el: wrap, canvas: cv, ready: ready,
     get resolution() { return resolution; },
     get weather() { return W; },
+    /** Everything this diorama knows about the place, as [{label, value}] rows. */
+    attributes: attributes,
     setWeather: function (patch) { Object.assign(W, patch); describe(); if (reduce) renderOnce(); },
     setPlace: function (place) { setPlace(place); startData(); },
     refresh: loadWeather,
@@ -215,26 +261,53 @@ export function createVivarium(target, options) {
 }
 
 // Click-to-zoom: expand to a centred, integer-scaled overlay; dock on re-click.
-function wireZoom(wrap, doc, reduce) {
+function wireZoom(wrap, doc, reduce, attributes) {
   wrap.classList.add("is-interactive");
   wrap.setAttribute("role", "button");
   wrap.setAttribute("tabindex", "0");
   var backdrop = doc.createElement("div");
   backdrop.className = "wv-backdrop"; backdrop.hidden = true;
   (doc.body || doc.documentElement).appendChild(backdrop);
+  // The info card that rides along with the expanded scene, listing everything
+  // the diorama knows about the place. Built once, refilled on each expand.
+  var card = doc.createElement("div");
+  card.className = "wv-card"; card.hidden = true;
+  backdrop.appendChild(card);
+  card.addEventListener("click", function (e) { e.stopPropagation(); });
   var expanded = false;
   function intSize() {
     var w = (typeof window !== "undefined") ? window.innerWidth : 800;
     var h = (typeof window !== "undefined") ? window.innerHeight : 600;
-    var n = Math.floor((Math.min(w, h) - 32) / 100);
+    // On a wide screen the info card sits beside the scene, so leave it room
+    // (matches the 900px breakpoint in styles.js); below that it's a bottom sheet.
+    var avail = w >= 900 ? w - 350 : w;
+    var n = Math.floor((Math.min(avail, h) - 32) / 100);
     return (n < 1 ? 1 : n) * 100;
   }
+  function fillCard() {
+    if (!attributes) return;
+    var rows = attributes();
+    if (!rows.length) { card.hidden = true; return; }
+    card.textContent = "";
+    for (var i = 0; i < rows.length; i++) {
+      var r = doc.createElement("div"); r.className = "wv-card__row";
+      var k = doc.createElement("span"); k.className = "wv-card__k"; k.textContent = rows[i].label;
+      var v = doc.createElement("span"); v.className = "wv-card__v"; v.textContent = rows[i].value;
+      r.appendChild(k); r.appendChild(v); card.appendChild(r);
+    }
+    card.hidden = false;
+  }
+  var cardTimer = null;
   function expand() {
     if (expanded) return; expanded = true;
     wrap.style.setProperty("--wv-exp", intSize() + "px");
     wrap.classList.add("is-expanded");
     doc.documentElement.classList.add("wv-lock");
     backdrop.hidden = false; backdrop.offsetWidth; backdrop.classList.add("is-on");
+    fillCard();
+    // keep it live while open — the weather may land after the click
+    if (cardTimer) clearInterval(cardTimer);
+    cardTimer = setInterval(fillCard, 2000);
     wrap.setAttribute("aria-pressed", "true");
   }
   function collapse() {
@@ -242,7 +315,8 @@ function wireZoom(wrap, doc, reduce) {
     wrap.classList.remove("is-expanded");
     backdrop.classList.remove("is-on");
     doc.documentElement.classList.remove("wv-lock");
-    setTimeout(function () { if (!expanded) backdrop.hidden = true; }, 360);
+    if (cardTimer) { clearInterval(cardTimer); cardTimer = null; }
+    setTimeout(function () { if (!expanded) { backdrop.hidden = true; card.hidden = true; } }, 360);
     wrap.setAttribute("aria-pressed", "false");
   }
   function toggle() { expanded ? collapse() : expand(); }

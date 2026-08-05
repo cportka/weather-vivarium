@@ -109,7 +109,7 @@ export var STYLES = {
   },
   // Stilt shacks over marsh/lake.
   stilt: {
-    id: "stilt", name: "Stilt houses", heights: [4, 5, 7], maxCoverage: 0.42, width: w4,
+    id: "stilt", name: "Stilt houses", overWater: true, heights: [4, 5, 7], maxCoverage: 0.42, width: w4,
     building: function (P, x, w, h, env, lit, rng) {
       var b = baseRow(env), body = Math.max(2, h - 2), top = b - h + 1, wall = env.col(mix("#8a7a5a", "#a99a6a", rng()));
       P.px(x + 1, b, env.col("#5a4a30")); P.px(x + w - 2, b, env.col("#5a4a30")); P.px(x, b - 1, env.col("#5a4a30")); // posts
@@ -138,7 +138,7 @@ export var STYLES = {
 // Each biome has one or more candidate styles; a city picks one deterministically
 // from its seed, so cities of the same biome vary but any one city is stable.
 var BIOME_STYLES = {
-  city: ["towers", "midrise"], coast: ["midrise", "lowrise"], ocean: [], mountain: ["chalet"],
+  city: ["towers", "midrise"], coast: ["midrise", "lowrise"], ocean: [], mountain: ["chalet", "adobe"],
   desert: ["adobe"], forest: ["lowrise"], jungle: ["favela"], plains: ["lowrise", "farmstead"],
   tundra: ["chalet"], wetland: ["stilt"], lake: ["stilt", "chalet"], savanna: ["roundhut"],
   canyon: ["adobe"], farmland: ["farmstead", "lowrise"]
@@ -150,8 +150,44 @@ var BIOME_STYLES = {
 // the biome keeps showing through in the gaps and the background.
 var URBAN = ["towers", "midrise", "apartment-blocks", "gulf-modern"];
 
-export function styleForBiome(biomeId, seed, density) {
-  var list = BIOME_STYLES[biomeId] || [];
+// Where a vernacular style belongs. A style with no entry here is universal
+// (towers, mid-rise, plain low-rise, farmsteads, stilt shacks — those turn up
+// anywhere); the culturally specific ones are pinned to their part of the world so
+// a pagoda roof never lands in Denver and a pumpjack never lands in Tromsø.
+var STYLE_REGIONS = {
+  "pagoda-town": ["east-asia", "southeast-asia", "south-asia"],
+  shophouse: ["southeast-asia", "east-asia", "south-asia"],
+  medina: ["africa", "middle-east"],
+  roundhut: ["africa"],
+  favela: ["latin-america", "africa"],
+  adobe: ["north-america", "latin-america", "africa", "middle-east"],
+  pueblo: ["north-america"],
+  "oil-town": ["north-america", "middle-east", "north-asia"],
+  chalet: ["europe", "north-america", "north-asia", "oceania"],
+  nordic: ["europe", "north-america", "north-asia"],
+  brownstone: ["north-america", "europe"],
+  "lake-lodge": ["north-america", "europe", "north-asia", "oceania"],
+  "gulf-modern": ["middle-east", "east-asia", "southeast-asia", "north-america"]
+};
+
+// Where nothing in a biome's list suits the region, a place still has to be built
+// of something: plain low-rise/mid-rise reads as "ordinary buildings" anywhere.
+var UNIVERSAL_FALLBACK = ["lowrise", "midrise"];
+
+/** Keep only styles that suit this region (styles with no region are universal). */
+function fitRegion(ids, region) {
+  if (!region) return ids;
+  var kept = ids.filter(function (id) {
+    var rs = STYLE_REGIONS[id];
+    return !rs || rs.indexOf(region) !== -1;
+  });
+  if (kept.length) return kept;
+  var universal = ids.filter(function (id) { return !STYLE_REGIONS[id]; });
+  return universal.length ? universal : UNIVERSAL_FALLBACK;
+}
+
+export function styleForBiome(biomeId, seed, density, region) {
+  var list = fitRegion(BIOME_STYLES[biomeId] || [], region);
   var d = density || 0;
   var urban = URBAN.filter(function (id) { return STYLES[id]; });
   // Weight by the same tiers the compositor uses: a town builds in its own

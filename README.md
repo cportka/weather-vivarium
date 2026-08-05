@@ -2,7 +2,7 @@
   <img src="assets/logo.png" alt="weather-vivarium" width="560" />
 </p>
 
-> **Version:** 0.7.0
+> **Version:** 0.8.0
 > **Cities:** 25,000 precomputed · 202 countries · **any** city on Earth via geocoding
 
 A tiny **living pixel-art weather diorama** for *any* city — dependency-free, drop
@@ -122,10 +122,23 @@ source of truth (SemVer), kept in sync with `CHANGELOG.md`, this README's versio
 line, and `src/index.js`.
 
 ```
-npm test                 # version sync + syntax + node --test (catalog / resolver / every-sprite render)
+npm test                 # version sync + syntax + node --test (catalog / resolver / reference cities)
 npm run verify:render    # headless-Chromium contact sheets + example scenes (verify/out/)
+npm run verify:reference # render the 50 reference cities, day + night (verify/out/reference-50.png)
 npm run build:cities     # rebuild the city database
 ```
+
+### The 50 reference cities
+
+[`verify/reference-cities.mjs`](verify/reference-cities.mjs) is a standing,
+deliberately diverse set — every biome, the full range from hamlet to megacity, both
+hemispheres, coastal and landlocked, curated landmarks and uncurated long tail. It's
+the yardstick for any visual change: render the sheet, look at all 50, and only then
+call a tweak an improvement. `tests/reference-cities.test.mjs` locks in how each one
+resolves (biome, cultural region, density tier, settlement style, landmark), so a
+change to the resolver or the style tables can't quietly alter one. When a change to
+them is intended, regenerate with `npm run update:reference` and review the sheet
+before committing.
 
 Adding a sprite is one object in a `src/catalog/parts/*` file — see
 [`src/catalog/_contract.md`](src/catalog/_contract.md).
