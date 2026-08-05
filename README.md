@@ -2,7 +2,7 @@
   <img src="assets/logo.png" alt="weather-vivarium" width="560" />
 </p>
 
-> **Version:** 0.8.0
+> **Version:** 0.8.1
 > **Cities:** 25,000 precomputed · 202 countries · **any** city on Earth via geocoding
 
 A tiny **living pixel-art weather diorama** for *any* city — dependency-free, drop
@@ -130,6 +130,12 @@ npm run build:cities     # rebuild the city database
 
 ### The 50 reference cities
 
+<p align="center">
+  <img src="assets/reference-50.png" alt="The 50 reference cities rendered by day — every biome, from hamlet to megacity" width="900" />
+  <br />
+  <em>The 50 reference cities, midday — <a href="assets/reference-50-night.png">and at night →</a></em>
+</p>
+
 [`verify/reference-cities.mjs`](verify/reference-cities.mjs) is a standing,
 deliberately diverse set — every biome, the full range from hamlet to megacity, both
 hemispheres, coastal and landlocked, curated landmarks and uncurated long tail. It's
@@ -139,6 +145,10 @@ resolves (biome, cultural region, density tier, settlement style, landmark), so 
 change to the resolver or the style tables can't quietly alter one. When a change to
 them is intended, regenerate with `npm run update:reference` and review the sheet
 before committing.
+
+CI renders both sheets on every push and uploads them as the **`reference-cities`**
+artifact, so each run has a picture attached; the committed copies above are refreshed
+whenever the look changes.
 
 Adding a sprite is one object in a `src/catalog/parts/*` file — see
 [`src/catalog/_contract.md`](src/catalog/_contract.md).

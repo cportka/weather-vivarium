@@ -1,12 +1,9 @@
 // reference.mjs — render the 50 reference cities to one contact sheet.
 // Run: npm run verify:reference   → verify/out/reference-50.png (+ -night.png)
-import { createRequire } from "module";
+import { launchChromium } from "./browser.mjs";
 import http from "http"; import fs from "fs"; import path from "path"; import { fileURLToPath } from "url";
 import { REFERENCE_CITIES } from "./reference-cities.mjs";
 
-const require = createRequire(import.meta.url);
-const { chromium } = require("/opt/node22/lib/node_modules/playwright");
-const CHROME = "/opt/pw-browsers/chromium-1194/chrome-linux/chrome";
 const ROOT = path.resolve(fileURLToPath(import.meta.url), "../..");
 const OUT = path.join(ROOT, "verify", "out");
 fs.mkdirSync(OUT, { recursive: true });
@@ -30,7 +27,7 @@ const specs = (now, wx) => REFERENCE_CITIES.map((c) => ({
 
 async function main() {
   await new Promise((r) => server.listen(8087, r));
-  const browser = await chromium.launch({ executablePath: CHROME, args: ["--no-sandbox"] });
+  const browser = await launchChromium();
   const page = await browser.newPage();
   page.on("console", (m) => { if (m.type() === "error") console.log("  [err]", m.text()); });
   await page.goto("http://localhost:8087/verify/harness.html");

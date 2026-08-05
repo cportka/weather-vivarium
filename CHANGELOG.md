@@ -4,6 +4,33 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com) and the project uses
 [Semantic Versioning](https://semver.org). Every change bumps the version and adds an entry below.
 
+## [0.8.1] - 2026-08-05
+
+### Fixed
+- **The Golden Gate spans the whole width.** The bridge was drawn 48px wide on a
+  50px scene, leaving a sliver of open water at each edge; the headlands now run
+  right off both sides.
+- **Suburbs look like suburbs.** A new `suburb` style — tract houses with pitched
+  roofs, garages, driveways and lawns, built out wall to wall — and rural styles
+  (farmsteads, hut villages) drop out once a place has a real population. **Torrance**
+  and **Pasadena** were reading as woodland hamlets.
+- **Paved roads where people live.** Any place above town density gets asphalt with
+  markings whatever the terrain, so a suburb of 150,000 is no longer served by a dirt
+  track.
+- **Your city, properly.** The demo now snaps an IP fix to the nearest significant
+  precomputed city (so the hero carries a real population, and therefore the right
+  density and skyline) → falls back to the best city near those coordinates → and only
+  if nothing geographic can be established at all, Los Angeles. LA itself now carries
+  its true coordinates and population everywhere, so it always resolves as the
+  metropolis it is rather than as a nondescript town.
+
+### Added
+- **The reference sheets are generated in CI.** A `reference cities (50)` job renders
+  the day and night sheets plus the catalog/scene sweep in a real browser on every
+  push and uploads them as the `reference-cities` artifact. The sheets are also
+  committed under `assets/` and shown in the README, so they're visible without
+  downloading anything. Render scripts now find Chromium in CI or the sandbox alike.
+
 ## [0.8.0] - 2026-08-05
 
 Nothing built on water, architecture that belongs where it stands, and a standing

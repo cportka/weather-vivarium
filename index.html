@@ -320,14 +320,36 @@
       paint(); const t = setInterval(paint, 1500); setTimeout(() => clearInterval(t), 12000);
     }
   }
+  // The most significant precomputed city near a point: big and close beats small
+  // and closer. This is what turns a bare IP fix into a real place — with the
+  // population that drives density, so your city doesn't render as a village.
+  function nearestKnown(pool, at, maxMi) {
+    let best = null, bestScore = -Infinity;
+    for (const c of pool) {
+      const mi = haversineMi(at, c);
+      if (mi > maxMi) continue;
+      const s = Math.log10(c.population || 1000) - mi / 25;
+      if (s > bestScore) { bestScore = s; best = c; }
+    }
+    return best;
+  }
+  const LA = { name: "Los Angeles", cc: "US", lat: 34.05, lon: -118.24, tz: "America/Los_Angeles", population: 3971883 };
+
   (async () => {
     const pool = await loadPool();
     POOL = pool;
     const cc = document.getElementById("citycount"); if (cc && INDEXED_TOTAL) cc.textContent = INDEXED_TOTAL.toLocaleString() + " cities";
-    let here = await ipLocate();
-    if (here) { load({ city: here.name, lat: here.lat, lon: here.lon, tz: here.tz, country: here.country }); }
-    else { load("Los Angeles"); here = { name: "Los Angeles", lat: 34.05, lon: -118.24 }; document.getElementById("near-title").textContent = "Interesting cities within 400 miles of Los Angeles"; }
-    const excl = new Set([(here.name + "|US").toLowerCase(), (here.name + "|").toLowerCase()]);
+    // Hero city: your IP location, snapped to the nearest known city so it carries a
+    // real population/biome; then the best city near those coordinates; and only if
+    // nothing geographic can be established at all, Los Angeles.
+    const fix = await ipLocate();
+    let here = null;
+    if (fix) here = nearestKnown(pool, fix, 75) ||
+      { name: fix.name, lat: fix.lat, lon: fix.lon, tz: fix.tz, population: null, country: fix.country };
+    if (!here) here = pool.find(c => c.cc === "US" && c.name === "Los Angeles") || LA;
+    load({ city: here.name, lat: here.lat, lon: here.lon, tz: here.tz, population: here.population, country: here.country });
+    document.getElementById("near-title").textContent = "Interesting cities within 400 miles of " + here.name;
+    const excl = new Set([(here.name + "|" + (here.cc || "US")).toLowerCase(), (here.name + "|").toLowerCase(), (here.key || "")]);
     const near = pool.filter(c => haversineMi(here, c) <= 400);
     const rowNear = pickInteresting(near.length >= 5 ? near : pool, 5, excl, false);
     rowNear.forEach(c => excl.add(c.key));

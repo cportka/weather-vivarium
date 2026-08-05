@@ -172,9 +172,11 @@ export default [
     // the beach, across the water, to the bridge linking two headlands far off.
     id: "golden-gate", name: "Golden Gate Bridge", cities: ["san francisco"], biomes: ["coast", "city"],
     tags: ["bridge", "suspension", "red", "landmark"], place: "water",
-    w: 48, h: 16, anchor: "baseline",
+    w: 50, h: 16, anchor: "baseline",
     draw: function (P, x, yb, env) {
-      var W = 48, deckY = yb;
+      // Spans the FULL width: the headlands run right off both edges, so no strip
+      // of open water is left showing beside the bridge.
+      var W = 50, deckY = yb;
       var orange = env.col("#c85434"), dk = env.col("#9c3f22"), cable = env.col("#8a3520");
       var land = env.col("#425a46"), landDk = env.col("#33472f");
       // the two headlands the bridge connects (far shore, sloping into the strait)
