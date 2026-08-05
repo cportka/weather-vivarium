@@ -5,6 +5,37 @@
 
 export default [
   {
+    // El Ángel de la Independencia — the golden winged victory on her column on
+    // Paseo de la Reforma. Mexico City is a metropolis in a ring of volcanoes, so
+    // she reads against the mountains as well as against a skyline.
+    id: "angel-independencia", name: "El Ángel de la Independencia",
+    cities: ["mexico city", "ciudad de mexico", "cdmx"], biomes: ["mountain", "city", "jungle", "savanna"],
+    tags: ["column", "monument", "gold", "landmark"],
+    w: 11, h: 26, anchor: "baseline",
+    draw: function (P, x, yb, env) {
+      var stone = env.col("#ded6c4"), dk = env.col("#b3a992"), shade = env.col("#9a917c");
+      var gold = env.dayT > 0.5 ? "#ffd24a" : env.col("#c8a23a");     // she catches the sun
+      var cx = x + 5;
+      // stepped plinth
+      P.rect(x + 1, yb - 2, 9, 3, dk); P.rect(x + 2, yb - 4, 7, 2, stone);
+      P.rect(x + 2, yb - 4, 7, 1, shade);
+      P.px(x + 1, yb - 3, shade); P.px(x + 9, yb - 3, shade);          // corner figures
+      // fluted column
+      P.rect(cx - 1, yb - 21, 3, 17, stone);
+      P.rect(cx, yb - 21, 1, 17, dk);                                  // flute shadow
+      P.rect(cx - 1, yb - 22, 3, 1, stone);                            // capital
+      P.rect(cx - 2, yb - 23, 5, 1, stone);
+      // the winged victory, arms up: laurel in one hand, broken chain in the other
+      P.px(cx, yb - 24, gold); P.px(cx, yb - 25, gold);                // body
+      P.px(cx - 1, yb - 25, gold); P.px(cx + 1, yb - 25, gold);        // outstretched arms
+      P.px(cx - 2, yb - 26, gold);                                     // raised laurel
+      P.px(cx, yb - 26, gold);                                         // head
+      P.px(cx + 2, yb - 24, gold);                                     // trailing wing
+      P.px(cx - 2, yb - 24, gold);                                     // wing
+      if (env.night) { P.px(cx, yb - 23, "#ffe9a6"); P.px(cx - 1, yb - 12, "#ffe9a6"); }  // uplighting
+    }
+  },
+  {
     id: "st-basils", name: "St. Basil's Cathedral", cities: ["moscow"], biomes: ["city", "forest", "plains", "tundra"],
     w: 20, h: 21, anchor: "baseline",
     draw: function (P, x, yb, env) {

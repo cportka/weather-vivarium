@@ -52,12 +52,12 @@ function distantSkyline(P, env, rng) {
   var hy = env.horizon, d = env.density, lit = env.night || env.dayT < 0.42;
   if (env.waterLandmark) return;   // a distant bridge is already the horizon here
   if (d < 0.34) return;
-  // On a waterfront the near shore can't carry the city (buildings would stand in
-  // the sea), so the skyline across the bay does that work — start it sooner and
-  // let it grow denser, the way a real bayside city reads from the beach.
-  var water = env.waterBot != null;
-  var cov = water ? clamp((d - 0.24) * 1.0, 0, 0.66)
-                  : clamp((d - 0.32) * 0.75, 0, 0.5);   // always leaves sky between
+  // Never a skyline standing on open water. Looking out over the sea there is no
+  // land to build on, so the horizon stays clean sea and sky; only where the water
+  // has a far shore (a lake's far bank, a marsh, a canyon rim) can a distant city
+  // sit behind it.
+  if (env.water && !env.farShore) return;
+  var cov = clamp((d - 0.32) * 0.75, 0, 0.5);   // always leaves sky between
   // A far skyline is atmosphere, not architecture: heights vary a lot (a ragged
   // profile, not a row of monoliths) and everything washes toward the sky at the
   // horizon, so it reads as distance rather than as dark pillars in the scene.
@@ -79,27 +79,52 @@ function distantSkyline(P, env, rng) {
     } else { x += 3 + Math.floor(rng() * 4); }
   }
 }
+// A building has to be at least this tall to belong in a scene — anything shorter
+// reads as clutter next to a person or a bird, not as architecture.
+var MIN_BUILDING = 7;
+
+/**
+ * Which row a settlement stands on, given the water in this biome — and null when
+ * it simply can't stand anywhere. Nothing is ever built ON open water: a style
+ * that's meant to (stilt houses over a marsh) says so with `overWater`; anything
+ * else steps back to dry land above the waterline. And where the sea sits behind
+ * the near shore (a beach), the strip left over has to be deep enough for a real
+ * building, otherwise the shore stays open sand.
+ */
+function settlementBase(env, style) {
+  var base = env.groundTop - 1, w = env.water;
+  if (!w) return base;
+  if (base >= w.top && base <= w.bot) {                      // the build line is water
+    if (!style.overWater) base = w.top - 1;                  // step back onto dry land
+  }
+  if (w.bot < base) {                                        // sea/lake behind the shore
+    if (base - w.bot < MIN_BUILDING) return null;            // only a sliver of beach → leave it open
+  }
+  return base;
+}
+
 function localSettlement(P, env, rng) {
   var d = env.density, lit = env.night || env.dayT < 0.42;
-  var style = styleForBiome(env.biomeId, env.seed, d);
+  var style = styleForBiome(env.biomeId, env.seed, d, env.region);
   if (!style) return;
+  var base = settlementBase(env, style);
+  if (base == null) return;
   var tier = d < 0.36 ? 0 : d < 0.62 ? 1 : 2;                // town / city / metropolis
   var hcap = style.heights[tier];
-  // Never build up through the sea. On a waterfront the near shore is a beach, so
-  // a building standing on it may only rise to the waterline — the city itself
-  // reads from the distant skyline across the bay, not from towers in the surf.
-  if (env.waterBot != null) {
-    var room = env.groundTop - 1 - env.waterBot;
-    if (room < 2) return;
-    if (hcap > room) hcap = room;
+  if (env.water && env.water.bot < base) {                   // don't grow up into the water
+    hcap = Math.min(hcap, base - env.water.bot);
   }
+  if (hcap < MIN_BUILDING) hcap = MIN_BUILDING;
   var cov = clamp((d - 0.08) * 0.72, 0, style.maxCoverage);  // sparse when small, still gapped when huge
+  var shift = base - (env.groundTop - 1);                    // styles draw off env.groundTop
+  var senv = shift ? Object.create(env) : env;
+  if (shift) senv.groundTop = env.groundTop + shift;
   var fx = 0;
   while (fx < P.L) {
     if (rng() < cov) {
       var w = style.width ? style.width(rng) : (3 + Math.floor(rng() * 3));
-      var h = Math.max(2, Math.round(hcap * (0.55 + rng() * 0.45)));
-      style.building(P, fx, w, h, env, lit, rng);
+      var h = Math.max(MIN_BUILDING, Math.round(hcap * (0.55 + rng() * 0.45)));
+      style.building(P, fx, w, h, senv, lit, rng);
       fx += w + 1 + Math.floor(rng() * 3);                   // gap after each building
     } else { fx += 3 + Math.floor(rng() * 5); }              // nature gap
   }
@@ -178,9 +203,11 @@ export function createScene(P, world, opts) {
       // of flickering/"scrolling" as the shared rng advances.
       srng: makeRng(world.seed || 1),
       density: world.density || 0, biomeId: world.biome.id, seed: world.seed || 1,
-      // bottom row of the sea, when this biome has one — the near shore starts
-      // below it, so nothing built on the beach may rise past it.
-      waterBot: world.biome.water ? world.biome.water.bot : null,
+      // this biome's water band (or null), and whether there's LAND across it —
+      // a lake's far bank or a canyon rim can carry a distant city; open sea can't.
+      region: world.region || null,
+      water: world.biome.water || null,
+      farShore: !!world.biome.farShore,
       wind: clamp((W.windKph || 0) / 45, 0, 1),
       code: W.code, cloud: W.cloud, aqi: W.aqi, temp: W.temp,
       waveM: W.waveM, tide: W.tide, sunrise: world.sunrise, sunset: world.sunset,
@@ -385,8 +412,13 @@ export function createScene(P, world, opts) {
 
     // road traffic (in front)
     if (!reduce && world.pools.roadVehicles.length && world.biome.road.kind !== "none") {
-      var maxCars = env.density > 0.6 ? 4 : env.density > 0.3 ? 3 : 2;   // busier streets in denser cities
-      if (frame >= nextCar && cars.length < maxCars) { spawnCar(); nextCar = frame + Math.round((24 + rng() * 64) * (1.3 - env.density * 0.9)); }
+      // Traffic by city size — a quiet road with the odd car in a village, a steady
+      // stream downtown. Kept sparse overall: the road is a frame for the scene,
+      // not the subject, so even a metropolis never becomes a traffic jam.
+      var d = env.density || 0;
+      var maxCars = d >= 0.62 ? 3 : d >= 0.36 ? 2 : 1;
+      var gap = d >= 0.62 ? 62 : d >= 0.36 ? 108 : d >= 0.12 ? 185 : 290;
+      if (frame >= nextCar && cars.length < maxCars) { spawnCar(); nextCar = frame + Math.round(gap * (0.7 + rng() * 0.8)); }
       for (var ci = cars.length - 1; ci >= 0; ci--) {
         var car = cars[ci]; car.x += car.speed * car.dir;
         if (car.x < -car.entry.w - 10 || car.x > P.L + car.entry.w + 10) cars.splice(ci, 1);

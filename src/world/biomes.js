@@ -225,7 +225,7 @@ var TUNDRA = {
 
 var WETLAND = {
   id: "wetland", name: "Wetland",
-  water: { top: 33, bot: 37 }, road: { kind: "path", markings: false },
+  water: { top: 33, bot: 37 }, farShore: true, road: { kind: "path", markings: false },
   drawFar: function (P, env) { treeline(P, env, "#3a5a3a"); },
   drawGround: function (P, env) {
     grassGround(P, env, env.horizon, "#4a6a3a", "#6a9a4a");
@@ -237,7 +237,7 @@ var WETLAND = {
 
 var LAKE = {
   id: "lake", name: "Lakeside",
-  water: { top: 26, bot: 33 }, road: { kind: "dirt", markings: false },
+  water: { top: 26, bot: 33 }, farShore: true, road: { kind: "dirt", markings: false },
   drawFar: function (P, env) { farMountains(P, env, "#6a7a6a", false); },
   drawGround: function (P, env) {
     // still lake with a soft far shore, then a grassy near bank
@@ -264,7 +264,7 @@ var SAVANNA = {
 
 var CANYON = {
   id: "canyon", name: "Canyon",
-  sky: { clearTop: "#3f86c0", clearHor: "#e8b78a" }, water: { top: 35, bot: 37 },
+  sky: { clearTop: "#3f86c0", clearHor: "#e8b78a" }, water: { top: 35, bot: 37 }, farShore: true,
   road: { kind: "dirt", markings: false },
   drawFar: function (P, env) {
     // layered mesa walls

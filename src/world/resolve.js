@@ -59,6 +59,11 @@ export function guessBiome(place) {
   if (box(37, 49, -114, -105)) return "mountain";   // Rockies / Mountain West
   if (box(31, 49, -104, -96)) return "plains";      // Great Plains
   if (box(37, 49, -96, -82)) return "farmland";     // Corn Belt / Midwest
+  // Mexico + Central America: the volcanic highlands are green and mountainous,
+  // not dry savanna — Mexico City, Puebla, Toluca, Guadalajara, Morelia sit at
+  // 1,500–2,600 m ringed by volcanoes.
+  if (box(14, 22, -106, -95)) return "mountain";    // Mexican volcanic belt / central highlands
+  if (box(13, 17, -92, -83)) return "mountain";     // Guatemalan / Honduran highlands
   // South America
   if (box(-32, -14, -73, -66)) return "mountain";   // Andes
   if (box(-40, -22, -66, -56)) return "plains";     // Pampas
@@ -80,6 +85,30 @@ export function guessBiome(place) {
   if (alat < 12) return "jungle";
   if (alat < 24) return "savanna";
   return "forest";                 // temperate / boreal default
+}
+
+/**
+ * A coarse cultural region from coordinates. Used to keep vernacular architecture
+ * where it belongs: pagoda roofs in East Asia, not Denver; a nodding pumpjack in
+ * West Texas, not Tromsø. Deliberately broad — it only ever narrows a candidate
+ * list, and anything unmatched simply gets the universal styles.
+ */
+export function regionFor(place) {
+  var lat = place.latitude || 0, lon = place.longitude || 0;
+  function box(la0, la1, lo0, lo1) { return lat >= la0 && lat <= la1 && lon >= lo0 && lon <= lo1; }
+  if (box(14, 33, -118, -86)) return "latin-america";   // Mexico + Central America
+  if (box(8, 27, -90, -58)) return "latin-america";      // Caribbean
+  if (box(15, 75, -170, -52)) return "north-america";
+  if (box(-60, 15, -95, -30)) return "latin-america";
+  if (box(35, 72, -25, 40)) return "europe";
+  if (box(-36, 35, -20, 52)) return "africa";
+  if (box(12, 42, 34, 63)) return "middle-east";
+  if (box(4, 38, 60, 92)) return "south-asia";
+  if (box(-11, 25, 92, 130)) return "southeast-asia";
+  if (box(20, 46, 100, 146)) return "east-asia";
+  if (box(-50, -10, 110, 180)) return "oceania";
+  if (box(42, 78, 40, 180)) return "north-asia";
+  return null;
 }
 
 // Cities with a famously relaxed cannabis culture — the odd weed-smoking stroller
@@ -129,6 +158,7 @@ export function resolveScene(place, opts) {
     latitude: place.latitude || 0,
     coastal: coastal,
     unit: unit,
+    region: regionFor(place),
     cannabis: isCannabisCity(place)
   };
 }

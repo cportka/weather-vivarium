@@ -15,6 +15,9 @@ export var LANDSCAPES = [
     cities: ["san francisco", "monterey", "big sur", "cape town", "wellington", "berkeley", "oakland"] },
   { id: "north-sea", name: "North Sea Harbour", biome: "coast", coastal: true,
     cities: ["copenhagen", "bergen", "aberdeen", "gothenburg", "stavanger"] },
+  // Cities defined by the water they sit in/on, rather than by their latitude.
+  { id: "lagoon", name: "Lagoon City", biome: "coast", coastal: true,
+    cities: ["venice", "venezia", "havana", "la habana", "cartagena", "valletta", "zanzibar"] },
   { id: "manhattan", name: "Manhattan", biome: "city",
     cities: ["new york", "chicago", "toronto", "hong kong", "shanghai", "singapore", "sao paulo", "mexico city",
       "washington", "boston", "philadelphia", "atlanta", "dallas", "minneapolis"] },

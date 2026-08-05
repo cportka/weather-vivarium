@@ -224,7 +224,9 @@ export default [
     }
   },
   {
-    id: "pyramid", name: "Pyramids", cities: ["cairo", "giza", "luxor"], landscapes: ["sahara"], biomes: ["desert"],
+    // City-matched only: the pyramids belong to Giza, not to every Saharan town
+    // (a landscape fallback used to plant them in Marrakesh and Timbuktu).
+    id: "pyramid", name: "Pyramids", cities: ["cairo", "giza", "luxor"], biomes: ["desert"],
     w: 22, h: 15, anchor: "baseline",
     draw: function (P, x, yb, env) {
       var lit = env.col("#f0d08a"), shade = env.col("#a06d34"), edge = env.col("#7a5326");
