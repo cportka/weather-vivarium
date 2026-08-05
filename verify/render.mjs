@@ -1,14 +1,11 @@
 // Headless render harness — screenshots catalog contact sheets + example scenes
 // with Chromium (Playwright). Run: node verify/render.mjs
-import { createRequire } from "module";
+import { launchChromium } from "./browser.mjs";
 import http from "http";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 
-const require = createRequire(import.meta.url);
-const { chromium } = require("/opt/node22/lib/node_modules/playwright");
-const CHROME = "/opt/pw-browsers/chromium-1194/chrome-linux/chrome";
 
 const ROOT = path.resolve(fileURLToPath(import.meta.url), "../..");
 const OUT = path.join(ROOT, "verify", "out");
@@ -27,7 +24,7 @@ const server = http.createServer((req, res) => {
 
 async function main() {
   await new Promise(r => server.listen(8099, r));
-  const browser = await chromium.launch({ executablePath: CHROME, args: ["--no-sandbox"] });
+  const browser = await launchChromium();
   const page = await browser.newPage({ deviceScaleFactor: 1 });
   const logs = [];
   page.on("console", m => logs.push(m.text()));

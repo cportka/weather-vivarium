@@ -21,10 +21,13 @@ import { describe as wmoWord } from "../data/wmo.js";
 var L = 50, DISPLAY = 100;
 var GEOMETRY = { L: L, horizon: 24, groundTop: 37, roadBot: 46 };
 
-// A default place (Santa Monica) so the widget is alive before geocoding.
+// The default place, used until a real one resolves: Los Angeles, with its actual
+// coordinates and population so it renders as the metropolis it is rather than
+// defaulting to a nondescript town.
 var DEFAULT_PLACE = {
   name: "Los Angeles", country: "United States", admin1: "California",
-  latitude: 34.019, longitude: -118.491, timezone: "America/Los_Angeles", elevation: 30
+  latitude: 34.05, longitude: -118.24, timezone: "America/Los_Angeles",
+  elevation: 87, population: 3971883
 };
 
 function el(target, doc) {

@@ -12,28 +12,28 @@
       "biome": "coast",
       "region": "north-america",
       "tier": "town",
-      "style": "port",
+      "style": "midrise",
       "landmark": null
     },
     "San Francisco": {
       "biome": "coast",
       "region": "north-america",
       "tier": "city",
-      "style": "midrise",
+      "style": "suburb",
       "landmark": "golden-gate"
     },
     "Honolulu": {
       "biome": "coast",
       "region": "north-america",
       "tier": "city",
-      "style": "midrise",
+      "style": "suburb",
       "landmark": "diamond-head"
     },
     "Seattle": {
       "biome": "forest",
       "region": "north-america",
       "tier": "city",
-      "style": "midrise",
+      "style": "apartment-blocks",
       "landmark": "space-needle"
     },
     "New York City": {
@@ -54,14 +54,14 @@
       "biome": "desert",
       "region": "north-america",
       "tier": "city",
-      "style": "oil-town",
+      "style": "suburb",
       "landmark": "casino"
     },
     "Reno": {
       "biome": "desert",
       "region": "north-america",
       "tier": "city",
-      "style": "pueblo",
+      "style": "suburb",
       "landmark": "casino-reno"
     },
     "Denver": {
@@ -96,14 +96,14 @@
       "biome": "forest",
       "region": "north-america",
       "tier": "city",
-      "style": "lowrise",
+      "style": "suburb",
       "landmark": "snowpeak"
     },
     "Berkeley": {
       "biome": "coast",
       "region": "north-america",
       "tier": "town",
-      "style": "midrise",
+      "style": "suburb",
       "landmark": "belltower"
     },
     "Miami": {
@@ -138,7 +138,7 @@
       "biome": "forest",
       "region": "latin-america",
       "tier": "town",
-      "style": "lowrise",
+      "style": "suburb",
       "landmark": null
     },
     "Havana": {
@@ -152,7 +152,7 @@
       "biome": "forest",
       "region": "north-america",
       "tier": "city",
-      "style": "lake-lodge",
+      "style": "suburb",
       "landmark": null
     },
     "London": {
@@ -208,7 +208,7 @@
       "biome": "coast",
       "region": "europe",
       "tier": "city",
-      "style": "brownstone",
+      "style": "midrise",
       "landmark": "belltower"
     },
     "Cairo": {
@@ -348,7 +348,7 @@
       "biome": "desert",
       "region": "oceania",
       "tier": "rural",
-      "style": "lowrise",
+      "style": "suburb",
       "landmark": null
     }
   }

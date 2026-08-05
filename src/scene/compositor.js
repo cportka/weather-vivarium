@@ -115,7 +115,9 @@ function localSettlement(P, env, rng) {
     hcap = Math.min(hcap, base - env.water.bot);
   }
   if (hcap < MIN_BUILDING) hcap = MIN_BUILDING;
-  var cov = clamp((d - 0.08) * 0.72, 0, style.maxCoverage);  // sparse when small, still gapped when huge
+  // how built-out the place is; `fill` lets a style (suburbia) reach its
+  // coverage sooner than a scattering of cottages would
+  var cov = clamp((d - 0.08) * 0.72 * (style.fill || 1), 0, style.maxCoverage);
   var shift = base - (env.groundTop - 1);                    // styles draw off env.groundTop
   var senv = shift ? Object.create(env) : env;
   if (shift) senv.groundTop = env.groundTop + shift;
@@ -337,7 +339,11 @@ export function createScene(P, world, opts) {
     // present it becomes the horizon, so the hazy distant skyline is suppressed
     // (otherwise those grey towers read as stray bridge piers).
     env.waterLandmark = !!(props.landmark && props.landmark.entry.place === "water");
-    if (env.waterLandmark) props.landmark.entry.draw(P, 1, G.horizon + 3, env);
+    if (env.waterLandmark) {
+      // centre it so a full-width span reaches both edges
+      var lmx = Math.floor((P.L - props.landmark.entry.w) / 2);
+      props.landmark.entry.draw(P, lmx < 0 ? 0 : lmx, G.horizon + 3, env);
+    }
 
     // city fabric — buildings scaled by how urban the place is (gaps show nature)
     urbanLayer(P, env);
@@ -454,12 +460,19 @@ export function createScene(P, world, opts) {
   function drawRoad(P, env) {
     var kind = world.biome.road.kind;
     if (kind === "none") return;
+    var markings = world.biome.road.markings;
+    // A built-up place has a paved, painted road whatever the terrain around it —
+    // a suburb of 150,000 people is not served by a dirt track. Below that, the
+    // biome's own surface (dirt, path, cobble) stands.
+    if ((env.density || 0) >= 0.3 && (kind === "dirt" || kind === "path")) {
+      kind = "asphalt"; markings = true;
+    }
     var C = env.night ? ROAD_NIGHT[kind] : ROAD_DAY[kind];
     for (var x = 0; x < P.L; x++) {
       P.rect(x, G.groundTop, 1, G.roadBot - G.groundTop, C.surf);
       P.px(x, G.groundTop, C.edge);
       P.px(x, G.roadBot - 1, C.dark);
-      if (world.biome.road.markings && (x + 1) % 6 < 3) P.px(x, (G.groundTop + G.roadBot) >> 1, C.mark);
+      if (markings && (x + 1) % 6 < 3) P.px(x, (G.groundTop + G.roadBot) >> 1, C.mark);
     }
   }
 

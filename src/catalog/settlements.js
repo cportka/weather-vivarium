@@ -118,6 +118,32 @@ export var STYLES = {
       P.px(x + (w >> 1), top + 2, lit ? "#ffca6a" : env.col("#3a2f1a"));
     }
   },
+  // Suburbia — single-family tract houses: pitched roof, garage door, driveway,
+  // a clipped hedge. Low but *built-up*, wall to wall: the look of a Torrance or a
+  // Naperville, which is concrete and lawn, not countryside.
+  suburb: {
+    // `fill` — suburbia is uniformly built out, house after house, so it reaches its
+    // coverage much sooner than a scattering of village cottages would.
+    id: "suburb", name: "Suburb", heights: [7, 8, 9], maxCoverage: 0.62, fill: 2.6,
+    width: function (rng) { return 6 + Math.floor(rng() * 3); },
+    building: function (P, x, w, h, env, lit, rng) {
+      var b = baseRow(env), top = b - h + 1;
+      var wall = env.col(["#d8d2c4", "#c9c0ae", "#cbb89c", "#bfc6c2", "#d0c2b6"][Math.floor(rng() * 5)]);
+      var roof = env.col(mix("#6a5a4e", "#4f463f", rng()));
+      var drive = env.col("#a8a49c"), lawn = env.col("#5f8a48");
+      P.rect(x, b - 1, w, 2, lawn);                                        // lawn strip out front
+      P.rect(x, top + 1, w - 2, h - 2, wall);                              // house
+      for (var i = 0; i < w - 2; i++) {                                    // pitched roof
+        var d = Math.abs(i - (w - 3) / 2);
+        P.px(x + i, top + Math.round(d * 0.5), roof);
+      }
+      P.rect(x, top + 1, w - 2, 1, roof);                                  // eaves line
+      P.rect(x + w - 2, b - 2, 2, 3, drive);                               // driveway + kerb cut
+      P.rect(x + 1, b - 2, 2, 2, env.col("#8f8880"));                      // garage door
+      P.px(x + w - 4, b - 3, lit ? "#ffe0a0" : env.col("#4a4640"));        // lit window
+      if (rng() < 0.5) P.px(x + w - 3, b - 2, env.col("#3f6a3a"));         // shrub by the door
+    }
+  },
   // Stacked colourful favela boxes climbing a slope.
   favela: {
     id: "favela", name: "Favela", heights: [4, 6, 10], maxCoverage: 0.55, width: w4,
@@ -138,10 +164,10 @@ export var STYLES = {
 // Each biome has one or more candidate styles; a city picks one deterministically
 // from its seed, so cities of the same biome vary but any one city is stable.
 var BIOME_STYLES = {
-  city: ["towers", "midrise"], coast: ["midrise", "lowrise"], ocean: [], mountain: ["chalet", "adobe"],
-  desert: ["adobe"], forest: ["lowrise"], jungle: ["favela"], plains: ["lowrise", "farmstead"],
+  city: ["towers", "midrise"], coast: ["midrise", "lowrise", "suburb"], ocean: [], mountain: ["chalet", "adobe"],
+  desert: ["adobe", "suburb"], forest: ["lowrise", "suburb"], jungle: ["favela"], plains: ["lowrise", "farmstead", "suburb"],
   tundra: ["chalet"], wetland: ["stilt"], lake: ["stilt", "chalet"], savanna: ["roundhut"],
-  canyon: ["adobe"], farmland: ["farmstead", "lowrise"]
+  canyon: ["adobe"], farmland: ["farmstead", "lowrise", "suburb"]
 };
 
 // Genuinely urban architecture. A big city is a big city whatever biome it sits
@@ -167,8 +193,16 @@ var STYLE_REGIONS = {
   nordic: ["europe", "north-america", "north-asia"],
   brownstone: ["north-america", "europe"],
   "lake-lodge": ["north-america", "europe", "north-asia", "oceania"],
-  "gulf-modern": ["middle-east", "east-asia", "southeast-asia", "north-america"]
+  "gulf-modern": ["middle-east", "east-asia", "southeast-asia", "north-america"],
+  suburb: ["north-america", "oceania", "europe", "latin-america"]
 };
+
+// Rural styles — a working farm or a village of huts. Fine for a hamlet, wrong for
+// anywhere with a real population, so they drop out once a place is built-up.
+var RURAL_ONLY = ["farmstead", "roundhut"];
+
+// Where postwar car-suburbia is the dominant built form at town/city size.
+var SUBURB_REGIONS = ["north-america", "oceania"];
 
 // Where nothing in a biome's list suits the region, a place still has to be built
 // of something: plain low-rise/mid-rise reads as "ordinary buildings" anywhere.
@@ -187,8 +221,20 @@ function fitRegion(ids, region) {
 }
 
 export function styleForBiome(biomeId, seed, density, region) {
-  var list = fitRegion(BIOME_STYLES[biomeId] || [], region);
   var d = density || 0;
+  var candidates = BIOME_STYLES[biomeId] || [];
+  if (d >= 0.36) {                       // town-and-up: no farmsteads, no hut villages
+    var built = candidates.filter(function (id) { return RURAL_ONLY.indexOf(id) === -1; });
+    if (built.length) candidates = built;
+  }
+  var list = fitRegion(candidates, region);
+  // In the car-suburb world, a place of this size mostly IS suburbia — tract houses
+  // and driveways, not a lodge in the woods or a village main street. Make that the
+  // usual answer in the town/city band, keeping a third for local variety.
+  if (d >= 0.3 && d < 0.62 && SUBURB_REGIONS.indexOf(region) !== -1 &&
+      list.indexOf("suburb") !== -1 && (seed >>> 0) % 3 !== 0) {
+    return STYLES.suburb;
+  }
   var urban = URBAN.filter(function (id) { return STYLES[id]; });
   // Weight by the same tiers the compositor uses: a town builds in its own
   // vernacular; a city mixes; a metropolis is mostly genuinely urban (with one
