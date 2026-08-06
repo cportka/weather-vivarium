@@ -19,6 +19,9 @@ import { styleForBiome } from "../catalog/settlements.js";
 import { groundOffset } from "../catalog/measure.js";
 
 var LANE_NEAR = 43, LANE_FAR = 39;
+// Where the temperature sign stands, and how long each fold-down / get-up pose
+// of a resting stroller is held.
+var SIGN_X = 29, SETTLE = 6;
 
 // ---- clouds (ported from the LA widget) ---------------------------------
 function cloudPuff(P, x, y, c, s) {
@@ -188,7 +191,7 @@ export function createScene(P, world, opts) {
       if (props.landmark && props.landmark.pairedSign) {
         for (var s = 0; s < signs.length; s++) if (signs[s].id === props.landmark.pairedSign) { chosen = signs[s]; break; }
       }
-      props.sign = { entry: chosen || pickWeighted(rng, signs), x: 29 };
+      props.sign = { entry: chosen || pickWeighted(rng, signs), x: SIGN_X };
     }
 
     var pool = world.pools.trees;
@@ -255,15 +258,20 @@ export function createScene(P, world, opts) {
   // A place's calling card: the first person/animal it sends out, before the cast
   // turns over to the usual random draw. Each is used once, then forgotten.
   var card = world.callingCard ? {
-    person: world.callingCard.person, ground: world.callingCard.ground,
+    person: world.callingCard.person, nightPerson: world.callingCard.nightPerson,
+    ground: world.callingCard.ground,
     bird: world.callingCard.bird, water: world.callingCard.water
   } : {};
-  /** Take the calling card for `slot` if it's in this pool, else a weighted pick. */
+  /** Take the calling card for `slot` if it's in this pool, else a weighted pick.
+      The card is only spent on a hit: a card the current pool can't honour (the
+      LA beachgoer while it's still dark) stays pending for the next spawn rather
+      than being silently burnt on a cast that never happened. */
   function pickCast(slot, pool) {
     var want = card[slot];
     if (want) {
-      card[slot] = null;                       // the calling card plays once
-      for (var i = 0; i < pool.length; i++) if (pool[i].id === want) return pool[i];
+      for (var i = 0; i < pool.length; i++) {
+        if (pool[i].id === want) { card[slot] = null; return pool[i]; }   // plays once
+      }
     }
     return pickWeighted(rng, pool);
   }
@@ -317,27 +325,43 @@ export function createScene(P, world, opts) {
     }
   }
 
-  // Paint the strolling figure (+ any weather gear) at its current position — or
-  // its resting pose while it's stopped (a beachgoer laid out on a towel).
+  // Paint the strolling figure (+ any weather gear) at its current position, or,
+  // once it has stopped, the pose for where it is in the sit-down: the in-between
+  // `restPoses` while it folds down and rises again, `restDraw` while it rests.
   function paintWalker(env) {
-    var wx = Math.round(walker.x);
-    if (walker.resting) { walker.entry.restDraw(P, wx, walker.fy, env); return; }
-    draw(walker.entry, wx, walker.fy, env, walker.dir);
-    if (walker.gear) drawGear(P, wx, walker.fy, walker.gear, env);
-  }
-
-  // Advance the strolling figure: walk, pause to rest (if this sprite has a
-  // resting pose and the weather is nice), then get up and carry on.
-  function stepWalker(env, frame) {
-    if (walker.resting) {
-      if (frame >= walker.restUntil) { walker.resting = false; walker.rested = true; }
+    var w = walker, wx = Math.round(w.x), poses = w.entry.restPoses;
+    if ((w.phase === "settling" || w.phase === "rising") && poses && poses.length) {
+      var i = Math.min(poses.length - 1, Math.floor(w.settle / SETTLE));
+      if (w.phase === "rising") i = poses.length - 1 - i;    // same poses, reversed
+      poses[i](P, wx, w.fy, env);
       return;
     }
-    walker.x += walker.speed * walker.dir;
-    if (!walker.rested && walker.entry.restDraw && !env.rough && walker.x >= walker.restAt) {
-      walker.resting = true;
-      walker.restUntil = frame + 220 + Math.round(rng() * 260);   // a good long sunbathe
+    if (w.phase !== "walking") { w.entry.restDraw(P, wx, w.fy, env); return; }
+    draw(w.entry, wx, w.fy, env, w.dir);
+    if (w.gear) drawGear(P, wx, w.fy, w.gear, env);
+  }
+
+  // Advance the strolling figure: walk out, fold down onto the towel (if this
+  // sprite has a resting pose and the weather is nice), rest a good while, then
+  // rise and stroll on. It only ever rests once per crossing.
+  function stepWalker(env, frame) {
+    var w = walker, poses = w.entry.restPoses;
+    var span = (poses ? poses.length : 0) * SETTLE;
+    if (w.phase === "settling") {
+      if (++w.settle >= span) { w.phase = "resting"; w.restUntil = frame + 220 + Math.round(rng() * 260); }
+      return;
     }
+    if (w.phase === "resting") {
+      // pack up when the sunbathe is done — or early if the weather turns
+      if (frame >= w.restUntil || env.rough) { w.phase = "rising"; w.settle = 0; }
+      return;
+    }
+    if (w.phase === "rising") {
+      if (++w.settle >= span) { w.phase = "walking"; w.rested = true; }
+      return;
+    }
+    w.x += w.speed * w.dir;
+    if (!w.rested && w.entry.restDraw && !env.rough && w.x >= w.restAt) { w.phase = "settling"; w.settle = 0; }
   }
 
   // spawn helpers -------------------------------------------------------
@@ -388,13 +412,27 @@ export function createScene(P, world, opts) {
     var pool = world.pools.people; if (!pool.length) return;
     // weed-smoking strollers only turn up in cannabis-culture cities
     if (!world.cannabis) pool = pool.filter(function (p) { return p.require !== "cannabis"; });
+    // Day and night keep their own cast: nobody sunbathes in the dark, and the
+    // figures that own the small hours (the beach cat) keep to them.
+    var day = !env.night && env.dayT >= 0.5;
+    pool = pool.filter(function (p) { return day ? !p.nocturnal : !p.daylight; });
     if (!pool.length) return;
-    var e = pickCast("person", pool);
+    var e = pickCast(day ? "person" : "nightPerson", pool);
+    // Weather gear is for people — the cat just hunches and hurries.
     var gear = null;
-    if (env.rough) gear = (env.aqi >= 160 && !isPrecip(env.code)) ? "gasmask" : (env.cold ? "parka" : "umbrella");
-    walker = { entry: e, x: -8, dir: 1, fy: G.groundTop - 1, gear: gear, speed: env.rough ? 0.3 : 0.22,
-      // where it stops to rest (if it has a resting pose), and whether it already has
-      restAt: 8 + Math.round(rng() * 22), resting: false, rested: false, restUntil: 0 };
+    if (env.rough && (e.tags || []).indexOf("person") >= 0) {
+      gear = (env.aqi >= 160 && !isPrecip(env.code)) ? "gasmask" : (env.cold ? "parka" : "umbrella");
+    }
+    // `lift` sets a figure back off the road edge — the beachgoer strolls on the
+    // sand, not on the kerb.
+    var lift = e.lift || 0;
+    // Stop it far enough left that the laid-out pose (restW wide) still clears
+    // the sign at x=29 — a long sunbathe is never spent hidden behind the panel.
+    var restAt = clamp(SIGN_X - (e.restW || 0) - 2 - Math.round(rng() * 5), 3, SIGN_X);
+    walker = { entry: e, x: -8, dir: 1, fy: G.groundTop - 1 - lift, gear: gear, speed: env.rough ? 0.3 : 0.22,
+      // where it stops to rest (if it has a resting pose), how far through the
+      // fold-down/get-up it is, and whether it has already had its rest
+      restAt: restAt, phase: "walking", settle: 0, restUntil: 0, rested: false };
   }
 
   // ---- per-frame --------------------------------------------------------

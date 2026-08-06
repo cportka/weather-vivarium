@@ -6,7 +6,7 @@
    painter/compositor) is exported for the demo, the gallery, tests, and anyone
    who wants to build their own scene.
    ========================================================================= */
-export var VERSION = "0.10.0";
+export var VERSION = "0.11.0";
 
 // The one-liner.
 export { createVivarium } from "./scene/widget.js";

@@ -3,37 +3,12 @@
 // CI safety net that catches a sprite with a typo or out-of-box coordinates.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mix, clamp, lerp, hex, shade, tint, BAYER } from "../src/engine/painter.js";
+import { mix } from "../src/engine/painter.js";
 import { CATALOG } from "../src/catalog/index.js";
 import { LANDMARKS } from "../src/catalog/landmarks.js";
+import { stubPainter } from "./stub-painter.mjs";
 
 const L = 50;
-
-function stubPainter() {
-  const bounds = { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity, drew: false };
-  const mark = (x, y) => {
-    if (!Number.isFinite(x) || !Number.isFinite(y)) throw new Error("non-finite coord " + x + "," + y);
-    bounds.drew = true;
-    bounds.minX = Math.min(bounds.minX, x); bounds.maxX = Math.max(bounds.maxX, x);
-    bounds.minY = Math.min(bounds.minY, y); bounds.maxY = Math.max(bounds.maxY, y);
-  };
-  const ctx = { set fillStyle(v) {}, beginPath() {}, arc(cx, cy) { mark(cx, cy); }, fill() {}, fillRect(x, y, w, h) { mark(x, y); mark(x + w, y + h); }, save() {}, restore() {}, translate() {}, scale() {}, clearRect() {} };
-  const P = {
-    ctx, L,
-    px: (x, y) => mark(x, y),
-    rect: (x, y, w, h) => { mark(x, y); mark(x + w, y + h); },
-    disc: (cx, cy, r) => { mark(cx - r, cy - r); mark(cx + r, cy + r); },
-    line: (x0, y0, x1, y1) => { mark(x0, y0); mark(x1, y1); },
-    glyph: () => 4,
-    text: (s) => (s ? s.length * 4 : 0),
-    withAlpha: (a, fn) => fn(),
-    alpha: () => {},
-    flip: (x, w, fn) => fn(),
-    clear: () => {},
-    mix, hex, lerp, clamp, shade, tint, BAYER
-  };
-  return { P, bounds };
-}
 
 function env(night) {
   return {
@@ -66,3 +41,24 @@ for (const [cat, list] of Object.entries(ALL)) {
     }
   });
 }
+
+// A stroller that stops (the beachgoer on her towel) paints through restDraw and
+// restPoses, which the loop above never reaches — cover them too, and hold them to
+// the restW footprint the compositor uses to keep them clear of the sign.
+test("resting poses draw without throwing and stay inside restW", () => {
+  for (const e of CATALOG.people) {
+    if (!e.restDraw) continue;
+    assert.ok(e.restW > 0, `people/${e.id} has a restDraw but no restW`);
+    const poses = [e.restDraw].concat(e.restPoses || []);
+    for (const pose of poses) {
+      for (const night of [false, true]) {
+        const { P, bounds } = stubPainter();
+        assert.doesNotThrow(() => pose(P, 12, 40, env(night)), `people/${e.id} rest pose threw`);
+        assert.ok(bounds.drew, `people/${e.id} rest pose painted nothing`);
+        // poses are authored around x, and may spill one column left (hair on the towel)
+        assert.ok(bounds.minX >= 11 && bounds.maxX <= 12 + e.restW - 1,
+          `people/${e.id} rest pose spans [${bounds.minX},${bounds.maxX}], wider than restW ${e.restW}`);
+      }
+    }
+  }
+});

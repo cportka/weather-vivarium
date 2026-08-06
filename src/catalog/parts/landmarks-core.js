@@ -96,16 +96,44 @@ export default [
     }
   },
   {
+    // Lēʻahi — the tuff cone above Waikīkī: a long shallow slope up from the west
+    // to a high notched rim on the east, dropping away steeply to the sea. Sunlit
+    // seaward face, shadowed inland flank, dry scrub gullies raking down it.
     id: "diamond-head", name: "Diamond Head", cities: ["honolulu", "waikiki"], biomes: ["coast"],
-    w: 26, h: 12, anchor: "baseline",
+    w: 28, h: 15, anchor: "baseline",
     draw: function (P, x, yb, env) {
-      var g = env.col("#5a7a44"), d = env.col("#3f5a30");
-      // a broad extinct-crater ridge on the horizon
-      for (var i = 0; i < 24; i++) {
-        var h = Math.round(9 - Math.abs(i - 10) * 0.7 + (i > 14 ? 2 : 0));
-        if (h < 1) h = 1;
-        P.rect(x + i, yb - h, 1, h, i % 3 === 0 ? d : g);
+      // Lēʻahi is a dry leeward tuff cone, not a green hill: gold-brown slopes with
+      // green only down the erosion gullies and along the vegetated foot, a notched
+      // crater rim, and the little lighthouse on the low seaward point.
+      var crest = env.col("#d4bd7e"), lit = env.col("#b39a5e");
+      var mid = env.col("#8d7748"), dark = env.col("#635334");
+      var gully = env.col("#5f7c42"), scrub = env.col("#456939");
+      // Column by column: the long ramp up from Waikiki, then the broad crater RIM —
+      // two low rises with a shallow saddle between them, not a pair of peaks — and
+      // finally the steep drop to the sea. It's the wide, almost flat crest that
+      // reads as a blown-out cone rather than a hill.
+      var PROFILE = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 11, 12, 12, 11, 10, 10, 11,
+                     12, 13, 13, 12, 10, 7, 4, 3, 2, 2];
+      for (var i = 0; i < PROFILE.length; i++) {
+        var h = PROFILE[i], top = yb - h;
+        var seaward = i > 20;                                  // past the rim, falling to the sea
+        for (var y = top; y <= yb; y++) {
+          var d = y - top, c;                                  // depth below this crest
+          if (d === 0) c = crest;                              // sunlit rim line
+          else if (d === 1) c = seaward ? mid : lit;
+          else if (d < 5) c = seaward ? dark : mid;
+          else c = dark;
+          // ravines raking part-way down the face, and the green skirt at the foot
+          if ((i % 6) === 3 && d >= 2 && d < h - 2) c = gully;
+          if (y >= yb - 1) c = scrub;
+          P.px(x + i, y, c);
+        }
       }
+      // the lighthouse standing clear on the seaward point, lit after dark
+      var lamp = (env.night || env.dayT < 0.4) ? "#ffe9a6" : env.col("#cfcabc");
+      P.px(x + 25, yb - 4, env.col("#efeae0"));
+      P.px(x + 25, yb - 5, env.col("#efeae0"));
+      P.px(x + 25, yb - 6, lamp);
     }
   },
   {

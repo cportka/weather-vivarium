@@ -4,6 +4,50 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com) and the project uses
 [Semantic Versioning](https://semver.org). Every change bumps the version and adds an entry below.
 
+## [0.11.0] - 2026-08-06
+
+The beach at both ends of the day, and two landmarks redrawn.
+
+### Fixed
+- **The beachgoer keeps to daylight.** Nobody sunbathes in the dark: figures marked
+  `daylight` are only cast while the sun is up. After sunset the Los Angeles beach
+  belongs to a tabby cat instead — the night half of the original LA widget, restored.
+- **She sunbathes where you can see her.** The towel now goes down well clear of the
+  temperature sign instead of sometimes landing behind it, and she strolls two pixels
+  up on the sand rather than on the kerb — the depth the original drew her at, which
+  also puts her behind the sign the way the original did.
+- **A calling card is no longer spent on a cast that never happened.** A card the
+  current pool can't honour (LA's beachgoer while it's still dark) stays pending for
+  the next spawn instead of being silently burnt.
+- **The verify harness was building a world the widget never builds** — it left out
+  `region` and `callingCard`, so every reference render since 0.9.0 was missing its
+  calling card and its regional settlement style. It now mirrors `buildWorld()`
+  field for field.
+
+### Added
+- **Beach cat** — pads down the sand after dark, tail up, hunched and quick when the
+  weather turns. Cast through a new `nightPerson` calling-card slot.
+- **The full sunbathe, ported from the original.** She folds down through two
+  in-between poses (crouch → propped) onto a nine-wide striped towel, holds the
+  reclining pose with one knee rocking, then rises back up the same way — instead of
+  snapping flat and snapping upright.
+- **`tests/walker.test.mjs`** drives the real compositor over hundreds of frames with
+  a stub Painter and asserts what actually got painted: the right cast for the hour,
+  the full fold-down sequence, and a towel that always clears the sign. Placement bugs
+  here are silent no-ops — a scene that renders fine, just missing someone — so they
+  need a test that looks at the output, not at the code.
+
+### Changed
+- **Diamond Head redrawn.** It was a lumpy green mound; Lēʻahi is a dry leeward tuff
+  cone. Gold-brown slopes with green only in the ravines and along the foot, a broad
+  crater rim with the saddle between its two rises, a shaded seaward face, and the
+  lighthouse standing clear on the low point.
+- **The Eiffel Tower redrawn.** The old profile collapsed to a bare one-pixel pole for
+  its whole upper half. The silhouette is now written out row by row — splayed legs
+  with open sky and the great arch between them, the first deck, the braced shaft, the
+  second deck, the long taper, top platform and spire — warm iron by day, gilded with
+  a floodlit glow and a champagne sparkle at night.
+
 ## [0.10.0] - 2026-08-06
 
 From a full review of the reference set.

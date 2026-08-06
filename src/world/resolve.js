@@ -117,9 +117,13 @@ export function regionFor(place) {
    thing you'd put in the first frame if you had only one. Any id here must exist in
    the catalog and be valid for the resolved biome, or it's simply skipped.
 
+   `nightPerson` is the after-dark counterpart: LA's beachgoer keeps to daylight, so
+   once the sun is down the beach belongs to the cat instead.
+
    Keys are matched as whole words against the place name (see match.js). */
 var CALLING_CARDS = [
-  { cities: ["los angeles", "santa monica", "malibu", "venice beach"], person: "beachgoer", tree: "palm" },
+  { cities: ["los angeles", "santa monica", "malibu", "venice beach"],
+    person: "beachgoer", nightPerson: "beach-cat", tree: "palm" },
   { cities: ["honolulu", "waikiki"], person: "surfer", tree: "palm" },
   { cities: ["new orleans"], person: "street-musician" },
   { cities: ["nashville", "austin"], person: "street-musician" },
@@ -144,7 +148,7 @@ var CALLING_CARDS = [
   { cities: ["maui", "lahaina", "reykjahlid"], water: "whale" }
 ];
 
-/** The calling card for a place: {person, ground, bird, water} — or null. */
+/** The calling card for a place: {person, nightPerson, ground, bird, water, tree} — or null. */
 export function callingCardFor(place) {
   var name = norm(place && place.name), full = name + " " + norm(place && place.admin1);
   if (!name) return null;
@@ -152,7 +156,8 @@ export function callingCardFor(place) {
     var cc = CALLING_CARDS[i];
     for (var c = 0; c < cc.cities.length; c++) {
       if (cityNames(cc.cities[c], name, full)) {
-        return { person: cc.person || null, ground: cc.ground || null, bird: cc.bird || null,
+        return { person: cc.person || null, nightPerson: cc.nightPerson || null,
+          ground: cc.ground || null, bird: cc.bird || null,
           water: cc.water || null, tree: cc.tree || null };
       }
     }
