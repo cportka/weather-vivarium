@@ -7,7 +7,7 @@
 import { CATALOG } from "../src/catalog/index.js";
 import { LANDMARKS } from "../src/catalog/landmarks.js";
 import { createPainter } from "../src/engine/painter.js";
-import { resolveScene } from "../src/world/resolve.js";
+import { resolveScene, placeKey } from "../src/world/resolve.js";
 import { pools } from "../src/catalog/index.js";
 import { createScene } from "../src/scene/compositor.js";
 import { defaultState } from "../src/data/weather.js";
@@ -112,7 +112,7 @@ window.sceneStrip = function (placeOpts, weatherOver, nowMin, frames) {
     latitude: res.latitude, coastal: res.coastal, unit: res.unit, density: densFrom(place, res),
     cannabis: res.cannabis, region: res.region, callingCard: res.callingCard,
     pools: pools(res.biome.id), W, sunrise: W.sunrise, sunset: W.sunset,
-    moon: moonIllumination(lt.year, lt.month, lt.day), seed: seedFrom(place.name + place.latitude),
+    moon: moonIllumination(lt.year, lt.month, lt.day), seed: seedFrom(placeKey(place)),
     place, tempText: () => (W.temp == null ? "--" : W.temp + "°")
   };
   const buf = document.createElement("canvas"); buf.width = L; buf.height = L;
@@ -143,7 +143,7 @@ function buildScene(spec) {
     latitude: res.latitude, coastal: res.coastal, unit: res.unit, density: densFrom(place, res),
     cannabis: res.cannabis, region: res.region, callingCard: res.callingCard,
     pools: pools(res.biome.id), W, sunrise: W.sunrise, sunset: W.sunset,
-    moon: moonIllumination(2026, 7, 18), seed: seedFrom(place.name + place.latitude),
+    moon: moonIllumination(2026, 7, 18), seed: seedFrom(placeKey(place)),
     place, tempText: () => (W.temp == null ? "--" : W.temp + "°")
   };
   const buf = document.createElement("canvas"); buf.width = L; buf.height = L;

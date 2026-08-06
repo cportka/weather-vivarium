@@ -183,6 +183,25 @@ export function isCannabisCity(place) {
  * into { place, biome, landscape, landmark, latitude, coastal, unit, cannabis }.
  * opts: { biome, landscape, temperatureUnit }.
  */
+/* A stable identity for a place, used to seed everything fixed about its scene —
+   which tree grows there, which sign stands by the road, how the buildings pack.
+
+   It has to key on WHO the place is, not on the exact numbers that happened to
+   describe it: the same city arrives with slightly different coordinates from the
+   packed dataset (34.052), a hand-written reference entry (34.05) and the browser's
+   geolocation (34.0522…), and seeding on the raw float gave each of those a
+   different tree. Names are the identity; coordinates are only the fallback for an
+   unnamed fix, rounded to a ~1° cell so two readings of the same spot agree. */
+export function placeKey(place) {
+  if (!place) return "";
+  var name = String(place.name || "").trim().toLowerCase();
+  if (name) {
+    return name + "|" + String(place.admin1 || "").trim().toLowerCase() +
+      "|" + String(place.country || "").trim().toLowerCase();
+  }
+  return "@" + Math.round(place.latitude || 0) + "," + Math.round(place.longitude || 0);
+}
+
 export function resolveScene(place, opts) {
   opts = opts || {};
   place = place || {};

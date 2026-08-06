@@ -8,6 +8,9 @@
 # 2. Syntax: every module under src/ (and tests/, verify/, scripts/) parses.
 # 3. Unit tests: the node:test suite in tests/ (catalog breadth, resolver, and a
 #    stub-painter render of every catalog entry so broken sprites fail CI).
+# 4. Placement replay: build EVERY city in data/cities and check what got placed.
+#    The reference sheet shows whether scenes look good; this catches a scene that
+#    is quietly missing something, which 52 cities never will. ~4s, no disk use.
 #
 # Usage:  bash tests/run-tests.sh   (or: npm test)
 # Exit:   0 if nothing FAILed, 1 otherwise.
@@ -90,6 +93,21 @@ if [[ $have_node -eq 1 ]]; then
   rm -f /tmp/wv_test.log
 else
   fail "node absent — cannot run unit tests"
+fi
+
+# --- 4. whole-database replay ---------------------------------------------------------
+section "Placement — every city in the database"
+if [[ $have_node -eq 1 ]]; then
+  if node scripts/replay-cities.mjs >/tmp/wv_replay.log 2>&1; then
+    grep -E '^Replayed' /tmp/wv_replay.log | sed 's/^/    /'
+    pass "every city places what it should, nothing off-canvas"
+  else
+    tail -30 /tmp/wv_replay.log | sed 's/^/    /'
+    fail "city replay found placement problems"
+  fi
+  rm -f /tmp/wv_replay.log
+else
+  fail "node absent — cannot replay cities"
 fi
 
 # --- summary --------------------------------------------------------------------------

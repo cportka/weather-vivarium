@@ -12,22 +12,14 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { REFERENCE_CITIES } from "../verify/reference-cities.mjs";
-import { resolveScene } from "../src/world/resolve.js";
-import { styleForBiome } from "../src/catalog/settlements.js";
-import { seedFrom } from "../src/engine/random.js";
+import { REFERENCE_CITIES, resolveReference, referenceDensity, referenceTier } from "../verify/reference-cities.mjs";
 
 const snapshot = JSON.parse(readFileSync(new URL("./reference-cities.snapshot.json", import.meta.url), "utf8"));
 
-const density = (pop) => Math.max(0, Math.min(1, (Math.log10(pop) - 3.6) / 4.2));
-const tierName = (d) => (d < 0.2 ? "rural" : d < 0.36 ? "town" : d < 0.62 ? "city" : "metropolis");
+const density = referenceDensity;
+const tierName = referenceTier;
 
-function resolveRef(c) {
-  const r = resolveScene({ name: c.name, latitude: c.lat, longitude: c.lon, country: c.country }, {});
-  const d = density(c.population);
-  const s = styleForBiome(r.biome.id, seedFrom(c.name + c.lat), d, r.region);
-  return { biome: r.biome.id, region: r.region, tier: tierName(d), style: s ? s.id : null, landmark: r.landmark ? r.landmark.id : null };
-}
+const resolveRef = resolveReference;
 
 test("the reference set is 50+ diverse cities", () => {
   assert.ok(REFERENCE_CITIES.length >= 50, `expected at least 50 reference cities, got ${REFERENCE_CITIES.length}`);

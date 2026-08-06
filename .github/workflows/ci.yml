@@ -22,7 +22,7 @@ jobs:
         run: bash tests/run-tests.sh
 
   reference:
-    name: reference cities (50)
+    name: reference cities (52) + page controls
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -37,6 +37,8 @@ jobs:
         run: |
           npm run verify:reference
           npm run verify:render
+      - name: Check verify.html's controls actually do something
+        run: npm run verify:controls
       - name: Upload renders
         if: always()
         uses: actions/upload-artifact@v4

@@ -4,6 +4,59 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com) and the project uses
 [Semantic Versioning](https://semver.org). Every change bumps the version and adds an entry below.
 
+## [0.12.0] - 2026-08-06
+
+Three bugs with one thing in common: nothing threw, nothing logged, the scene just
+quietly stopped being right.
+
+### Fixed
+- **The day/night and live toggles work again.** The widget claimed `timezone: "UTC"`
+  for any place given as bare coordinates, so Open-Meteo returned Los Angeles's
+  sunrise and sunset as UTC wall-clock times — 13:05 and 02:55. Sunset landed
+  *before* sunrise and `dayFactor` answered 0 for every minute of the day: the scene
+  was permanently night and neither toggle could move it. The zone is now resolved
+  from the coordinates and adopted from the response, `dayFactor` reads a lit stretch
+  that wraps past midnight as an interval on a circle (which is also polar summer),
+  and `localTime` falls back to the viewer's clock rather than UTC.
+- **A city looks like itself again.** Everything fixed about a scene was seeded from
+  `name + latitude`, so the same city seeded differently depending on which code path
+  supplied its coordinates — the packed dataset (34.052), the reference list (34.05),
+  the browser's geolocation (34.0522…) — and Los Angeles grew a different tree on
+  each. The seed now keys on the place's identity.
+- **Ground animals stand on the ground.** They were planted a row above the line the
+  trees, sign, landmark and strolling figure all use, so every animal hovered — two
+  rows for the deer and the elephant. `groundOffset` also samples a walk cycle now
+  instead of one frame, so a lifted hoof no longer drives the planted one underground.
+- **A wide sign no longer runs off the canvas.** The 22px mural wall was placed at the
+  same hard-coded column as every other sign and lost its last pixel.
+- **The stub Painter's bounds were a pixel too generous** — a `w × h` rect covers rows
+  `y..y+h-1`, not `y+h` — which made every rect-drawn sprite measure a row taller than
+  it is. Nothing in the catalog actually breaks its baseline; the ruler was wrong.
+
+### Added
+- **33,333 cities** (13,333 US + 20,000 world), and **Lomita, CA** joins the reference
+  set — now 52.
+- **`npm run verify:replay`** builds every city in the database and checks what got
+  placed: a tree wherever one is due, the calling card's tree when a city names one,
+  and nothing off the canvas. It runs in the test suite on every push and found two
+  real bugs the moment it was switched on. Deliberately cheap — no canvas, no images,
+  nothing written to disk: **~4s and ~170 MB for all 33,333**, scaling linearly, so
+  growing the database stays affordable.
+- **`npm run verify:controls`** drives the real `verify.html` in a browser with
+  Open-Meteo stubbed and asserts that pressing day/night actually changes what you
+  see. The unit suite can prove `dayFactor` is right; only this catches a page that
+  has quietly stopped responding.
+
+### Changed
+- **The Statue of Liberty redrawn.** She was a two-pixel-wide column of one green on a
+  pedestal that ate two thirds of her height — a grey-green blob on the New York
+  skyline. Now a short granite plinth under a tall figure: modelled copper with the
+  folds running down the robe, four-wide shoulders pinching to a head under a spiked
+  crown, the tablet in the crook of one arm and the torch raised clear on the other,
+  gilded and floodlit after dark.
+- The snapshot test and its updater now share one resolver with the widget, so the
+  locked expectations can't drift from the scene anyone actually renders.
+
 ## [0.11.0] - 2026-08-06
 
 The beach at both ends of the day, and two landmarks redrawn.

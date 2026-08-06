@@ -12,11 +12,12 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { resolveScene } from "../src/world/resolve.js";
-import { pools } from "../src/catalog/index.js";
+import { pools, CATALOG, byLayer } from "../src/catalog/index.js";
 import { createScene } from "../src/scene/compositor.js";
 import { defaultState } from "../src/data/weather.js";
 import { seedFrom } from "../src/engine/random.js";
 import { moonIllumination } from "../src/engine/astronomy.js";
+import { groundOffset } from "../src/catalog/measure.js";
 import { stubPainter } from "./stub-painter.mjs";
 
 const L = 50, GEOMETRY = { L, horizon: 24, groundTop: 37, roadBot: 46 };
@@ -109,4 +110,31 @@ test("weather gear is for people — the cat just hunches and hurries", () => {
   // ...and the control: a person in the same rain does get one
   const wetDay = run(LA, 1, 300, { code: 61, temp: 55 });
   assert.ok(wetDay.colours.has(UMBRELLA), "a person walking in the rain should carry an umbrella");
+});
+
+test("ground animals stand on the ground, not a pixel above it", () => {
+  // A grounder used to be planted at groundTop-2 while the trees, sign, landmark
+  // and strolling figure all used groundTop-1 — so every animal hovered, and the
+  // deer and elephant (drawn a pixel short of their own baseline) hovered by two.
+  const GROUND = GEOMETRY.groundTop - 1;
+  for (const e of byLayer(CATALOG.animals, "ground")) {
+    const yb = GROUND + groundOffset(e);
+    let deepest = -Infinity;
+    // walk the animation: no frame may sink below the ground, and at least one
+    // frame has to actually touch it
+    for (let frame = 0; frame < 8; frame++) {
+      const { P, bounds } = stubPainter(L);
+      e.draw(P, 10, yb, {
+        L, horizon: 24, groundTop: GEOMETRY.groundTop, roadBot: 46, frame, dayT: 1, night: false,
+        col: (c) => c, rng: () => 0.4, dir: 1, wind: 0.3, code: 0, cloud: 20, aqi: 40,
+        temp: 70, intensity: 0, tide: 0.5, waveM: 0.8, rough: false, cold: false
+      });
+      assert.ok(bounds.drew, `animals/${e.id} painted nothing on frame ${frame}`);
+      assert.ok(bounds.maxY <= GROUND,
+        `animals/${e.id} sinks to row ${bounds.maxY} on frame ${frame}, below the ground line ${GROUND}`);
+      if (bounds.maxY > deepest) deepest = bounds.maxY;
+    }
+    assert.equal(deepest, GROUND,
+      `animals/${e.id} never touches the ground — deepest row ${deepest}, ground line ${GROUND}`);
+  }
 });
