@@ -15,8 +15,9 @@ From a full review of the reference set.
 - **New York is dense again** (regression). Buildings are packed shoulder to shoulder
   at metropolis density instead of leaving town-sized gaps between them — the gap
   between buildings and the gap between clusters now both scale with density.
-- **Trees and buildings no longer block each other.** Trees are placed in slots that
-  clear the landmark and the sign, and the settlement steps *around* the tree spans,
+- **Trees and buildings no longer block each other.** Trees take the free-est of a
+  set of slots — never covering the landmark or another tree — and the settlement
+  steps *around* the tree spans,
   so a tree and the building behind it both show fully — **Kyoto** and **Mumbai** were
   the worst cases.
 - **Zurich's shapeless grey blob is gone.** Where the horizon already has a silhouette

@@ -193,19 +193,27 @@ export function createScene(P, world, opts) {
 
     var pool = world.pools.trees;
     if (pool.length && world.biome.id !== "ocean") {
-      // Trees go where nothing else is: never stacked on the landmark, never
-      // hidden behind the sign. Candidate slots are tried in order and the first
-      // that clears both wins, so a tree and a building each get to show fully.
+      // Trees look for room rather than demanding it: each one takes the free-est
+      // of the remaining slots, so it doesn't cover the landmark or another tree.
+      // The temperature sign is NOT a hard blocker — it's a short panel drawn over
+      // the tree, and a canopy reading above it is how the original scene looked —
+      // and a tree always gets placed, since silently dropping it just leaves a
+      // bare scene. (A `place:"water"` landmark hangs at the horizon, not on the
+      // ground, so it never competes for a slot.)
       var blocked = [];
-      if (props.landmark) blocked.push([props.landmark.x, props.landmark.x + props.landmark.entry.w - 1]);
-      if (props.sign) blocked.push([props.sign.x, props.sign.x + props.sign.entry.w - 1]);
-      function clear(x, w) {
-        for (var b = 0; b < blocked.length; b++) {
-          if (x <= blocked[b][1] && x + w - 1 >= blocked[b][0]) return false;
-        }
-        return true;
+      if (props.landmark && props.landmark.entry.place !== "water") {
+        blocked.push([props.landmark.x, props.landmark.x + props.landmark.entry.w - 1]);
       }
-      var slots = [7, 20, 45, 14, 26, 38];
+      // how many columns of `x..x+w-1` sit on top of something already placed
+      function clash(x, w) {
+        var n = 0;
+        for (var b = 0; b < blocked.length; b++) {
+          var lo = Math.max(x, blocked[b][0]), hi = Math.min(x + w - 1, blocked[b][1]);
+          if (hi >= lo) n += hi - lo + 1;
+        }
+        return n;
+      }
+      var slots = [7, 20, 33, 44, 13, 27];
       var base = props.landmark ? 1 : (1 + (rng() < 0.6 ? 1 : 0));
       var nTrees = Math.max(0, Math.round(base * (1 - (world.density || 0) * 0.7)));
       // a place's signature tree (LA's palm) leads, then the usual weighted draw
@@ -217,14 +225,18 @@ export function createScene(P, world, opts) {
           wantTree = null;
         }
         if (!entry) entry = pickWeighted(rng, pool);
+        var bestI = -1, bestX = 0, bestClash = Infinity;
         for (var sI = 0; sI < slots.length; sI++) {
-          var sx = slots[sI];
-          if (sx == null || !clear(sx, entry.w)) continue;
-          props.trees.push({ entry: entry, x: sx });
-          blocked.push([sx, sx + entry.w - 1]);
-          slots[sI] = null;
-          break;
+          if (slots[sI] == null) continue;
+          var sx = clamp(slots[sI], 0, Math.max(0, P.L - entry.w));   // keep it on the canvas
+          var c = clash(sx, entry.w);
+          if (c < bestClash) { bestClash = c; bestI = sI; bestX = sx; }
+          if (c === 0) break;
         }
+        if (bestI === -1) break;                                       // every slot used up
+        props.trees.push({ entry: entry, x: bestX });
+        blocked.push([bestX, bestX + entry.w - 1]);
+        slots[bestI] = null;
       }
       // buildings step around the trees, so neither is drawn on top of the other
       props.treeSpans = props.trees.map(function (t) { return [t.x, t.x + t.entry.w - 1]; });
