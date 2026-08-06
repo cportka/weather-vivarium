@@ -30,10 +30,10 @@
       "landmark": "diamond-head"
     },
     "Seattle": {
-      "biome": "forest",
+      "biome": "lake",
       "region": "north-america",
       "tier": "city",
-      "style": "apartment-blocks",
+      "style": "midrise",
       "landmark": "space-needle"
     },
     "New York City": {
@@ -111,6 +111,13 @@
       "region": "latin-america",
       "tier": "city",
       "style": "stilt",
+      "landmark": null
+    },
+    "Torrance": {
+      "biome": "forest",
+      "region": "north-america",
+      "tier": "city",
+      "style": "suburb",
       "landmark": null
     },
     "Mexico City": {

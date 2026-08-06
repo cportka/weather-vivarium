@@ -193,6 +193,23 @@ export function createScene(P, world, opts) {
   var swimmers = [], nextSwim = 120;
   var fliers = [], nextFlit = 100;
   var walker = null, nextWalker = 90;
+  var grounders = [], nextGrounder = 70;
+
+  // A place's calling card: the first person/animal it sends out, before the cast
+  // turns over to the usual random draw. Each is used once, then forgotten.
+  var card = world.callingCard ? {
+    person: world.callingCard.person, ground: world.callingCard.ground,
+    bird: world.callingCard.bird, water: world.callingCard.water
+  } : {};
+  /** Take the calling card for `slot` if it's in this pool, else a weighted pick. */
+  function pickCast(slot, pool) {
+    var want = card[slot];
+    if (want) {
+      card[slot] = null;                       // the calling card plays once
+      for (var i = 0; i < pool.length; i++) if (pool[i].id === want) return pool[i];
+    }
+    return pickWeighted(rng, pool);
+  }
 
   function buildEnv(frame, now, dayT) {
     var W = world.W, night = dayT < 0.35;
@@ -273,7 +290,7 @@ export function createScene(P, world, opts) {
       x: dir > 0 ? -e.w - 4 : P.L + 4 });
   }
   function spawnBird() {
-    var e = pickWeighted(rng, world.pools.birds);
+    var e = pickCast("bird", world.pools.birds);
     var dir = rng() < 0.5 ? 1 : -1, y = G.horizon - 12 + Math.floor(rng() * 10);
     birds.push({ entry: e, dir: dir, y: clamp(y, 4, G.horizon - 2), speed: (0.4 + rng() * 0.4),
       x: dir > 0 ? -8 : P.L + 8 });
@@ -285,8 +302,11 @@ export function createScene(P, world, opts) {
     boats.push({ entry: e, dir: dir, yb: yb, speed: 0.18 + rng() * 0.18, x: dir > 0 ? -e.w - 4 : P.L + 4 });
   }
   function spawnSwimmer() {
-    var e = pickWeighted(rng, world.pools.waterAnimals);
-    var band = world.biome.water; var y = Math.round((band.top + band.bot) / 2);
+    var e = pickCast("water", world.pools.waterAnimals);
+    // A little above the middle of the band, so a whale or a fin reads as being
+    // OUT in the water rather than washed up at the near edge of it.
+    var band = world.biome.water;
+    var y = clamp(Math.round((band.top + band.bot) / 2) - 2, band.top + 1, band.bot - 1);
     var dir = rng() < 0.5 ? 1 : -1;
     swimmers.push({ entry: e, dir: dir, y: y, speed: 0.25 + rng() * 0.3, x: dir > 0 ? -6 : P.L + 6 });
   }
@@ -296,12 +316,21 @@ export function createScene(P, world, opts) {
     fliers.push({ entry: e, dir: dir, y: G.groundTop - 8 - Math.floor(rng() * 6), speed: 0.3 + rng() * 0.3,
       x: dir > 0 ? -5 : P.L + 5, ph: rng() * 6 });
   }
+  // A ground animal ambling along the back of the scene (behind the road, in front
+  // of the settlement) — the giraffes, kangaroos, llamas and bears in the catalog.
+  function spawnGrounder() {
+    var pool = world.pools.groundAnimals; if (!pool.length) return;
+    var e = pickCast("ground", pool);
+    var dir = rng() < 0.5 ? 1 : -1;
+    grounders.push({ entry: e, dir: dir, yb: G.groundTop - 2, speed: 0.12 + rng() * 0.16,
+      x: dir > 0 ? -e.w - 2 : P.L + 2 });
+  }
   function spawnWalker(env) {
     var pool = world.pools.people; if (!pool.length) return;
     // weed-smoking strollers only turn up in cannabis-culture cities
     if (!world.cannabis) pool = pool.filter(function (p) { return p.require !== "cannabis"; });
     if (!pool.length) return;
-    var e = pickWeighted(rng, pool);
+    var e = pickCast("person", pool);
     var gear = null;
     if (env.rough) gear = (env.aqi >= 160 && !isPrecip(env.code)) ? "gasmask" : (env.cold ? "parka" : "umbrella");
     walker = { entry: e, x: -8, dir: 1, fy: G.groundTop - 1, gear: gear, speed: env.rough ? 0.3 : 0.22,
@@ -342,7 +371,7 @@ export function createScene(P, world, opts) {
     if (env.waterLandmark) {
       // centre it so a full-width span reaches both edges
       var lmx = Math.floor((P.L - props.landmark.entry.w) / 2);
-      props.landmark.entry.draw(P, lmx < 0 ? 0 : lmx, G.horizon + 3, env);
+      props.landmark.entry.draw(P, lmx < 0 ? 0 : lmx, G.horizon + 1, env);
     }
 
     // city fabric — buildings scaled by how urban the place is (gaps show nature)
@@ -390,6 +419,18 @@ export function createScene(P, world, opts) {
     // fixed trees (behind the road) — auto-grounded like the landmark
     for (var ti = 0; ti < props.trees.length; ti++) {
       props.trees[ti].entry.draw(P, props.trees[ti].x, G.groundTop - 1 + groundOffset(props.trees[ti].entry), env);
+    }
+
+    // ground animals ambling across the back of the scene
+    if (!reduce && world.pools.groundAnimals.length) {
+      if (frame >= nextGrounder && grounders.length < 2) {
+        spawnGrounder(); nextGrounder = frame + Math.round(240 + rng() * 420);
+      }
+      for (var gi = grounders.length - 1; gi >= 0; gi--) {
+        var gr = grounders[gi]; gr.x += gr.speed * gr.dir;
+        if (gr.x < -gr.entry.w - 4 || gr.x > P.L + gr.entry.w + 4) { grounders.splice(gi, 1); continue; }
+        draw(gr.entry, Math.round(gr.x), gr.yb, env, gr.dir);
+      }
     }
 
     // a strolling figure — advance it here. A pedestrian on the road shoulder

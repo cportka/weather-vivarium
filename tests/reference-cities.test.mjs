@@ -29,8 +29,10 @@ function resolveRef(c) {
   return { biome: r.biome.id, region: r.region, tier: tierName(d), style: s ? s.id : null, landmark: r.landmark ? r.landmark.id : null };
 }
 
-test("the reference set is 50 diverse cities", () => {
-  assert.equal(REFERENCE_CITIES.length, 50);
+test("the reference set is 50+ diverse cities", () => {
+  assert.ok(REFERENCE_CITIES.length >= 50, `expected at least 50 reference cities, got ${REFERENCE_CITIES.length}`);
+  const names = REFERENCE_CITIES.map((c) => c.name);
+  assert.equal(new Set(names).size, names.length, "reference city names must be unique");
   const biomes = new Set(REFERENCE_CITIES.map((c) => resolveRef(c).biome));
   assert.ok(biomes.size >= 8, `reference set should span many biomes, got ${[...biomes].join(",")}`);
   const tiers = new Set(REFERENCE_CITIES.map((c) => tierName(density(c.population))));

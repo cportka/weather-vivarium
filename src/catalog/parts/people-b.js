@@ -9,7 +9,7 @@
 
 export default [
   {
-    id: "street-musician", name: "Street Musician", biomes: ["city", "coast", "plains"],
+    id: "street-musician", name: "Street Musician", biomes: ["city", "coast", "plains", "wetland", "farmland", "forest", "lake"],
     tags: ["person", "music", "busker"], w: 6, h: 8, anchor: "baseline", layer: "ground",
     draw: function (P, x, yb, env) {
       var skin = "#cf9560", hair = env.col("#2a1a12"), shirt = env.col("#3a7a6a");

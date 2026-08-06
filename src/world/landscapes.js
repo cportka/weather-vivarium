@@ -16,6 +16,10 @@ export var LANDSCAPES = [
   { id: "north-sea", name: "North Sea Harbour", biome: "coast", coastal: true,
     cities: ["copenhagen", "bergen", "aberdeen", "gothenburg", "stavanger"] },
   // Cities defined by the water they sit in/on, rather than by their latitude.
+  // Puget Sound: a green city ON water, but sound and inlet rather than surf beach —
+  // evergreen banks, a far shore across the water, mountains beyond.
+  { id: "puget-sound", name: "Puget Sound", biome: "lake", coastal: true,
+    cities: ["seattle", "tacoma", "olympia", "bellingham", "everett", "bremerton", "victoria"] },
   { id: "lagoon", name: "Lagoon City", biome: "coast", coastal: true,
     cities: ["venice", "venezia", "havana", "la habana", "cartagena", "valletta", "zanzibar"] },
   { id: "manhattan", name: "Manhattan", biome: "city",

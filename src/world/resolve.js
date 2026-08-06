@@ -111,6 +111,54 @@ export function regionFor(place) {
   return null;
 }
 
+/* A place's CALLING CARD — the one character it sends out first, before the cast
+   turns over to the usual random draw. Los Angeles opens with the beachgoer on her
+   towel; Nairobi with a giraffe; Cusco with a llama. It's the establishing shot: the
+   thing you'd put in the first frame if you had only one. Any id here must exist in
+   the catalog and be valid for the resolved biome, or it's simply skipped.
+
+   Keys are matched as whole words against the place name (see match.js). */
+var CALLING_CARDS = [
+  { cities: ["los angeles", "santa monica", "malibu", "venice beach"], person: "beachgoer" },
+  { cities: ["honolulu", "waikiki"], person: "surfer" },
+  { cities: ["new orleans"], person: "street-musician" },
+  { cities: ["nashville", "austin"], person: "street-musician" },
+  { cities: ["amsterdam", "copenhagen", "utrecht"], person: "cyclist" },
+  { cities: ["kyoto", "nara"], person: "monk" },
+  { cities: ["kathmandu", "lhasa", "thimphu"], person: "monk" },
+  { cities: ["aspen", "zermatt", "chamonix", "queenstown", "whistler"], person: "skier" },
+  { cities: ["boulder", "portland", "eugene"], person: "jogger" },
+  { cities: ["paris", "florence", "firenze"], person: "painter" },
+  { cities: ["san francisco", "seattle"], person: "photographer" },
+  { cities: ["dallas", "fort worth", "calgary", "cheyenne"], person: "cowboy" },
+  { cities: ["nairobi", "arusha", "serengeti"], ground: "giraffe" },
+  { cities: ["cusco", "la paz", "arequipa"], ground: "llama" },
+  { cities: ["sydney", "bondi", "gold coast"], person: "surfer" },
+  { cities: ["melbourne", "brisbane", "perth", "alice springs", "canberra"], ground: "kangaroo" },
+  { cities: ["churchill", "anchorage", "tromso", "tromsø"], ground: "moose" },
+  { cities: ["marrakesh", "timbuktu", "cairo", "dubai"], ground: "camel" },
+  { cities: ["jaipur", "chiang mai"], ground: "elephant" },
+  { cities: ["reykjavik", "reykjavík"], bird: "gull" },
+  { cities: ["miami", "everglades"], bird: "flamingo" },
+  { cities: ["monterey", "cape town", "san diego"], water: "seal" },
+  { cities: ["maui", "lahaina", "reykjahlid"], water: "whale" }
+];
+
+/** The calling card for a place: {person, ground, bird, water} — or null. */
+export function callingCardFor(place) {
+  var name = norm(place && place.name), full = name + " " + norm(place && place.admin1);
+  if (!name) return null;
+  for (var i = 0; i < CALLING_CARDS.length; i++) {
+    var cc = CALLING_CARDS[i];
+    for (var c = 0; c < cc.cities.length; c++) {
+      if (cityNames(cc.cities[c], name, full)) {
+        return { person: cc.person || null, ground: cc.ground || null, bird: cc.bird || null, water: cc.water || null };
+      }
+    }
+  }
+  return null;
+}
+
 // Cities with a famously relaxed cannabis culture — the odd weed-smoking stroller
 // shows up in these (gated so they don't appear everywhere).
 var CANNABIS = [
@@ -159,6 +207,7 @@ export function resolveScene(place, opts) {
     coastal: coastal,
     unit: unit,
     region: regionFor(place),
+    callingCard: callingCardFor(place),
     cannabis: isCannabisCity(place)
   };
 }

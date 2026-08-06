@@ -31,6 +31,7 @@ export const REFERENCE_CITIES = [
   { name: "Anchorage", lat: 61.22, lon: -149.9, population: 291826, country: "United States" },
   { name: "Berkeley", lat: 37.87, lon: -122.27, population: 124321, country: "United States" },
   { name: "Miami", lat: 25.76, lon: -80.19, population: 441003, country: "United States" },
+  { name: "Torrance", lat: 33.84, lon: -118.34, population: 147067, country: "United States" },
   // --- the Americas ---
   { name: "Mexico City", lat: 19.43, lon: -99.13, population: 12294193, country: "Mexico" },
   { name: "Rio de Janeiro", lat: -22.91, lon: -43.2, population: 6023699, country: "Brazil" },
