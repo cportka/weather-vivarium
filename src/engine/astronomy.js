@@ -27,8 +27,11 @@ export function localTime(timeZone, nowOverride, dateOverride) {
   var d = dateOverride || new Date();
   var out = { minutes: 0, year: 2026, month: 1, day: 1 };
   try {
+    // No zone known yet → the viewer's own. Forcing UTC here used to put a
+    // California scene twelve hours out of step with the sunrise/sunset it was
+    // drawn against; the viewer's clock is at least a defensible guess.
     var p = new Intl.DateTimeFormat("en-US", {
-      timeZone: timeZone || "UTC", hour: "2-digit", minute: "2-digit", second: "2-digit",
+      timeZone: timeZone || undefined, hour: "2-digit", minute: "2-digit", second: "2-digit",
       hour12: false, year: "numeric", month: "2-digit", day: "2-digit"
     }).formatToParts(d);
     var h = 0, mm = 0, s = 0;
@@ -54,9 +57,21 @@ export function localTime(timeZone, nowOverride, dateOverride) {
 export var TWILIGHT = 55;
 
 /** Day factor: 1 in full day, 0 deep night, linear across the twilight band. */
+/** Minutes between two times of day, the short way round the clock. */
+function clockGap(a, b) {
+  var d = Math.abs(a - b) % 1440;
+  return d > 720 ? 1440 - d : d;
+}
+
 export function dayFactor(now, sunrise, sunset) {
-  if (now >= sunrise && now <= sunset) return 1;
-  var d = now < sunrise ? sunrise - now : now - sunset;
+  // The lit stretch can run PAST midnight — a polar summer, or sunrise and sunset
+  // reported in a zone that doesn't match the clock we're comparing them to. Read
+  // it as an interval on a circle so a wrapped day still answers sensibly instead
+  // of collapsing to permanent night.
+  var wraps = sunset < sunrise;
+  var lit = wraps ? (now >= sunrise || now <= sunset) : (now >= sunrise && now <= sunset);
+  if (lit) return 1;
+  var d = Math.min(clockGap(now, sunrise), clockGap(now, sunset));
   var v = 1 - d / TWILIGHT;
   return v < 0 ? 0 : v > 1 ? 1 : v;
 }

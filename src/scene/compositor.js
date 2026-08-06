@@ -191,7 +191,10 @@ export function createScene(P, world, opts) {
       if (props.landmark && props.landmark.pairedSign) {
         for (var s = 0; s < signs.length; s++) if (signs[s].id === props.landmark.pairedSign) { chosen = signs[s]; break; }
       }
-      props.sign = { entry: chosen || pickWeighted(rng, signs), x: SIGN_X };
+      // Signs stand at SIGN_X, but a wide one (the 22px mural wall) has to be
+      // pulled left to fit — hard-coding the column ran it a pixel off the canvas.
+      var signEntry = chosen || pickWeighted(rng, signs);
+      props.sign = { entry: signEntry, x: clamp(SIGN_X, 0, Math.max(0, P.L - signEntry.w)) };
     }
 
     var pool = world.pools.trees;
@@ -405,7 +408,11 @@ export function createScene(P, world, opts) {
     var pool = world.pools.groundAnimals; if (!pool.length) return;
     var e = pickCast("ground", pool);
     var dir = rng() < 0.5 ? 1 : -1;
-    grounders.push({ entry: e, dir: dir, yb: G.groundTop - 2, speed: 0.12 + rng() * 0.16,
+    // Feet on the same auto-grounded line as the trees, sign and landmark. These
+    // used to sit a row higher, which read as an animal hovering over the ground —
+    // and two rows for the deer and the elephant, whose sprites are drawn a pixel
+    // short of their own baseline.
+    grounders.push({ entry: e, dir: dir, yb: G.groundTop - 1 + groundOffset(e), speed: 0.12 + rng() * 0.16,
       x: dir > 0 ? -e.w - 2 : P.L + 2 });
   }
   function spawnWalker(env) {
@@ -427,8 +434,10 @@ export function createScene(P, world, opts) {
     // sand, not on the kerb.
     var lift = e.lift || 0;
     // Stop it far enough left that the laid-out pose (restW wide) still clears
-    // the sign at x=29 — a long sunbathe is never spent hidden behind the panel.
-    var restAt = clamp(SIGN_X - (e.restW || 0) - 2 - Math.round(rng() * 5), 3, SIGN_X);
+    // the sign — a long sunbathe is never spent hidden behind the panel. Read the
+    // sign's ACTUAL column, since a wide one gets pulled left of SIGN_X to fit.
+    var signX = props.sign ? props.sign.x : SIGN_X;
+    var restAt = clamp(signX - (e.restW || 0) - 2 - Math.round(rng() * 5), 3, signX);
     walker = { entry: e, x: -8, dir: 1, fy: G.groundTop - 1 - lift, gear: gear, speed: env.rough ? 0.3 : 0.22,
       // where it stops to rest (if it has a resting pose), how far through the
       // fold-down/get-up it is, and whether it has already had its rest

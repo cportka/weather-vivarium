@@ -36,15 +36,24 @@ var ENV = {
   wind: 0.3, code: 0, cloud: 20, aqi: 40, temp: 70, intensity: 0, tide: 0.5, waveM: 0.8
 };
 
-/** Rows the entry's lowest pixel sits ABOVE its baseline yb (>= 0). Cached. */
+/** Rows the entry's lowest pixel sits ABOVE its baseline yb (>= 0). Cached.
+
+    Sampled across a walk cycle, not from one frame: a deer with a hoof lifted on
+    frame 0 reaches a row lower on frame 3, and planting it by the lifted-hoof
+    measurement would drive the planted hoof below the ground. We take the DEEPEST
+    the sprite ever reaches, so no frame of the animation ever sinks. */
 export function groundOffset(entry) {
   if (entry.__groundOff != null) return entry.__groundOff;
-  var off = 0, refYb = 40;
+  var off = 0, refYb = 40, deepest = -Infinity;
   try {
-    var m = mockPainter();
-    entry.draw(m.P, 8, refYb, ENV);
-    var maxY = m.max();
-    if (isFinite(maxY)) off = refYb - maxY;
+    for (var f = 0; f < 8; f++) {
+      var m = mockPainter();
+      var env = Object.assign({}, ENV, { frame: f });
+      entry.draw(m.P, 8, refYb, env);
+      var maxY = m.max();
+      if (isFinite(maxY) && maxY > deepest) deepest = maxY;
+    }
+    if (isFinite(deepest)) off = refYb - deepest;
     if (off < 0) off = 0;   // never plant a sprite below the ground line
   } catch (e) { off = 0; }
   entry.__groundOff = off;

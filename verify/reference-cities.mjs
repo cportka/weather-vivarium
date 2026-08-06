@@ -12,6 +12,10 @@
    verify/out/reference-50.png.
    ========================================================================= */
 
+import { resolveScene, placeKey } from "../src/world/resolve.js";
+import { styleForBiome } from "../src/catalog/settlements.js";
+import { seedFrom } from "../src/engine/random.js";
+
 export const REFERENCE_CITIES = [
   // --- the origin story + US coast ---
   { name: "Los Angeles", lat: 34.05, lon: -118.24, population: 3971883, country: "United States" },
@@ -32,6 +36,7 @@ export const REFERENCE_CITIES = [
   { name: "Berkeley", lat: 37.87, lon: -122.27, population: 124321, country: "United States" },
   { name: "Miami", lat: 25.76, lon: -80.19, population: 441003, country: "United States" },
   { name: "Torrance", lat: 33.84, lon: -118.34, population: 147067, country: "United States" },
+  { name: "Lomita", lat: 33.79, lon: -118.32, population: 20921, country: "United States" },
   // --- the Americas ---
   { name: "Mexico City", lat: 19.43, lon: -99.13, population: 12294193, country: "Mexico" },
   { name: "Rio de Janeiro", lat: -22.91, lon: -43.2, population: 6023699, country: "Brazil" },
@@ -72,5 +77,29 @@ export const REFERENCE_CITIES = [
   { name: "Queenstown", lat: -45.03, lon: 168.66, population: 15850, country: "New Zealand" },
   { name: "Alice Springs", lat: -23.7, lon: 133.88, population: 25186, country: "Australia" }
 ];
+
+/* How a reference city resolves — biome, region, density tier, settlement style and
+   landmark. The snapshot test and the snapshot updater both call THIS, so the locked
+   expectations can't drift from what the widget actually builds: the place object and
+   the seed key here are the same ones src/scene/widget.js uses. */
+export function referencePlace(c) {
+  return { name: c.name, latitude: c.lat, longitude: c.lon, country: c.country, admin1: c.admin1 || "" };
+}
+export function referenceDensity(pop) {
+  return Math.max(0, Math.min(1, (Math.log10(pop) - 3.6) / 4.2));
+}
+export function referenceTier(d) {
+  return d < 0.2 ? "rural" : d < 0.36 ? "town" : d < 0.62 ? "city" : "metropolis";
+}
+export function resolveReference(c) {
+  var place = referencePlace(c);
+  var r = resolveScene(place, {});
+  var d = referenceDensity(c.population);
+  var s = styleForBiome(r.biome.id, seedFrom(placeKey(place)), d, r.region);
+  return {
+    biome: r.biome.id, region: r.region, tier: referenceTier(d),
+    style: s ? s.id : null, landmark: r.landmark ? r.landmark.id : null
+  };
+}
 
 export default REFERENCE_CITIES;

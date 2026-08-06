@@ -5,14 +5,14 @@
       "biome": "coast",
       "region": "north-america",
       "tier": "metropolis",
-      "style": "midrise",
+      "style": "gulf-modern",
       "landmark": null
     },
     "Santa Monica": {
       "biome": "coast",
       "region": "north-america",
       "tier": "town",
-      "style": "midrise",
+      "style": "suburb",
       "landmark": null
     },
     "San Francisco": {
@@ -33,14 +33,14 @@
       "biome": "lake",
       "region": "north-america",
       "tier": "city",
-      "style": "midrise",
+      "style": "apartment-blocks",
       "landmark": "space-needle"
     },
     "New York City": {
       "biome": "city",
       "region": "north-america",
       "tier": "metropolis",
-      "style": "gulf-modern",
+      "style": "towers",
       "landmark": "liberty"
     },
     "Chicago": {
@@ -68,21 +68,21 @@
       "biome": "mountain",
       "region": "north-america",
       "tier": "city",
-      "style": "nordic",
+      "style": "chalet",
       "landmark": null
     },
     "Aspen": {
       "biome": "mountain",
       "region": "north-america",
       "tier": "rural",
-      "style": "chalet",
+      "style": "lake-lodge",
       "landmark": null
     },
     "Santa Fe": {
       "biome": "desert",
       "region": "north-america",
       "tier": "town",
-      "style": "oil-town",
+      "style": "adobe",
       "landmark": null
     },
     "New Orleans": {
@@ -117,6 +117,13 @@
       "biome": "forest",
       "region": "north-america",
       "tier": "city",
+      "style": "lowrise",
+      "landmark": null
+    },
+    "Lomita": {
+      "biome": "forest",
+      "region": "north-america",
+      "tier": "rural",
       "style": "suburb",
       "landmark": null
     },
@@ -124,14 +131,14 @@
       "biome": "city",
       "region": "latin-america",
       "tier": "metropolis",
-      "style": "towers",
+      "style": "gulf-modern",
       "landmark": "angel-independencia"
     },
     "Rio de Janeiro": {
       "biome": "coast",
       "region": "latin-america",
       "tier": "metropolis",
-      "style": "apartment-blocks",
+      "style": "midrise",
       "landmark": "christ-redeemer"
     },
     "Cusco": {
@@ -145,14 +152,14 @@
       "biome": "forest",
       "region": "latin-america",
       "tier": "town",
-      "style": "suburb",
+      "style": "lowrise",
       "landmark": null
     },
     "Havana": {
       "biome": "coast",
       "region": "latin-america",
       "tier": "metropolis",
-      "style": "midrise",
+      "style": "gulf-modern",
       "landmark": null
     },
     "Vancouver": {
@@ -166,14 +173,14 @@
       "biome": "city",
       "region": "europe",
       "tier": "metropolis",
-      "style": "apartment-blocks",
+      "style": "midrise",
       "landmark": "ferris-wheel"
     },
     "Paris": {
       "biome": "city",
       "region": "europe",
       "tier": "metropolis",
-      "style": "apartment-blocks",
+      "style": "gulf-modern",
       "landmark": "eiffel"
     },
     "Reykjavík": {
@@ -187,21 +194,21 @@
       "biome": "mountain",
       "region": "europe",
       "tier": "city",
-      "style": "nordic",
+      "style": "lake-lodge",
       "landmark": null
     },
     "Moscow": {
       "biome": "forest",
       "region": "europe",
       "tier": "metropolis",
-      "style": "towers",
+      "style": "apartment-blocks",
       "landmark": "st-basils"
     },
     "Barcelona": {
       "biome": "coast",
       "region": "europe",
       "tier": "metropolis",
-      "style": "apartment-blocks",
+      "style": "midrise",
       "landmark": "sagrada"
     },
     "Tromsø": {
@@ -215,14 +222,14 @@
       "biome": "coast",
       "region": "europe",
       "tier": "city",
-      "style": "midrise",
+      "style": "lowrise",
       "landmark": "belltower"
     },
     "Cairo": {
       "biome": "desert",
       "region": "africa",
       "tier": "metropolis",
-      "style": "midrise",
+      "style": "adobe",
       "landmark": "pyramid"
     },
     "Nairobi": {
@@ -236,28 +243,28 @@
       "biome": "desert",
       "region": "africa",
       "tier": "city",
-      "style": "apartment-blocks",
+      "style": "midrise",
       "landmark": null
     },
     "Cape Town": {
       "biome": "coast",
       "region": "africa",
       "tier": "metropolis",
-      "style": "midrise",
+      "style": "towers",
       "landmark": "lighthouse"
     },
     "Lagos": {
       "biome": "jungle",
       "region": "africa",
       "tier": "metropolis",
-      "style": "apartment-blocks",
+      "style": "towers",
       "landmark": null
     },
     "Dubai": {
       "biome": "desert",
       "region": "middle-east",
       "tier": "metropolis",
-      "style": "midrise",
+      "style": "gulf-modern",
       "landmark": "burj-khalifa"
     },
     "Timbuktu": {
@@ -271,14 +278,14 @@
       "biome": "city",
       "region": "east-asia",
       "tier": "metropolis",
-      "style": "towers",
+      "style": "apartment-blocks",
       "landmark": "tokyo-tower"
     },
     "Kyoto": {
       "biome": "forest",
       "region": "east-asia",
       "tier": "city",
-      "style": "towers",
+      "style": "pagoda-town",
       "landmark": null
     },
     "Taipei": {
@@ -306,42 +313,42 @@
       "biome": "city",
       "region": "southeast-asia",
       "tier": "metropolis",
-      "style": "midrise",
+      "style": "towers",
       "landmark": "wat-arun"
     },
     "Hong Kong": {
       "biome": "city",
       "region": "southeast-asia",
       "tier": "metropolis",
-      "style": "towers",
+      "style": "gulf-modern",
       "landmark": null
     },
     "Kathmandu": {
       "biome": "mountain",
       "region": "south-asia",
       "tier": "city",
-      "style": "pagoda-town",
+      "style": "apartment-blocks",
       "landmark": null
     },
     "Ulaanbaatar": {
       "biome": "forest",
       "region": "north-asia",
       "tier": "city",
-      "style": "lowrise",
+      "style": "lake-lodge",
       "landmark": null
     },
     "Jakarta": {
       "biome": "jungle",
       "region": "southeast-asia",
       "tier": "metropolis",
-      "style": "towers",
+      "style": "apartment-blocks",
       "landmark": null
     },
     "Sydney": {
       "biome": "coast",
       "region": "oceania",
       "tier": "metropolis",
-      "style": "apartment-blocks",
+      "style": "gulf-modern",
       "landmark": "opera-house"
     },
     "Queenstown": {

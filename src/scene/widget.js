@@ -11,7 +11,7 @@ import { createPainter } from "../engine/painter.js";
 import { localTime, dayFactor, moonIllumination } from "../engine/astronomy.js";
 import { defaultState, fetchWeather } from "../data/weather.js";
 import { geocode } from "../data/geocode.js";
-import { resolveScene } from "../world/resolve.js";
+import { resolveScene, placeKey } from "../world/resolve.js";
 import { pools } from "../catalog/index.js";
 import { createScene } from "./compositor.js";
 import { seedFrom } from "../engine/random.js";
@@ -96,7 +96,7 @@ export function createVivarium(target, options) {
       geometry: GEOMETRY, biome: res.biome, landscape: res.landscape, landmark: res.landmark,
       latitude: res.latitude, coastal: res.coastal, unit: res.unit, density: density, cannabis: res.cannabis, region: res.region, callingCard: res.callingCard,
       pools: pools(res.biome.id), W: W, sunrise: W.sunrise, sunset: W.sunset, moon: moon,
-      seed: seedFrom(options.seed || (place.name + place.latitude)),
+      seed: seedFrom(options.seed || placeKey(place)),
       place: place,
       tempText: function () { return tempText(W, res.unit); }
     };
@@ -197,7 +197,12 @@ export function createVivarium(target, options) {
       coastal: resolution.coastal && !options.minimalData,
       airQuality: !options.minimalData,        // gallery tiles skip AQI to spare requests
       temperatureUnit: resolution.unit,
-      onUpdate: function () { describe(); if (reduce) renderOnce(); }
+      onUpdate: function () {
+        // Adopt the zone the API resolved, so the clock we read the scene's time
+        // from is the same one its sunrise and sunset are quoted in.
+        if (W.timezone && !world.place.timezone) world.place.timezone = W.timezone;
+        describe(); if (reduce) renderOnce();
+      }
     });
   }
   function startData() {
@@ -211,7 +216,10 @@ export function createVivarium(target, options) {
   var explicitCoords = options.lat != null && options.lon != null;
   var initialPlace = explicitCoords ? {
     name: options.city || options.name || "", country: options.country || "", admin1: options.admin1 || "",
-    latitude: options.lat, longitude: options.lon, timezone: options.timezone || "UTC",
+    // No timezone → leave it unset rather than claiming UTC. The weather fetch asks
+    // Open-Meteo to resolve the zone from the coordinates and we adopt what comes
+    // back; claiming UTC made it report a Los Angeles sunset before its sunrise.
+    latitude: options.lat, longitude: options.lon, timezone: options.timezone || null,
     elevation: options.elevation != null ? options.elevation : null,
     population: options.population != null ? options.population : null
   } : DEFAULT_PLACE;

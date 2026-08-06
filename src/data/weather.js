@@ -65,6 +65,10 @@ export function fetchWeather(place, state, opts) {
       if (typeof c.cloud_cover === "number") state.cloud = c.cloud_cover;
       if (typeof c.wind_speed_10m === "number") state.windKph = c.wind_speed_10m;
       if (typeof c.is_day === "number") state.isDay = c.is_day;
+      // The zone the API resolved from the coordinates. Sunrise/sunset below are
+      // wall-clock times IN that zone, so whoever reads them has to keep the clock
+      // and the zone together — hand it back on the state.
+      if (d.timezone) state.timezone = d.timezone;
       if (d.daily) {
         if (d.daily.sunrise && d.daily.sunrise[0]) { var sr = isoToMinutes(d.daily.sunrise[0]); if (sr != null) state.sunrise = sr; }
         if (d.daily.sunset && d.daily.sunset[0]) { var ss = isoToMinutes(d.daily.sunset[0]); if (ss != null) state.sunset = ss; }

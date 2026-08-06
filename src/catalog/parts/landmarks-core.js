@@ -8,17 +8,69 @@
 export default [
   {
     id: "liberty", name: "Statue of Liberty", cities: ["new york", "jersey city", "newark"], biomes: ["city", "coast"],
-    w: 10, h: 26, anchor: "baseline",
+    w: 14, h: 32, anchor: "baseline",
     draw: function (P, x, yb, env) {
-      var stone = env.col("#5aa08a"), dark = env.col("#3f7a68"), torch = "#ffd24a";
-      P.rect(x + 3, yb - 6, 4, 6, env.col("#6a6a70"));      // pedestal
-      P.rect(x + 4, yb - 16, 2, 10, stone);                 // robe/body
-      P.px(x + 3, yb - 12, dark); P.px(x + 6, yb - 12, dark);
-      P.px(x + 4, yb - 17, stone); P.px(x + 5, yb - 17, stone); // head
-      for (var s = 0; s < 5; s++) P.px(x + 3 + s, yb - 19 + Math.abs(s - 2), dark); // crown spikes
-      P.px(x + 6, yb - 16, stone); P.px(x + 7, yb - 18, stone); P.px(x + 8, yb - 20, stone); // raised arm
-      P.px(x + 8, yb - 21, torch); if (!env.night) P.withAlpha(0.4, function () { P.disc(x + 8, yb - 21, 2, torch); });
-      else P.withAlpha(0.6, function () { P.disc(x + 8, yb - 21, 2, torch); });
+      var night = env.night || env.dayT < 0.4;
+      // Oxidised copper, modelled rather than flat — she used to be a two-pixel-wide
+      // column of one green on a pedestal that ate two thirds of her height, which
+      // read as a grey-green smudge. The plinth is now short and the figure tall.
+      var pale = env.col("#a8e6cd"), lit = env.col("#7fd4b4"), mid = env.col("#57ad92");
+      var shade = env.col("#357a66"), deep = env.col("#23574a");
+      var gran = env.col("#8f8f98"), granS = env.col("#63636e"), granD = env.col("#45454f");
+      var gold = "#ffd24a", flame = "#fff3b0";
+
+      // --- the granite plinth on its star fort ---
+      P.rect(x + 1, yb - 1, 12, 2, granS); P.rect(x + 1, yb - 1, 12, 1, gran);
+      P.rect(x + 2, yb - 2, 10, 1, gran);
+      P.rect(x + 3, yb - 7, 8, 5, granS);
+      for (var py = yb - 7; py <= yb - 3; py++) {           // lit face / shadowed flank
+        P.px(x + 3, py, gran); P.px(x + 9, py, granD); P.px(x + 10, py, granD);
+      }
+      P.rect(x + 2, yb - 8, 10, 1, gran);                   // cornice
+
+      // --- the robe: a long column that flares as it falls, lit from the left ---
+      // [left, right] column span per row, from the hem (yb-9) up to the shoulders
+      var ROBE = [[3, 10], [3, 10], [3, 10], [4, 10], [4, 9], [4, 9], [4, 9],
+                  [5, 9], [5, 9], [5, 8], [5, 8], [5, 8], [5, 8]];
+      for (var i = 0; i < ROBE.length; i++) {
+        var row = yb - 9 - i, x0 = ROBE[i][0], x1 = ROBE[i][1];
+        for (var cx = x0; cx <= x1; cx++) {
+          // folds run DOWN the drapery, so they are fixed columns — a diagonal
+          // dither here read as scales rather than cloth
+          var c = cx === x0 ? lit : cx === x1 ? shade : (cx === 8) ? shade : mid;
+          P.px(x + cx, row, c);
+        }
+      }
+
+      // --- head and crown ---
+      // The read comes from the SILHOUETTE, not from extra shading: four-wide
+      // shoulders pinch to a two-wide neck and head, then flare again into the
+      // spiked crown. Outlining the head in dark only cut a gap under the crown.
+      P.px(x + 6, yb - 22, shade); P.px(x + 7, yb - 22, deep);   // neck, in shadow
+      P.px(x + 6, yb - 23, pale); P.px(x + 7, yb - 23, mid);     // face
+      P.px(x + 6, yb - 24, lit); P.px(x + 7, yb - 24, shade);    // brow
+      P.px(x + 5, yb - 25, lit); P.px(x + 8, yb - 25, lit);      // the outer spikes
+      P.px(x + 6, yb - 25, pale); P.px(x + 7, yb - 25, pale);    // the crown band
+      P.px(x + 6, yb - 26, pale);                                // one tall ray, kept
+      P.px(x + 7, yb - 26, lit);                                 // below the torch
+
+      // --- the tablet, held in the crook of the left arm ---
+      P.rect(x + 2, yb - 16, 2, 4, env.col("#9fd8c4"));
+      P.px(x + 2, yb - 16, env.col("#c4ecdd"));
+      P.px(x + 4, yb - 17, shade); P.px(x + 4, yb - 16, shade);  // forearm across the body
+
+      // --- the raised right arm and the torch, set clear of the crown ---
+      P.px(x + 9, yb - 22, mid); P.px(x + 9, yb - 23, mid);
+      P.px(x + 10, yb - 24, lit); P.px(x + 10, yb - 25, lit);
+      P.px(x + 10, yb - 26, lit); P.px(x + 10, yb - 27, mid);
+      P.px(x + 10, yb - 28, gold);                               // the torch cup
+      P.px(x + 9, yb - 29, gold); P.px(x + 11, yb - 29, gold);
+      P.px(x + 10, yb - 29, flame); P.px(x + 10, yb - 30, flame);
+      P.withAlpha(night ? 0.5 : 0.22, function () { P.disc(x + 10, yb - 29, 1, gold); });
+      if (night) {
+        // floodlit from the base, the way the island lights her after dark
+        P.withAlpha(0.1, function () { P.disc(x + 7, yb - 16, 7, "#bfe8d8"); });
+      }
     }
   },
   {
