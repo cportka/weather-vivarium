@@ -146,7 +146,9 @@ var OCEAN = {
 
 var MOUNTAIN = {
   id: "mountain", name: "Mountains",
-  sky: { clearTop: "#2f6bb0", clearHor: "#bcd6e8" }, water: null,
+  // farSilhouette: the peaks already own the horizon, so a distant skyline drawn
+  // against them just reads as a grey smudge (Zurich's "shapeless blob").
+  sky: { clearTop: "#2f6bb0", clearHor: "#bcd6e8" }, water: null, farSilhouette: true,
   road: { kind: "asphalt", markings: true },
   drawFar: function (P, env) { farMountains(P, env, "#5a6470", true); },
   drawGround: function (P, env) {
@@ -264,7 +266,7 @@ var SAVANNA = {
 
 var CANYON = {
   id: "canyon", name: "Canyon",
-  sky: { clearTop: "#3f86c0", clearHor: "#e8b78a" }, water: { top: 35, bot: 37 }, farShore: true,
+  sky: { clearTop: "#3f86c0", clearHor: "#e8b78a" }, water: { top: 35, bot: 37 }, farShore: true, farSilhouette: true,
   road: { kind: "dirt", markings: false },
   drawFar: function (P, env) {
     // layered mesa walls

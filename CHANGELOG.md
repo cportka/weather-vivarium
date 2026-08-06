@@ -4,6 +4,40 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com) and the project uses
 [Semantic Versioning](https://semver.org). Every change bumps the version and adds an entry below.
 
+## [0.10.0] - 2026-08-06
+
+From a full review of the reference set.
+
+### Fixed
+- **Los Angeles has its swaying palm back** (regression). Trees were a weighted
+  random draw, so LA's signature palm was a coin flip; calling cards now cover trees
+  too, and LA and Honolulu always lead with a palm (Kyoto with cherry blossom).
+- **New York is dense again** (regression). Buildings are packed shoulder to shoulder
+  at metropolis density instead of leaving town-sized gaps between them — the gap
+  between buildings and the gap between clusters now both scale with density.
+- **Trees and buildings no longer block each other.** Trees take the free-est of a
+  set of slots — never covering the landmark or another tree — and the settlement
+  steps *around* the tree spans,
+  so a tree and the building behind it both show fully — **Kyoto** and **Mumbai** were
+  the worst cases.
+- **Zurich's shapeless grey blob is gone.** Where the horizon already has a silhouette
+  of its own (mountains, canyon rims), the distant skyline is suppressed — a handful of
+  far blocks against a mountain wall just read as a smudge. Those places show their
+  size through the settlement in front.
+- **Miami keeps its swamp but reads as a big place** — the distant skyline is stronger
+  now, so a few towers stand behind the cypress and stilt houses.
+- **Small buildings are bigger.** The minimum is now 8px, and the low styles (suburb,
+  low-rise, adobe, chalet, round hut, farmstead) start at 8–9px, so houses hold their
+  own beside a tree or a person — **Torrance**'s tract houses were dwarfed.
+- **Bangkok isn't bland**: it gets **Wat Arun**, the Temple of Dawn — a tall porcelain
+  prang flanked by two smaller ones.
+- **Bengaluru is denser** while staying the green jungle city it should be.
+
+### Added
+- **27,000 precomputed cities** across 204 countries (11,000 US + 16,000
+  international) — still 1.5 MB, because 27 is lucky.
+- `verify.html` shows the running version.
+
 ## [0.9.0] - 2026-08-06
 
 ### Added
@@ -23,7 +57,7 @@ All notable changes to this project are documented here. The format follows
 - **Torrance** joins the reference set (51 cities), as a suburb reference.
 
 ### Changed
-- **The wall is uncapped** — all **25,000** precomputed cities, because searching the
+- **The wall is uncapped** — every precomputed city, because searching the
   whole set is the fun part. Tiles still only come alive near the viewport.
 - **Seattle is a green city on water.** New `puget-sound` landscape (Seattle, Tacoma,
   Olympia, Bellingham, Everett, Bremerton, Victoria): sound and inlet with a far shore

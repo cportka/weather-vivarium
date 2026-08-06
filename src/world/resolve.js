@@ -119,12 +119,12 @@ export function regionFor(place) {
 
    Keys are matched as whole words against the place name (see match.js). */
 var CALLING_CARDS = [
-  { cities: ["los angeles", "santa monica", "malibu", "venice beach"], person: "beachgoer" },
-  { cities: ["honolulu", "waikiki"], person: "surfer" },
+  { cities: ["los angeles", "santa monica", "malibu", "venice beach"], person: "beachgoer", tree: "palm" },
+  { cities: ["honolulu", "waikiki"], person: "surfer", tree: "palm" },
   { cities: ["new orleans"], person: "street-musician" },
   { cities: ["nashville", "austin"], person: "street-musician" },
   { cities: ["amsterdam", "copenhagen", "utrecht"], person: "cyclist" },
-  { cities: ["kyoto", "nara"], person: "monk" },
+  { cities: ["kyoto", "nara"], person: "monk", tree: "cherry-blossom" },
   { cities: ["kathmandu", "lhasa", "thimphu"], person: "monk" },
   { cities: ["aspen", "zermatt", "chamonix", "queenstown", "whistler"], person: "skier" },
   { cities: ["boulder", "portland", "eugene"], person: "jogger" },
@@ -152,7 +152,8 @@ export function callingCardFor(place) {
     var cc = CALLING_CARDS[i];
     for (var c = 0; c < cc.cities.length; c++) {
       if (cityNames(cc.cities[c], name, full)) {
-        return { person: cc.person || null, ground: cc.ground || null, bird: cc.bird || null, water: cc.water || null };
+        return { person: cc.person || null, ground: cc.ground || null, bird: cc.bird || null,
+          water: cc.water || null, tree: cc.tree || null };
       }
     }
   }

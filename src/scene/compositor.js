@@ -57,7 +57,13 @@ function distantSkyline(P, env, rng) {
   // has a far shore (a lake's far bank, a marsh, a canyon rim) can a distant city
   // sit behind it.
   if (env.water && !env.farShore) return;
-  var cov = clamp((d - 0.32) * 0.75, 0, 0.5);   // always leaves sky between
+  // Where the horizon already has a strong silhouette of its own — a mountain wall,
+  // a canyon rim — a handful of far blocks just reads as a grey smudge against it.
+  // Those places show their size through the settlement in front instead.
+  if (env.farSilhouette) return;
+  // Enough of a skyline to actually read as a city behind the near ground (this is
+  // what tells you Miami is a big place even though the foreground is all swamp).
+  var cov = clamp((d - 0.28) * 0.95, 0, 0.55);   // always leaves sky between
   // A far skyline is atmosphere, not architecture: heights vary a lot (a ragged
   // profile, not a row of monoliths) and everything washes toward the sky at the
   // horizon, so it reads as distance rather than as dark pillars in the scene.
@@ -81,7 +87,7 @@ function distantSkyline(P, env, rng) {
 }
 // A building has to be at least this tall to belong in a scene — anything shorter
 // reads as clutter next to a person or a bird, not as architecture.
-var MIN_BUILDING = 7;
+var MIN_BUILDING = 8;
 
 /**
  * Which row a settlement stands on, given the water in this biome — and null when
@@ -121,14 +127,25 @@ function localSettlement(P, env, rng) {
   var shift = base - (env.groundTop - 1);                    // styles draw off env.groundTop
   var senv = shift ? Object.create(env) : env;
   if (shift) senv.groundTop = env.groundTop + shift;
+  // A metropolis is built shoulder to shoulder; a town leaves room to breathe.
+  var metro = d >= 0.62, big = d >= 0.36;
+  var spans = env.treeSpans || [];
+  function underTree(x, w) {
+    for (var i = 0; i < spans.length; i++) if (x <= spans[i][1] && x + w - 1 >= spans[i][0]) return spans[i][1];
+    return -1;
+  }
   var fx = 0;
   while (fx < P.L) {
     if (rng() < cov) {
       var w = style.width ? style.width(rng) : (3 + Math.floor(rng() * 3));
+      var hit = underTree(fx, w);
+      if (hit >= 0) { fx = hit + 1; continue; }              // step past the tree, don't stack on it
       var h = Math.max(MIN_BUILDING, Math.round(hcap * (0.55 + rng() * 0.45)));
       style.building(P, fx, w, h, senv, lit, rng);
-      fx += w + 1 + Math.floor(rng() * 3);                   // gap after each building
-    } else { fx += 3 + Math.floor(rng() * 5); }              // nature gap
+      fx += w + (metro ? 1 : big ? 1 + Math.floor(rng() * 2) : 1 + Math.floor(rng() * 3));
+    } else {
+      fx += metro ? 2 + Math.floor(rng() * 2) : big ? 3 + Math.floor(rng() * 3) : 3 + Math.floor(rng() * 5);
+    }
   }
 }
 function urbanLayer(P, env) {
@@ -163,17 +180,6 @@ export function createScene(P, world, opts) {
   var props = { trees: [], sign: null, landmark: null };
   (function initProps() {
     if (world.landmark) props.landmark = { entry: world.landmark, x: 1 };
-    var pool = world.pools.trees;
-    if (pool.length) {
-      // A landmark takes the left; trees fill the remaining space so they never
-      // stack on top of it. Denser (more urban) places show fewer street trees.
-      var xs = props.landmark ? [40, 33] : [7, 40, 22];
-      var base = props.landmark ? 1 : (1 + (rng() < 0.6 ? 1 : 0));
-      var nTrees = world.biome.id === "ocean" ? 0 : Math.max(0, Math.round(base * (1 - (world.density || 0) * 0.7)));
-      for (var i = 0; i < nTrees; i++) {
-        props.trees.push({ entry: pickWeighted(rng, pool), x: xs[i] });
-      }
-    }
     var signs = world.pools.signs;
     if (signs.length) {
       // a landmark may name a paired sign (e.g. the casino → the Vegas welcome
@@ -183,6 +189,57 @@ export function createScene(P, world, opts) {
         for (var s = 0; s < signs.length; s++) if (signs[s].id === props.landmark.pairedSign) { chosen = signs[s]; break; }
       }
       props.sign = { entry: chosen || pickWeighted(rng, signs), x: 29 };
+    }
+
+    var pool = world.pools.trees;
+    if (pool.length && world.biome.id !== "ocean") {
+      // Trees look for room rather than demanding it: each one takes the free-est
+      // of the remaining slots, so it doesn't cover the landmark or another tree.
+      // The temperature sign is NOT a hard blocker — it's a short panel drawn over
+      // the tree, and a canopy reading above it is how the original scene looked —
+      // and a tree always gets placed, since silently dropping it just leaves a
+      // bare scene. (A `place:"water"` landmark hangs at the horizon, not on the
+      // ground, so it never competes for a slot.)
+      var blocked = [];
+      if (props.landmark && props.landmark.entry.place !== "water") {
+        blocked.push([props.landmark.x, props.landmark.x + props.landmark.entry.w - 1]);
+      }
+      // how many columns of `x..x+w-1` sit on top of something already placed
+      function clash(x, w) {
+        var n = 0;
+        for (var b = 0; b < blocked.length; b++) {
+          var lo = Math.max(x, blocked[b][0]), hi = Math.min(x + w - 1, blocked[b][1]);
+          if (hi >= lo) n += hi - lo + 1;
+        }
+        return n;
+      }
+      var slots = [7, 20, 33, 44, 13, 27];
+      var base = props.landmark ? 1 : (1 + (rng() < 0.6 ? 1 : 0));
+      var nTrees = Math.max(0, Math.round(base * (1 - (world.density || 0) * 0.7)));
+      // a place's signature tree (LA's palm) leads, then the usual weighted draw
+      var wantTree = world.callingCard && world.callingCard.tree;
+      for (var i = 0; i < nTrees; i++) {
+        var entry = null;
+        if (wantTree) {
+          for (var t = 0; t < pool.length; t++) if (pool[t].id === wantTree) { entry = pool[t]; break; }
+          wantTree = null;
+        }
+        if (!entry) entry = pickWeighted(rng, pool);
+        var bestI = -1, bestX = 0, bestClash = Infinity;
+        for (var sI = 0; sI < slots.length; sI++) {
+          if (slots[sI] == null) continue;
+          var sx = clamp(slots[sI], 0, Math.max(0, P.L - entry.w));   // keep it on the canvas
+          var c = clash(sx, entry.w);
+          if (c < bestClash) { bestClash = c; bestI = sI; bestX = sx; }
+          if (c === 0) break;
+        }
+        if (bestI === -1) break;                                       // every slot used up
+        props.trees.push({ entry: entry, x: bestX });
+        blocked.push([bestX, bestX + entry.w - 1]);
+        slots[bestI] = null;
+      }
+      // buildings step around the trees, so neither is drawn on top of the other
+      props.treeSpans = props.trees.map(function (t) { return [t.x, t.x + t.entry.w - 1]; });
     }
   })();
 
@@ -225,6 +282,8 @@ export function createScene(P, world, opts) {
       // this biome's water band (or null), and whether there's LAND across it —
       // a lake's far bank or a canyon rim can carry a distant city; open sea can't.
       region: world.region || null,
+      treeSpans: props.treeSpans || null,
+      farSilhouette: !!world.biome.farSilhouette,
       water: world.biome.water || null,
       farShore: !!world.biome.farShore,
       wind: clamp((W.windKph || 0) / 45, 0, 1),
