@@ -111,7 +111,7 @@ export default [
     }
   },
   {
-    id: "kangaroo", name: "Kangaroo", biomes: ["desert", "savanna"],
+    id: "kangaroo", name: "Kangaroo", biomes: ["desert", "savanna", "plains", "forest", "coast"],
     tags: ["animal", "medium", "wild", "hops"], w: 9, h: 11, anchor: "baseline", layer: "ground", rarity: 0.7,
     draw: function (P, x, yb, env) {
       var body = env.col("#a06a3a"), dark = env.col("#7a4e28");

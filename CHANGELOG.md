@@ -4,6 +4,39 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com) and the project uses
 [Semantic Versioning](https://semver.org). Every change bumps the version and adds an entry below.
 
+## [0.9.0] - 2026-08-06
+
+### Added
+- **Calling cards.** A place can send out a specific character *first*, before the
+  cast turns over to the usual random draw — the establishing shot. Los Angeles opens
+  with the beachgoer on her towel, Nairobi with a giraffe, Cusco with a llama, New
+  Orleans with a street musician, Aspen with a skier, Kyoto with a monk, Honolulu and
+  Sydney with a surfer, Reykjavík with a gull. `resolveScene` exposes `callingCard`,
+  and a test proves each named sprite exists *and* can actually appear in that city's
+  biome (which caught three that silently couldn't).
+- **Ground animals actually appear.** The `groundAnimals` pool existed and was filled,
+  but nothing ever drew from it — 30-odd species were unreachable. They now amble
+  across the back of the scene, which is also what makes the animal calling cards work.
+- **`verify.html`** — flip through the whole reference set one city at a time: ← →
+  (or the buttons), a day/night toggle, live-weather toggle, a jump menu, dot strip,
+  and the full attributes card for each.
+- **Torrance** joins the reference set (51 cities), as a suburb reference.
+
+### Changed
+- **The wall is uncapped** — all **25,000** precomputed cities, because searching the
+  whole set is the fun part. Tiles still only come alive near the viewport.
+- **Seattle is a green city on water.** New `puget-sound` landscape (Seattle, Tacoma,
+  Olympia, Bellingham, Everett, Bremerton, Victoria): sound and inlet with a far shore
+  and evergreen banks rather than surf beach.
+- **The Space Needle is bigger and better** — 31px tall with tapered legs sweeping to
+  a waist, a proper flying-saucer deck with a warm ring of lit windows after dark, and
+  a blinking beacon.
+- **The Golden Gate sits 2px further back**, so it reads as distance.
+- **Swimming animals sit 2px higher** in the water — a whale reads as being out in it
+  rather than beached at the near edge.
+- Gulls range into the tundra, kangaroos across grassland/bush/coastal scrub, and the
+  street musician busks in more biomes — all so their calling cards can fire.
+
 ## [0.8.1] - 2026-08-05
 
 ### Fixed

@@ -2,7 +2,7 @@
   <img src="assets/logo.png" alt="weather-vivarium" width="560" />
 </p>
 
-> **Version:** 0.8.1
+> **Version:** 0.9.0
 > **Cities:** 25,000 precomputed · 202 countries · **any** city on Earth via geocoding
 
 A tiny **living pixel-art weather diorama** for *any* city — dependency-free, drop
@@ -18,11 +18,11 @@ generalised: same hand-built vintage-pixel soul, now for the whole world.
     <img src="assets/gallery-preview.gif" alt="Live weather-vivarium dioramas for Berkeley, New York, Honolulu, Anchorage, Seattle, Las Vegas, Miami, Austin, Washington, New Orleans, Memphis and Chicago" width="420" />
   </a>
   <br />
-  <em>A dozen cities, each on its current weather — or wander the <a href="https://cportka.github.io/weather-vivarium/gallery.html">live wall of 10,000 →</a></em>
+  <em>A dozen cities, each on its current weather — or wander the <a href="https://cportka.github.io/weather-vivarium/gallery.html">live wall of 25,000 →</a></em>
 </p>
 
 **[▶ Try any city / see yours (live demo)](https://cportka.github.io/weather-vivarium/)** ·
-**[▶ 10,000-city gallery](https://cportka.github.io/weather-vivarium/gallery.html)**
+**[▶ 25,000-city gallery](https://cportka.github.io/weather-vivarium/gallery.html)**
 
 ## Quick start
 
@@ -104,8 +104,9 @@ and a **`world.json`** of the top **15,000** cities outside the US
 (`npm run build:cities -- --world 15000`) — both from GeoNames via `all-the-cities`,
 with offline timezones from `tz-lookup`. Anything not in them still renders via
 live geocoding. The [gallery](https://cportka.github.io/weather-vivarium/gallery.html)
-hangs the 10,000 most-populous of these on its wall; the rest are a search away on
-the demo. The count above is enforced by a test (`tests/cities-count.test.mjs`), so
+puts every one of them on the wall (tiles wake as you scroll), and
+[`verify.html`](https://cportka.github.io/weather-vivarium/verify.html) flips through
+the reference set one city at a time. The count above is enforced by a test (`tests/cities-count.test.mjs`), so
 it can't drift. The roadmap (toward the ~5M named places) and the GeoNames ingest
 are in [`data/cities/README.md`](data/cities/README.md).
 
@@ -124,23 +125,24 @@ line, and `src/index.js`.
 ```
 npm test                 # version sync + syntax + node --test (catalog / resolver / reference cities)
 npm run verify:render    # headless-Chromium contact sheets + example scenes (verify/out/)
-npm run verify:reference # render the 50 reference cities, day + night (verify/out/reference-50.png)
+npm run verify:reference # render the reference cities, day + night (verify/out/reference-50.png)
 npm run build:cities     # rebuild the city database
 ```
 
-### The 50 reference cities
+### The reference cities
 
 <p align="center">
-  <img src="assets/reference-50.png" alt="The 50 reference cities rendered by day — every biome, from hamlet to megacity" width="900" />
+  <img src="assets/reference-50.png" alt="The reference cities rendered by day — every biome, from hamlet to megacity" width="900" />
   <br />
-  <em>The 50 reference cities, midday — <a href="assets/reference-50-night.png">and at night →</a></em>
+  <em>The reference cities, midday — <a href="assets/reference-50-night.png">and at night →</a></em>
 </p>
 
 [`verify/reference-cities.mjs`](verify/reference-cities.mjs) is a standing,
 deliberately diverse set — every biome, the full range from hamlet to megacity, both
 hemispheres, coastal and landlocked, curated landmarks and uncurated long tail. It's
-the yardstick for any visual change: render the sheet, look at all 50, and only then
-call a tweak an improvement. `tests/reference-cities.test.mjs` locks in how each one
+the yardstick for any visual change: render the sheet (or flip through
+[`verify.html`](https://cportka.github.io/weather-vivarium/verify.html)), look at every
+one, and only then call a tweak an improvement. `tests/reference-cities.test.mjs` locks in how each one
 resolves (biome, cultural region, density tier, settlement style, landmark), so a
 change to the resolver or the style tables can't quietly alter one. When a change to
 them is intended, regenerate with `npm run update:reference` and review the sheet

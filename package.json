@@ -1,6 +1,6 @@
 {
   "name": "weather-vivarium",
-  "version": "0.8.1",
+  "version": "0.9.0",
   "description": "A tiny living pixel-art weather diorama for any city — dependency-free, driven by real conditions (sun, rain, wind, tide, time of day, landscape, landmark).",
   "type": "module",
   "main": "src/index.js",

@@ -50,16 +50,34 @@ export default [
     }
   },
   {
-    id: "space-needle", name: "Space Needle", cities: ["seattle", "tacoma"], biomes: ["city", "forest"],
-    w: 9, h: 24, anchor: "baseline",
+    id: "space-needle", name: "Space Needle", cities: ["seattle", "tacoma"], biomes: ["city", "forest", "lake", "mountain"],
+    w: 13, h: 31, anchor: "baseline",
     draw: function (P, x, yb, env) {
-      var m = env.col("#c9cdd2");
-      P.line(x + 3, yb, x + 4, yb - 14, m); P.line(x + 5, yb, x + 4, yb - 14, m); // tapered legs
-      P.rect(x + 3, yb - 16, 3, 3, m);                        // shaft to saucer
-      P.rect(x, yb - 18, 9, 2, env.col("#9aa0a6"));           // saucer
-      P.px(x, yb - 17, m); P.px(x + 8, yb - 17, m);
-      P.rect(x + 4, yb - 23, 1, 5, m);                        // spire
-      P.px(x + 4, yb - 23, env.night ? "#ff5a5a" : "#e0e0e0"); // beacon
+      var m = env.col("#d3d7dc"), dk = env.col("#9aa0a6"), warm = env.col("#c8a06a");
+      var cx = x + 6, saucerY = yb - 22;
+      // three tapered legs sweeping in to a waist, then the core rising to the top
+      for (var y = 0; y <= 22; y++) {
+        var t = y / 22;
+        var spread = Math.round(5 * (1 - t) * (1 - t) * 1.15);   // wide at the base, pinched at the waist
+        P.px(cx - spread, yb - y, y > 16 ? dk : m);
+        P.px(cx + spread, yb - y, y > 16 ? dk : m);
+        if (spread <= 1) P.px(cx, yb - y, m);                    // the core column
+      }
+      P.px(cx, yb - 8, dk); P.px(cx, yb - 14, dk);               // elevator core detail
+      // the saucer: a wide flying-disc with an underside cone and a lifted rim
+      P.rect(x + 1, saucerY, 11, 1, dk);                         // underside
+      P.rect(x, saucerY - 1, 13, 1, m);                          // widest deck
+      P.rect(x + 1, saucerY - 2, 11, 1, m);                      // upper deck
+      P.px(x, saucerY, dk); P.px(x + 12, saucerY, dk);           // rim tips
+      // observation windows — a warm ring of light after dark
+      for (var wx = x + 2; wx <= x + 10; wx += 2) {
+        P.px(wx, saucerY - 1, (env.night || env.dayT < 0.4) ? "#ffe0a0" : warm);
+      }
+      P.rect(x + 3, saucerY - 3, 7, 1, dk);                      // roof of the restaurant level
+      // spire + aircraft beacon
+      P.rect(cx, saucerY - 8, 1, 5, m);
+      P.px(cx, saucerY - 9, env.night ? "#ff5a5a" : "#e6e6e6");
+      if (env.night && ((env.frame >> 2) & 1)) P.px(cx, saucerY - 10, "#ffd0d0");
     }
   },
   {
