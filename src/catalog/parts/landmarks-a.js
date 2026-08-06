@@ -39,30 +39,62 @@ export default [
     }
   },
   {
+    // La dame de fer — the real thing is warm brown ironwork, not grey: four
+    // splayed legs curving up through two decks to a slender mast, the whole of it
+    // openwork lattice you can see the sky through, and at night the famous golden
+    // floodlight with its sparkle.
     id: "eiffel", name: "Eiffel Tower", cities: ["paris"], biomes: ["city", "plains"],
     tags: ["tower", "iron", "lattice", "landmark"],
-    w: 14, h: 31, anchor: "baseline",
+    w: 16, h: 33, anchor: "baseline",
     draw: function (P, x, yb, env) {
-      var iron = env.col("#6f5f4a"), dk = env.col("#4f4235"), lit = env.col("#8a765a");
-      var cx = x + 7, H = 29;
-      // curved A-frame legs sweeping up to a point
-      for (var y = 0; y <= H; y++) {
-        var t = y / H;
-        var hw = Math.round(6 * (1 - t) * (1 - t));
-        P.px(cx - hw, yb - y, iron);
-        P.px(cx + hw, yb - y, iron);
-        // fill the narrow converging top third solid so it reads as a mast
-        if (hw <= 1) P.rect(cx - 1, yb - y, 3 - (hw ? 0 : 1), 1, lit);
+      var night = env.night || env.dayT < 0.4;
+      // gilded under floodlight after dark, warm brown iron by day
+      var iron = night ? "#c8912f" : env.col("#7a6244");
+      var edge = night ? "#f0bd63" : env.col("#957a56");
+      var deep = night ? "#8a6320" : env.col("#54432e");
+      var cx = x + 8;
+      // Half-width of the silhouette at each row above the ground — the splayed
+      // legs, the pinch at the first deck, the long taper, then the spire. Written
+      // out rather than curve-fitted so the profile is exactly Eiffel's: a wide
+      // flare over the bottom fifth, then a slender shaft for most of the height.
+      var HW = [7, 7, 6, 6, 5, 5, 4, 4, 4, 3, 3, 3, 3,
+                2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+                1, 1, 1, 1, 1, 1, 0, 0, 0, 0];
+      for (var k = 0; k < HW.length; k++) {
+        var hw = HW[k], row = yb - k;
+        if (hw === 0) { P.px(cx, row, edge); continue; }        // the spire
+        P.px(cx - hw, row, edge); P.px(cx + hw, row, edge);      // the two curving edges
+        if (k < 6) {                                            // legs: open sky between them
+          P.px(cx - hw + 1, row, iron); P.px(cx + hw - 1, row, iron);
+          continue;
+        }
+        if (hw <= 1) { P.px(cx, row, iron); continue; }         // the slender upper shaft
+        for (var i = -hw + 1; i <= hw - 1; i++) {               // openwork cross-bracing
+          if ((i + k) % 3 === 0) P.px(cx + i, row, iron);
+          else if ((i - k) % 3 === 0) P.px(cx + i, row, deep);
+        }
       }
-      // base arch between the legs
-      P.line(cx - 6, yb - 5, cx, yb - 8, iron);
-      P.line(cx + 6, yb - 5, cx, yb - 8, iron);
-      // observation decks
-      P.rect(cx - 5, yb - 8, 11, 1, dk);
-      P.rect(cx - 3, yb - 18, 7, 1, dk);
-      // beacon at the summit (light source — undimmed)
-      P.px(cx, yb - 30, env.night ? "#ff6a6a" : env.col("#c9c2b0"));
-      if (env.night && ((env.frame >> 2) & 1)) P.px(cx, yb - 29, "#fff2b0");
+      // the great arch springing between the legs, under the first deck
+      P.line(cx - 6, yb - 1, cx - 4, yb - 4, edge);
+      P.line(cx - 4, yb - 4, cx - 2, yb - 5, edge);
+      P.line(cx + 6, yb - 1, cx + 4, yb - 4, edge);
+      P.line(cx + 4, yb - 4, cx + 2, yb - 5, edge);
+      P.rect(cx - 2, yb - 5, 5, 1, edge);
+      // the two observation decks, each overhanging the shaft it sits on
+      P.rect(cx - 5, yb - 5, 11, 1, deep); P.rect(cx - 6, yb - 6, 13, 1, edge);
+      P.rect(cx - 3, yb - 12, 7, 1, deep); P.rect(cx - 4, yb - 13, 9, 1, edge);
+      P.rect(cx - 2, yb - 28, 5, 1, edge);                      // the top platform
+      // the summit: aircraft beacon, and the sparkle on the hour
+      P.px(cx, yb - 32, night ? "#ff6a6a" : env.col("#c9c2b0"));
+      if (night) {
+        P.px(cx, yb - 31, "#ffe9a6");
+        var f = env.frame || 0;
+        if ((f >> 1) % 3 === 0) {                   // champagne sparkle
+          var sx2 = cx - 4 + ((f * 5) % 9), sy2 = yb - 6 - ((f * 7) % 22);
+          P.px(sx2, sy2, "#fff6d0");
+        }
+        P.withAlpha(0.14, function () { P.disc(cx, yb - 14, 10, "#ffcf6a"); });  // floodlit glow
+      }
     }
   },
   {
