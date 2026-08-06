@@ -50,7 +50,7 @@ export var STYLES = {
   },
   // Small townhouses / shops with awnings.
   lowrise: {
-    id: "lowrise", name: "Low-rise town", heights: [3, 5, 8], maxCoverage: 0.46, width: w3,
+    id: "lowrise", name: "Low-rise town", heights: [8, 9, 11], maxCoverage: 0.46, width: w3,
     building: function (P, x, w, h, env, lit, rng) {
       var b = baseRow(env), top = b - h + 1;
       var wall = env.col(["#b06a4a", "#8a9a6a", "#6a8aa0", "#c0a060", "#9a6a8a"][Math.floor(rng() * 5)]);
@@ -62,7 +62,7 @@ export var STYLES = {
   },
   // Red barn + silo farmstead.
   farmstead: {
-    id: "farmstead", name: "Farmstead", heights: [3, 4, 6], maxCoverage: 0.3, width: function (rng) { return 4 + Math.floor(rng() * 3); },
+    id: "farmstead", name: "Farmstead", heights: [8, 9, 10], maxCoverage: 0.3, width: function (rng) { return 4 + Math.floor(rng() * 3); },
     building: function (P, x, w, h, env, lit, rng) {
       var b = baseRow(env), top = b - h + 1;
       if (rng() < 0.4) { // silo
@@ -77,7 +77,7 @@ export var STYLES = {
   },
   // Round thatched huts (savanna village).
   roundhut: {
-    id: "roundhut", name: "Village", heights: [3, 4, 5], maxCoverage: 0.4, width: function (rng) { return 4; },
+    id: "roundhut", name: "Village", heights: [8, 8, 9], maxCoverage: 0.4, width: function (rng) { return 4; },
     building: function (P, x, w, h, env, lit, rng) {
       var b = baseRow(env), wall = env.col("#a9764a"), roof = env.col("#8a6a3a");
       P.rect(x + 1, b - 2, 3, 3, wall);                                                  // mud wall
@@ -87,7 +87,7 @@ export var STYLES = {
   },
   // Flat-roof adobe / pueblo blocks.
   adobe: {
-    id: "adobe", name: "Adobe", heights: [3, 4, 7], maxCoverage: 0.46, width: w3,
+    id: "adobe", name: "Adobe", heights: [8, 9, 11], maxCoverage: 0.46, width: w3,
     building: function (P, x, w, h, env, lit, rng) {
       var b = baseRow(env), top = b - h + 1, wall = env.col(mix("#c98f52", "#dcae74", rng()));
       P.rect(x, top, w, h, wall);
@@ -98,7 +98,7 @@ export var STYLES = {
   },
   // A-frame chalets with snow roofs + a chimney.
   chalet: {
-    id: "chalet", name: "Chalet", heights: [3, 5, 7], maxCoverage: 0.42, width: w4,
+    id: "chalet", name: "Chalet", heights: [8, 9, 10], maxCoverage: 0.42, width: w4,
     building: function (P, x, w, h, env, lit, rng) {
       var b = baseRow(env), top = b - h + 1, wall = env.col(mix("#6a4a30", "#8a6540", rng())), snow = env.col("#eef2f5");
       P.rect(x, top + 1, w, h - 1, wall);
@@ -124,7 +124,7 @@ export var STYLES = {
   suburb: {
     // `fill` — suburbia is uniformly built out, house after house, so it reaches its
     // coverage much sooner than a scattering of village cottages would.
-    id: "suburb", name: "Suburb", heights: [7, 8, 9], maxCoverage: 0.62, fill: 2.6,
+    id: "suburb", name: "Suburb", heights: [9, 11, 12], maxCoverage: 0.62, fill: 2.6,
     width: function (rng) { return 6 + Math.floor(rng() * 3); },
     building: function (P, x, w, h, env, lit, rng) {
       var b = baseRow(env), top = b - h + 1;

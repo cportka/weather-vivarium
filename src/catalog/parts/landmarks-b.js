@@ -5,6 +5,39 @@
 
 export default [
   {
+    // Wat Arun, the Temple of Dawn on the Chao Phraya — a tall corn-cob prang
+    // encrusted with porcelain, flanked by two smaller ones. Bangkok read as a
+    // generic block of mid-rise without it.
+    id: "wat-arun", name: "Wat Arun", cities: ["bangkok", "krung thep", "ayutthaya"],
+    biomes: ["city", "jungle", "wetland", "savanna", "lake"],
+    tags: ["temple", "spire", "prang", "landmark"],
+    w: 17, h: 27, anchor: "baseline",
+    draw: function (P, x, yb, env) {
+      var pale = env.col("#e6ddc9"), shade = env.col("#c4b79e"), dk = env.col("#9c8f78");
+      var gold = env.dayT > 0.45 ? env.col("#d8b34a") : "#ffd76a";
+      // one tapering prang: a stepped, corn-cob tower narrowing to a gilded tip
+      function prang(cx, H, wide) {
+        for (var y = 0; y < H; y++) {
+          var t = y / H;
+          var hw = Math.max(0, Math.round(wide * (1 - t * t * 0.55) * (1 - t * 0.55)));
+          var band = (y % 4 === 0);                       // the tiered rings up the tower
+          for (var i = -hw; i <= hw; i++) {
+            P.px(cx + i, yb - 2 - y, band ? shade : (i === -hw || i === hw ? dk : pale));
+          }
+        }
+        P.px(cx, yb - 2 - H, gold);                       // gilded finial
+        P.px(cx, yb - 3 - H, gold);
+      }
+      P.rect(x, yb - 1, 17, 2, dk);                       // river terrace
+      P.rect(x, yb - 2, 17, 1, shade);
+      prang(x + 3, 12, 1);                                // flanking prangs
+      prang(x + 13, 12, 1);
+      prang(x + 8, 22, 3);                                // the great central prang
+      // porcelain glints catch the light
+      if (env.dayT > 0.5) { P.px(x + 8, yb - 14, gold); P.px(x + 7, yb - 9, gold); P.px(x + 9, yb - 19, gold); }
+    }
+  },
+  {
     // El Ángel de la Independencia — the golden winged victory on her column on
     // Paseo de la Reforma. Mexico City is a metropolis in a ring of volcanoes, so
     // she reads against the mountains as well as against a skyline.
