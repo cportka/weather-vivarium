@@ -80,7 +80,7 @@ export default [
     }
   },
   {
-    id: "sparrow", name: "Sparrow", biomes: ["forest", "city", "plains", "farmland", "desert", "savanna", "wetland", "coast", "lake", "mountain", "canyon"],
+    id: "sparrow", name: "Sparrow", biomes: ["forest", "city", "plains", "farmland", "desert", "savanna", "wetland", "coast", "lake", "mountain", "canyon", "jungle"],
     tags: ["bird", "sky", "songbird", "small"], w: 3, h: 2, anchor: "center", rarity: 3,
     draw: function (P, x, y, env) {
       var up = ((env.frame >> 2) & 1) === 0;

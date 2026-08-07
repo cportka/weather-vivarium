@@ -22,7 +22,7 @@ jobs:
         run: bash tests/run-tests.sh
 
   reference:
-    name: reference cities (52) + page controls
+    name: reference cities + page controls
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

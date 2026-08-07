@@ -44,7 +44,7 @@ export default [
     }
   },
   {
-    id: "deer", name: "Deer", biomes: ["forest", "mountain", "plains", "tundra"],
+    id: "deer", name: "Deer", biomes: ["forest", "mountain", "plains", "tundra", "lake"],
     tags: ["animal", "medium", "wild"], w: 10, h: 9, anchor: "baseline", layer: "ground", rarity: 0.8,
     draw: function (P, x, yb, env) {
       var body = env.col("#9a6a3e"), dark = env.col("#6f4a28");
@@ -57,7 +57,7 @@ export default [
     }
   },
   {
-    id: "rabbit", name: "Rabbit", biomes: ["plains", "farmland", "forest", "tundra", "desert"],
+    id: "rabbit", name: "Rabbit", biomes: ["plains", "farmland", "forest", "tundra", "desert", "canyon", "lake"],
     tags: ["animal", "tiny", "wild"], w: 5, h: 4, anchor: "baseline", layer: "ground", rarity: 1.1,
     draw: function (P, x, yb, env) {
       var body = env.col("#b9a48a"), dark = env.col("#8a7358");
@@ -107,7 +107,7 @@ export default [
     }
   },
   {
-    id: "butterfly", name: "Butterfly", biomes: ["plains", "farmland", "forest", "jungle", "wetland"],
+    id: "butterfly", name: "Butterfly", biomes: ["plains", "farmland", "forest", "jungle", "wetland", "mountain", "savanna", "lake", "canyon", "coast"],
     tags: ["animal", "air", "insect"], w: 4, h: 3, anchor: "center", layer: "air", rarity: 1.3,
     draw: function (P, x, y, env) {
       var open = (env.frame >> 1) & 1;

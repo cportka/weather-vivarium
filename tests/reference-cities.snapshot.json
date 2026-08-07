@@ -50,6 +50,13 @@
       "style": "apartment-blocks",
       "landmark": "skyscraper"
     },
+    "Naperville": {
+      "biome": "farmland",
+      "region": "north-america",
+      "tier": "city",
+      "style": "suburb",
+      "landmark": null
+    },
     "Las Vegas": {
       "biome": "desert",
       "region": "north-america",
@@ -146,6 +153,13 @@
       "region": "latin-america",
       "tier": "city",
       "style": "adobe",
+      "landmark": null
+    },
+    "Iquitos": {
+      "biome": "jungle",
+      "region": "latin-america",
+      "tier": "city",
+      "style": "resort",
       "landmark": null
     },
     "Ushuaia": {

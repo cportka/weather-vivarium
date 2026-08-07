@@ -7,6 +7,43 @@
 
 export default [
   {
+    // A thatched beach-bar board — the tropical answer to the trailpost. Two
+    // bamboo posts, a palm-frond roof shaggy at the eaves, a driftwood plank
+    // carrying the temperature, and a pair of tiki torches that light after dark.
+    id: "tiki-board", name: "Tiki board", biomes: ["jungle", "coast", "lake"],
+    tags: ["sign", "tropical", "thatch"], w: 18, h: 16, anchor: "baseline", rarity: 1,
+    draw: function (P, x, yb, env) {
+      var night = env.night || env.dayT < 0.4;
+      var bamboo = env.col("#b8974e"), bambooD = env.col("#8a6f36");
+      var thatch = env.col("#c9a95e"), thatchD = env.col("#a3843f");
+      var plank = env.col("#8a6a42"), plankD = env.col("#6b5030");
+      // posts planted on yb
+      P.rect(x + 3, yb - 12, 2, 12, bamboo); P.px(x + 3, yb - 8, bambooD);   // node rings
+      P.rect(x + 13, yb - 12, 2, 12, bamboo); P.px(x + 14, yb - 6, bambooD);
+      // palm-frond roof: ridge, slope, and a shaggy dripping eave line
+      P.rect(x + 1, yb - 14, 16, 1, thatchD);
+      P.rect(x, yb - 13, 18, 2, thatch);
+      for (var i = 0; i < 9; i++) P.px(x + 1 + i * 2, yb - 11, thatchD);     // straw ends
+      P.px(x + 8, yb - 15, thatchD); P.px(x + 9, yb - 15, thatchD);          // ridge cap
+      // the driftwood plank with the temperature
+      P.rect(x + 2, yb - 9, 14, 6, plank);
+      P.rect(x + 2, yb - 4, 14, 1, plankD);
+      P.px(x + 2, yb - 9, plankD); P.px(x + 15, yb - 9, plankD);             // rough corners
+      var s = env.text || "--", wpx = s.length * 4 - 1;
+      var tx = (x + 2) + Math.round((14 - wpx) / 2);
+      P.text(s, tx, yb - 8, night ? "#ffe9a6" : env.col("#f4ead2"));
+      // tiki torches flanking the posts, flames flickering after dark
+      P.rect(x, yb - 5, 1, 5, bambooD); P.rect(x + 17, yb - 5, 1, 5, bambooD);
+      if (night) {
+        var f = (env.frame >> 1) & 1;
+        P.px(x, yb - 6, f ? "#ffb347" : "#ff8c2a"); P.px(x + 17, yb - 6, f ? "#ff8c2a" : "#ffb347");
+        P.withAlpha(0.25, function () { P.disc(x, yb - 6, 1, "#ffb347"); P.disc(x + 17, yb - 6, 1, "#ffb347"); });
+      } else {
+        P.px(x, yb - 6, env.col("#4a3a24")); P.px(x + 17, yb - 6, env.col("#4a3a24"));
+      }
+    }
+  },
+  {
     id: "led-matrix", name: "LED matrix board", biomes: ["city", "coast"],
     tags: ["sign", "led", "digital"], w: 20, h: 16, anchor: "baseline", rarity: 1,
     draw: function (P, x, yb, env) {
@@ -84,7 +121,7 @@ export default [
     }
   },
   {
-    id: "milestone", name: "Milestone marker", biomes: ["plains", "forest", "mountain", "farmland", "savanna", "canyon"],
+    id: "milestone", name: "Milestone marker", biomes: ["plains", "forest", "mountain", "farmland", "savanna", "canyon", "jungle", "lake", "tundra", "wetland", "desert"],
     tags: ["sign", "stone", "path"], w: 18, h: 12, anchor: "baseline", rarity: 1,
     draw: function (P, x, yb, env) {
       var top = yb - 12;
@@ -98,7 +135,7 @@ export default [
     }
   },
   {
-    id: "flag-banner", name: "Flag banner", biomes: ["coast", "city", "plains", "savanna", "farmland"],
+    id: "flag-banner", name: "Flag banner", biomes: ["coast", "city", "plains", "savanna", "farmland", "jungle", "lake"],
     tags: ["sign", "flag", "cloth"], w: 18, h: 18, anchor: "baseline", rarity: 1,
     draw: function (P, x, yb, env) {
       var h = 18, top = yb - h;
@@ -137,7 +174,7 @@ export default [
     }
   },
   {
-    id: "gas-price", name: "Fuel price totem", biomes: ["city", "plains", "desert", "farmland", "coast", "savanna"],
+    id: "gas-price", name: "Fuel price totem", biomes: ["city", "plains", "desert", "farmland", "coast", "savanna", "forest", "mountain", "lake", "canyon", "wetland", "tundra"],
     tags: ["sign", "fuel", "price"], w: 17, h: 20, anchor: "baseline", rarity: 1,
     draw: function (P, x, yb, env) {
       var h = 20, top = yb - h, pw = 17, ph = 12;

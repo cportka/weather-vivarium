@@ -47,3 +47,36 @@ test("README mentions the world + US dataset sizes", () => {
   assert.ok(readme.includes(fmt(us.count)), `README should mention US count ${fmt(us.count)}`);
   assert.ok(readme.includes(fmt(total())), `README should mention the total ${fmt(total())}`);
 });
+
+test("metro-aware density: suburbs are lifted, cores and standalone towns are not", () => {
+  const find = (list, name, admin) => list.find((c) => c.name === name && (!admin || c.admin === admin));
+
+  // Chicago's commuter belt lifts Naperville; Chicago itself IS the core.
+  const naperville = find(usCities, "Naperville", "IL");
+  assert.ok(naperville, "Naperville IL should be in us.json");
+  assert.ok(naperville.density != null && naperville.density >= 0.38,
+    `Naperville should carry a metro-lifted density, got ${naperville.density}`);
+  assert.equal(find(usCities, "Chicago", "IL").density, null, "a metro core needs no lift");
+
+  // a standalone town far from any bigger core keeps the population formula
+  const iowaCity = find(usCities, "Iowa City", "IA");
+  if (iowaCity) assert.equal(iowaCity.density, null, "Iowa City has no bigger neighbour to lift it");
+
+  // the pass moved a real share of the dataset, not a handful
+  const lifted = usCities.filter((c) => c.density != null);
+  assert.ok(lifted.length > 2000, `expected thousands of lifted US suburbs, got ${lifted.length}`);
+  for (const c of lifted) {
+    assert.ok(c.density >= 0.15 && c.density <= 1, `${c.name}: stored density ${c.density} out of range`);
+  }
+});
+
+test("the Naperville reference row's hand-set density matches the dataset", async () => {
+  // resolveReference honours an explicit density on a reference row; this pins the
+  // hand-set value to what the build actually computed so the two can't drift.
+  const { REFERENCE_CITIES } = await import("../verify/reference-cities.mjs");
+  const ref = REFERENCE_CITIES.find((c) => c.name === "Naperville");
+  assert.ok(ref, "Naperville should be a reference city");
+  const row = usCities.find((c) => c.name === "Naperville" && c.admin === "IL");
+  assert.equal(ref.density, row.density,
+    `reference density ${ref.density} vs dataset ${row.density} — regenerate one of them`);
+});

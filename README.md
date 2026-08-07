@@ -2,7 +2,7 @@
   <img src="assets/logo.png" alt="weather-vivarium" width="560" />
 </p>
 
-> **Version:** 0.13.0
+> **Version:** 0.14.0
 > **Cities:** 44,444 precomputed · 204 countries · **any** city on Earth via geocoding
 
 A tiny **living pixel-art weather diorama** for *any* city — dependency-free, drop

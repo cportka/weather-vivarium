@@ -41,7 +41,7 @@ export default [
     }
   },
   {
-    id: "fox", name: "Fox", biomes: ["forest", "plains", "tundra", "farmland"],
+    id: "fox", name: "Fox", biomes: ["forest", "plains", "tundra", "farmland", "lake"],
     tags: ["animal", "small", "wild"], w: 8, h: 5, anchor: "baseline", layer: "ground", rarity: 0.8,
     draw: function (P, x, yb, env) {
       var body = env.col("#d1712e"), dark = env.col("#8a3f14"), white = env.col("#eae4d8");
@@ -133,7 +133,7 @@ export default [
     }
   },
   {
-    id: "goat", name: "Goat", biomes: ["mountain", "farmland", "plains", "savanna"],
+    id: "goat", name: "Goat", biomes: ["mountain", "farmland", "plains", "savanna", "canyon"],
     tags: ["animal", "medium", "farm"], w: 9, h: 7, anchor: "baseline", layer: "ground", rarity: 0.8,
     draw: function (P, x, yb, env) {
       var body = env.col("#cbb896"), dark = env.col("#7a6a4a"), horn = env.col("#5a4a35");

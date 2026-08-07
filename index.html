@@ -314,7 +314,7 @@
       const name = document.createElement("div"); name.className = "name"; name.textContent = c.name + ", " + c.cc;
       const meta = document.createElement("div"); meta.className = "meta"; meta.textContent = c.landscape + (c.landmark ? " · " + c.landmark : "");
       tile.append(m, name, meta); host.appendChild(tile);
-      const inst = createVivarium(m, { city: c.name, lat: c.lat, lon: c.lon, timezone: c.tz, biome: c.biome, landscape: c.landscape, population: c.population, temperatureUnit: c.unit, size: 140, interactive: true, minimalData: true, refreshMs: 0 });
+      const inst = createVivarium(m, { city: c.name, lat: c.lat, lon: c.lon, timezone: c.tz, biome: c.biome, landscape: c.landscape, population: c.population, density: c.density, temperatureUnit: c.unit, size: 140, interactive: true, minimalData: true, refreshMs: 0 });
       tile.onclick = e => { if (!m.contains(e.target)) load({ city: c.name, lat: c.lat, lon: c.lon, tz: c.tz, population: c.population }); };
       const u = c.unit === "celsius" ? "C" : "F";
       const paint = () => { const w = inst.weather; meta.textContent = (w.temp == null ? "…" : w.temp + "°" + u) + " · " + c.landscape + (c.landmark ? " · " + c.landmark : ""); };

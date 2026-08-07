@@ -145,6 +145,8 @@ var CALLING_CARDS = [
     person: "beachgoer", nightPerson: "beach-cat", tree: "palm", sign: "neon" },
   { cities: ["honolulu", "waikiki"], person: "surfer", tree: "palm" },
   { cities: ["lomita"], tree: "pine" },   // the big pine by the library
+  // Amazon river ports: a thatched riverfront board, and the capybara ambles out first
+  { cities: ["iquitos", "manaus"], sign: "tiki-board", ground: "capybara" },
   { cities: ["new orleans"], person: "street-musician" },
   { cities: ["nashville", "austin"], person: "street-musician" },
   { cities: ["amsterdam", "copenhagen", "utrecht"], person: "cyclist" },

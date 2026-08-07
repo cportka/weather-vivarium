@@ -91,10 +91,71 @@ async function fromAllTheCities(limit, opts) {
     out.push({
       name: c.name, cc: c.country, admin: c.adminCode || "", lat: Math.round(lat * 1000) / 1000, lon: Math.round(lon * 1000) / 1000,
       tz, population: c.population, biome: res.biome.id, landscape: res.landscape.id,
-      landmark: res.landmark ? res.landmark.id : null, category: category(res, c.population), unit
+      landmark: res.landmark ? res.landmark.id : null, category: category(res, c.population), unit,
+      floorD: res.densityFloor || 0
     });
   }
   return out;
+}
+
+/* METRO-AWARE DENSITY.
+
+   City-limits population lies about suburbs: Naperville's 141k next to Chicago's
+   2.7M renders as a mid-size town in a cornfield, when it is continuous metro.
+   So after enriching, look at each city's neighbourhood (~25 km) and let the
+   biggest neighbour pull its urbanisation up: a suburb reads at ~60% of its
+   core's density, floored at the city's own. Only rows the pass actually moved
+   carry a `density` column — everything else stays on the population formula at
+   runtime, so the packed files barely grow and live-geocoded places (which have
+   no neighbourhood to consult) are unaffected.
+
+   A core's commuter belt scales with its size — Chicago reaches Naperville at
+   45 km, but a 100k town's pull shouldn't stretch that far — so each candidate
+   core has a reach tiered by its population, and lifts below "village" (0.15)
+   or under +0.03 aren't stored at all: a hamlet next to a slightly bigger hamlet
+   is still a hamlet, and storing that noise would double the file for nothing.
+
+   Grid-bucketed so 28,000 cities scan in well under a second. */
+function densityOfPop(pop) {
+  if (!pop || pop <= 0) return 0;
+  const d = (Math.log10(pop) - 3.6) / 4.2;
+  return d < 0 ? 0 : d > 1 ? 1 : d;
+}
+function metroReachKm(pop) {
+  return pop >= 2e6 ? 50 : pop >= 5e5 ? 30 : pop >= 1e5 ? 20 : 12;
+}
+function metroPass(cities) {
+  const CELL = 0.25, MAXR = 50;                        // cells ~28 km of latitude
+  const grid = new Map();
+  const keyOf = (la, lo) => (Math.round(la / CELL)) + ":" + (Math.round(lo / CELL));
+  cities.forEach((c, i) => {
+    const k = keyOf(c.lat, c.lon);
+    if (!grid.has(k)) grid.set(k, []);
+    grid.get(k).push(i);
+  });
+  let moved = 0;
+  for (const c of cities) {
+    const cosLat = Math.cos(c.lat * Math.PI / 180) || 1e-6;
+    const sy = Math.ceil(MAXR / (111.32 * CELL));
+    const sx = Math.min(8, Math.ceil(MAXR / (111.32 * CELL * cosLat)));
+    let corePop = 0;
+    for (let dy = -sy; dy <= sy; dy++) for (let dx = -sx; dx <= sx; dx++) {
+      const cell = grid.get((Math.round(c.lat / CELL) + dy) + ":" + (Math.round(c.lon / CELL) + dx));
+      if (!cell) continue;
+      for (const j of cell) {
+        const o = cities[j];
+        if ((o.population || 0) <= Math.max(corePop, c.population || 0)) continue;
+        const km = Math.hypot((o.lat - c.lat) * 111.32, (o.lon - c.lon) * 111.32 * cosLat);
+        if (km <= metroReachKm(o.population)) corePop = o.population;
+      }
+    }
+    const own = Math.max(densityOfPop(c.population), c.floorD || 0);
+    const suburb = densityOfPop(corePop) * 0.6;
+    const eff = Math.max(own, suburb);
+    if (eff > own + 0.03 && eff >= 0.15) { c.density = Math.round(eff * 100) / 100; moved++; }
+    delete c.floorD;                                  // build-time scratch, not packed
+  }
+  return moved;
 }
 
 // Parse a GeoNames "cities" TSV (feature class P). Columns are documented at
@@ -120,7 +181,7 @@ const DICT_FIELDS = ["cc", "admin", "tz", "biome", "landscape", "landmark", "cat
 
 /** Pack rows into the compact columnar form src/data/cities.js reads. */
 function packCities(cities) {
-  const fields = ["name", "cc", "admin", "lat", "lon", "tz", "population", "biome", "landscape", "landmark", "category", "unit"]
+  const fields = ["name", "cc", "admin", "lat", "lon", "tz", "population", "density", "biome", "landscape", "landmark", "category", "unit"]
     .filter((f) => cities.some((c) => c[f] !== undefined));
   const dicts = {}, index = {};
   for (const f of fields) {
@@ -158,6 +219,8 @@ async function main() {
     // disjoint (US is covered fully by us.json) and their union is exactly the
     // sum. Keeps the advertised total honest and avoids duplicate tiles.
     const cities = await fromAllTheCities(limit, { exclude: "US" });
+    const moved = metroPass(cities);
+    console.log(`Metro-aware density: ${moved} cities lifted by a bigger neighbour`);
     cities.sort((a, b) => b.population - a.population);
     const outPath = path.join(OUT_DIR, "world.json");
     writeFileSync(outPath, JSON.stringify({
@@ -176,6 +239,8 @@ async function main() {
   if (ui !== -1) {
     const limit = parseInt(args[ui + 1], 10) || 5000;
     const cities = await fromAllTheCities(limit, { only: "US" });
+    const moved = metroPass(cities);
+    console.log(`Metro-aware density: ${moved} cities lifted by a bigger neighbour`);
     cities.sort((a, b) => b.population - a.population);
     const outPath = path.join(OUT_DIR, "us.json");
     writeFileSync(outPath, JSON.stringify({

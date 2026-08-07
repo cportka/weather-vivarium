@@ -63,7 +63,8 @@ function replayCity(c) {
   const res = resolveScene(place, {});
   const pool = pools(res.biome.id);
   const W = defaultState();
-  const density = sceneDensity(res, c.population);
+  // a metro-aware density baked into the row is what the gallery renders with
+  const density = c.density != null ? c.density : sceneDensity(res, c.population);
 
   // Record every tree/sign/landmark placement and where it landed.
   const placed = { trees: [], signs: [], landmarks: [] };
