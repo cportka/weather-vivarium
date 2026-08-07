@@ -48,7 +48,7 @@
       "region": "north-america",
       "tier": "metropolis",
       "style": "apartment-blocks",
-      "landmark": "skyscraper"
+      "landmark": "cloud-gate"
     },
     "Naperville": {
       "biome": "farmland",
@@ -125,7 +125,7 @@
       "region": "north-america",
       "tier": "city",
       "style": "lowrise",
-      "landmark": null
+      "landmark": "torrance-high"
     },
     "Lomita": {
       "biome": "forest",

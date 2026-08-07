@@ -11,7 +11,7 @@
 import { getBiome, BIOMES } from "./biomes.js";
 import { LANDSCAPES, getLandscape, landscapeForBiome } from "./landscapes.js";
 import { pickLandmark } from "../catalog/landmarks.js";
-import { cityNames, phraseIn } from "./match.js";
+import { cityNames, phraseIn, cityEntry } from "./match.js";
 
 // Countries that conventionally use Fahrenheit (rough but practical).
 var FAHRENHEIT = [
@@ -27,26 +27,8 @@ export function unitForCountry(country) {
   return FAHRENHEIT.indexOf(norm(country)) !== -1 ? "fahrenheit" : "celsius";
 }
 
-/** Match a place's name against the landscape city lists.
-
-    A list entry is either a plain string (matched by cityNames, as ever) or an
-    admin-scoped object `{ name, admin: ["ca", "california"] }` for names that
-    exist in many states: a bare "carson" entry would hijack Carson City, Nevada
-    (whose curated identity is Great Basin desert) and a 2,000-person Carson,
-    Washington. The scope accepts both the two-letter code (what the packed
-    dataset carries) and the full state name (what geocoding returns); a place
-    with NO admin at all is let through on the name alone, so typing just
-    "Lomita" still finds the South Bay. */
-function cityEntry(entry, name, full, admin) {
-  if (typeof entry === "string") return cityNames(entry, name, full);
-  if (!cityNames(entry.name, name, full)) return false;
-  if (!entry.admin || !admin) return true;
-  for (var a = 0; a < entry.admin.length; a++) {
-    if (phraseIn(full, entry.admin[a])) return true;
-  }
-  return false;
-}
-
+/** Match a place's name against the landscape city lists. Entries may be plain
+    strings or admin-scoped objects — see cityEntry in match.js. */
 function matchLandscape(place) {
   var name = norm(place.name), admin = norm(place.admin1), full = name + " " + admin;
   for (var i = 0; i < LANDSCAPES.length; i++) {
@@ -144,7 +126,7 @@ var CALLING_CARDS = [
   { cities: ["los angeles", "santa monica", "malibu", "venice beach"],
     person: "beachgoer", nightPerson: "beach-cat", tree: "palm", sign: "neon" },
   { cities: ["honolulu", "waikiki"], person: "surfer", tree: "palm" },
-  { cities: ["lomita"], tree: "pine" },   // the big pine by the library
+  { cities: ["lomita", "torrance"], tree: "pine" },   // the pines by the library and the high school
   // Amazon river ports: a thatched riverfront board, and the capybara ambles out first
   { cities: ["iquitos", "manaus"], sign: "tiki-board", ground: "capybara" },
   { cities: ["new orleans"], person: "street-musician" },
