@@ -7,6 +7,83 @@
 
 export default [
   {
+    // Cloud Gate — "the Bean". A polished chrome blob on its plaza, reading as a
+    // mirror: a bright sky band across the top, a smeared horizon line through
+    // the middle, the city's darkness underneath, and the gate's shadowed arch
+    // where the two feet meet the pavement.
+    id: "cloud-gate", name: "Cloud Gate", cities: ["chicago"], biomes: ["city"],
+    w: 20, h: 11, anchor: "baseline",
+    draw: function (P, x, yb, env) {
+      var night = env.night || env.dayT < 0.4;
+      var skyR = night ? "#2c3654" : env.col("#dcecf6");    // what the top reflects
+      var lit = env.col(night ? "#8794a8" : "#c2d4e0");
+      var mid = env.col("#8fa4b2"), deep = env.col("#5c6c78"), dark = env.col("#3e4a54");
+      var pave = env.col("#b8b4a8"), paveS = env.col("#8e8a7e");
+      // the blob, row by row — widest at the waist, tucked at the feet
+      P.rect(x + 6, yb - 10, 8, 1, lit);
+      P.rect(x + 4, yb - 9, 12, 1, skyR);                   // sky band
+      P.rect(x + 3, yb - 8, 14, 1, skyR);
+      P.rect(x + 2, yb - 7, 16, 1, lit);
+      P.rect(x + 2, yb - 6, 16, 1, mid);
+      P.rect(x + 1, yb - 6, 1, 1, lit); P.rect(x + 18, yb - 6, 1, 1, lit);
+      P.rect(x + 2, yb - 5, 16, 1, deep);                   // smeared horizon
+      P.rect(x + 2, yb - 4, 16, 1, mid);
+      P.rect(x + 3, yb - 3, 14, 1, deep);
+      // the arch: feet at the ends, the gate's shadow between them
+      P.rect(x + 3, yb - 2, 4, 2, deep); P.rect(x + 13, yb - 2, 4, 2, deep);
+      P.rect(x + 7, yb - 2, 6, 1, dark);
+      // specular gleam
+      P.px(x + 5, yb - 9, "#f4fbff"); P.px(x + 6, yb - 9, "#f4fbff");
+      // plaza pavement with the bean's shadow
+      P.rect(x, yb, 20, 1, pave);
+      P.rect(x + 3, yb, 14, 1, paveS);
+    }
+  },
+  {
+    // Torrance High School — the Renaissance Revival original: a central entry
+    // pavilion with a pediment and arched doorway, red-tile rooflines, and two
+    // long arcaded wings of tall dark windows in cream stucco.
+    id: "torrance-high", name: "Torrance High School",
+    cities: [{ name: "torrance", admin: ["ca", "california"] }],
+    biomes: ["forest", "coast", "city"],
+    w: 26, h: 15, anchor: "baseline",
+    draw: function (P, x, yb, env) {
+      var night = env.night || env.dayT < 0.4;
+      var wall = env.col("#e9dfc6"), wallS = env.col("#c9bda0");
+      var tile = env.col("#a84a38"), tileD = env.col("#7e3628");
+      var glass = night ? "#ffdf9a" : env.col("#333a42");
+      var trim = env.col("#f4efe2");
+      // the two wings, tile roofline over cream walls
+      for (var w2 = 0; w2 < 2; w2++) {
+        var wx = x + (w2 ? 17 : 0);
+        P.rect(wx, yb - 9, 9, 1, tile);
+        P.rect(wx, yb - 8, 9, 1, tileD);
+        P.rect(wx, yb - 7, 9, 7, wall);
+        for (var wi = 0; wi < 3; wi++) {                    // tall arched windows
+          var gx = wx + 1 + wi * 3;
+          P.rect(gx, yb - 5, 2, 5, glass);
+          P.px(gx, yb - 6, glass); P.px(gx + 1, yb - 6, glass);
+          P.px(gx + 2, yb - 6, trim);                       // arch shoulder
+        }
+      }
+      // the central pavilion: pediment, niche, arched entry
+      P.rect(x + 10, yb - 10, 6, 10, wall);
+      P.rect(x + 9, yb - 10, 8, 1, wallS);                  // cornice
+      P.rect(x + 10, yb - 11, 6, 1, tile);                  // pediment base tiles
+      P.rect(x + 11, yb - 12, 4, 1, tile);
+      P.rect(x + 12, yb - 13, 2, 1, tileD);                 // the peak
+      P.px(x + 12, yb - 9, glass); P.px(x + 13, yb - 9, glass);   // the little niche window
+      P.rect(x + 11, yb - 6, 4, 6, trim);                   // entry surround
+      P.rect(x + 12, yb - 5, 2, 5, glass);                  // arched doorway
+      P.px(x + 12, yb - 6, glass); P.px(x + 13, yb - 6, glass);
+      // walkway and the clipped hedges out front
+      P.rect(x, yb, 26, 1, env.col("#cfc8b4"));
+      var hedge = env.col("#4a7a3c");
+      P.rect(x + 7, yb, 2, 1, hedge); P.rect(x + 17, yb, 2, 1, hedge);
+      P.px(x + 8, yb - 1, hedge); P.px(x + 18, yb - 1, hedge);
+    }
+  },
+  {
     // The City of Lomita Public Library: a long, low midcentury civic building —
     // cream stone, tall dark glass bays between white pilasters, a flat white
     // fascia, the entrance canopy at the right, and a lawn with planting out front.
@@ -270,6 +347,8 @@ export default [
   },
   {
     id: "riverboat", name: "Riverboat", cities: ["new orleans", "memphis", "st louis", "baton rouge"], biomes: ["wetland", "lake", "coast"],
+    // moored AT the bank, so it sits in front of the shore trees, not behind them
+    front: true,
     w: 16, h: 12, anchor: "baseline",
     draw: function (P, x, yb, env) {
       var hull = env.col("#e8e4d8"), red = env.col("#c23b3b"), trim = env.col("#b08a4a");

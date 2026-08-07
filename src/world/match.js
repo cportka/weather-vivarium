@@ -25,3 +25,20 @@ export function phraseIn(hay, needle) {
 export function cityNames(city, name, full) {
   return name === city || phraseIn(full, city) || phraseIn(city, name);
 }
+
+/** A curated city-list entry: either a plain string (matched by cityNames) or an
+ *  admin-scoped object `{ name, admin: ["ca", "california"] }` for names that
+ *  exist in many places — a bare "carson" entry would claim Carson City, Nevada,
+ *  and a bare "torrance" the village in Scotland. The scope accepts both the
+ *  two-letter code (what the packed dataset carries) and the full region name
+ *  (what geocoding returns); a place with NO admin at all passes on the name
+ *  alone, so typing just "Lomita" still finds the South Bay. */
+export function cityEntry(entry, name, full, admin) {
+  if (typeof entry === "string") return cityNames(entry, name, full);
+  if (!cityNames(entry.name, name, full)) return false;
+  if (!entry.admin || !admin) return true;
+  for (var a = 0; a < entry.admin.length; a++) {
+    if (phraseIn(full, entry.admin[a])) return true;
+  }
+  return false;
+}

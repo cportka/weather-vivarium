@@ -137,3 +137,58 @@ test("ground animals stand on the ground, not a pixel above it", () => {
       `animals/${e.id} never touches the ground — deepest row ${deepest}, ground line ${GROUND}`);
   }
 });
+
+test("a set-back walker passes behind the trees; a road-edge walker in front", () => {
+  // The beachgoer walks the SAND (lift > 0): every paint of her must come before
+  // that frame's tree paints. An ordinary road-shoulder stroller paints after them.
+  const res = resolveScene(LA, {});
+  const pool = pools(res.biome.id);
+  let seq = 0;
+  const paints = [];   // {f, kind, seq}
+  let frameNo = 0;
+  const restore = [];
+  for (const e of pool.trees) {
+    const orig = e.draw; restore.push(() => { e.draw = orig; });
+    e.draw = function (...a) { paints.push({ f: frameNo, kind: "tree", seq: seq++ }); return orig.apply(this, a); };
+  }
+  for (const e of pool.people) {
+    const orig = e.draw; restore.push(() => { e.draw = orig; });
+    const kind = (e.lift || 0) > 0 ? "setback" : "roadedge";
+    e.draw = function (...a) { paints.push({ f: frameNo, kind, seq: seq++ }); return orig.apply(this, a); };
+  }
+  try {
+    const W = defaultState();
+    const scene = createScene(stubPainter(L).P, {
+      geometry: GEOMETRY, biome: res.biome, landscape: res.landscape, landmark: res.landmark,
+      latitude: res.latitude, coastal: res.coastal, unit: res.unit,
+      density: sceneDensity(res, LA.population),
+      cannabis: res.cannabis, region: res.region, callingCard: res.callingCard,
+      pools: pool, W, sunrise: W.sunrise, sunset: W.sunset, moon: moonIllumination(2026, 7, 18),
+      seed: seedFrom(LA.name + LA.latitude), place: LA, tempText: () => "78°"
+    }, { reduce: false });
+    for (frameNo = 0; frameNo <= 700; frameNo++) scene.render(frameNo, 840, 1);
+  } finally { for (const undo of restore) undo(); }
+
+  const byFrame = new Map();
+  for (const p of paints) {
+    if (!byFrame.has(p.f)) byFrame.set(p.f, []);
+    byFrame.get(p.f).push(p);
+  }
+  let checkedBack = 0;
+  for (const [f, list] of byFrame) {
+    const trees = list.filter((p) => p.kind === "tree");
+    if (!trees.length) continue;
+    const firstTree = Math.min(...trees.map((p) => p.seq));
+    const lastTree = Math.max(...trees.map((p) => p.seq));
+    for (const p of list) {
+      if (p.kind === "setback") {
+        assert.ok(p.seq < firstTree, `frame ${f}: set-back walker painted after a tree (in front of it)`);
+        checkedBack++;
+      }
+      if (p.kind === "roadedge") {
+        assert.ok(p.seq > lastTree, `frame ${f}: road-edge walker painted before the trees (behind them)`);
+      }
+    }
+  }
+  assert.ok(checkedBack > 50, `the set-back walker barely appeared (${checkedBack} frames) — the test proved nothing`);
+});

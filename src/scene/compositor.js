@@ -254,13 +254,17 @@ export function createScene(P, world, opts) {
         }
         if (bestI === -1) break;                                       // every slot used up
         // Even the free-est slot can overlap (Oakland: the mid slot sat under the
-        // sign). Walk outward from it — left first, the open side of most scenes —
-        // to the nearest clash-free column before settling.
+        // sign; Queenstown: two willows + a tall sign leave no slot clear). Scan
+        // the whole canvas for the column with the LEAST overlap, preferring the
+        // spot nearest the chosen slot on ties — in a crowded scene that packs
+        // the trees left of the sign instead of leaving one hidden behind it.
         if (bestClash > 0) {
-          for (var off = 1; off <= 10; off++) {
-            var lx = bestX - off, rx = bestX + off;
-            if (lx >= 0 && clash(lx, entry.w) === 0) { bestX = lx; break; }
-            if (rx + entry.w <= P.L && clash(rx, entry.w) === 0) { bestX = rx; break; }
+          for (var cx2 = 0; cx2 + entry.w <= P.L; cx2++) {
+            var c2 = clash(cx2, entry.w);
+            if (c2 < bestClash || (c2 === bestClash && Math.abs(cx2 - slots[bestI]) < Math.abs(bestX - slots[bestI]))) {
+              bestClash = c2; bestX = cx2;
+              if (c2 === 0 && Math.abs(cx2 - slots[bestI]) <= 3) break;
+            }
           }
         }
         props.trees.push({ entry: entry, x: bestX });
@@ -429,6 +433,12 @@ export function createScene(P, world, opts) {
   // of the settlement) — the giraffes, kangaroos, llamas and bears in the catalog.
   function spawnGrounder() {
     var pool = world.pools.groundAnimals; if (!pool.length) return;
+    // An animal can be region-locked as well as biome-locked: kangaroos belong to
+    // Australian beaches, not Californian ones — same biome, different continent.
+    pool = pool.filter(function (e) {
+      return !e.regions || e.regions.indexOf(world.region) !== -1;
+    });
+    if (!pool.length) return;
     var e = pickCast("ground", pool);
     var dir = rng() < 0.5 ? 1 : -1;
     // Feet on the same auto-grounded line as the trees, sign and landmark. These
@@ -553,11 +563,26 @@ export function createScene(P, world, opts) {
     // the city's landmark — a structure at the shoreline/midground: drawn AFTER
     // the water cast so a passing boat never floats in front of it, but before
     // the foreground trees/actors so those still layer over it. (Water-spanning
-    // landmarks were already drawn as a distance feature, above.)
-    if (props.landmark && props.landmark.entry.place !== "water") {
+    // landmarks were already drawn as a distance feature, above; a `front`
+    // landmark — a boat moored AT the shore — waits until after the trees.)
+    var groundLandmark = props.landmark && props.landmark.entry.place !== "water";
+    if (groundLandmark && !props.landmark.entry.front) {
       // plant the landmark so its lowest pixel lands exactly on the ground line,
       // whatever baseline habit the sprite was authored with (no more 1px float).
       props.landmark.entry.draw(P, props.landmark.x, G.groundTop - 1 + groundOffset(props.landmark.entry), env);
+    }
+
+    // The strolling figure advances here. Its DEPTH decides where it paints: a
+    // figure set back off the road edge (the beachgoer on the sand, lift > 0)
+    // walks behind the trees and the sign; one on the road shoulder walks in
+    // front of both, painted after the sign below.
+    if (!reduce) {
+      if (!walker && world.pools.people.length && frame >= nextWalker) spawnWalker(env);
+      if (walker) {
+        stepWalker(env, frame);
+        if (walker.x > P.L + 10) { walker = null; nextWalker = frame + Math.round(120 + rng() * 120); }
+        else if (walker.fy < G.groundTop - 1) paintWalker(env);   // set back → behind trees + sign
+      }
     }
 
     // fixed trees (behind the road) — auto-grounded like the landmark
@@ -565,17 +590,10 @@ export function createScene(P, world, opts) {
       props.trees[ti].entry.draw(P, props.trees[ti].x, G.groundTop - 1 + groundOffset(props.trees[ti].entry), env);
     }
 
-    // a strolling figure — advance it here. A pedestrian on the road shoulder
-    // (feet on the front edge, groundTop-1) passes in FRONT of the sign, so it's
-    // painted after the sign below; one further back (feet above the edge) paints
-    // here, behind it. One pixel of depth decides which side of the sign it's on.
-    if (!reduce) {
-      if (!walker && world.pools.people.length && frame >= nextWalker) spawnWalker(env);
-      if (walker) {
-        stepWalker(env, frame);
-        if (walker.x > P.L + 10) { walker = null; nextWalker = frame + Math.round(120 + rng() * 120); }
-        else if (walker.fy < G.groundTop - 1) paintWalker(env);   // set back → behind the sign
-      }
+    // a `front` landmark (New Orleans' riverboat moored at the bank) sits in
+    // front of the shore trees, so it paints after them
+    if (groundLandmark && props.landmark.entry.front) {
+      props.landmark.entry.draw(P, props.landmark.x, G.groundTop - 1 + groundOffset(props.landmark.entry), env);
     }
 
     // road + shoulder

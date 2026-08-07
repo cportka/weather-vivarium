@@ -111,7 +111,7 @@ export default [
     }
   },
   {
-    id: "kangaroo", name: "Kangaroo", biomes: ["desert", "savanna", "plains", "forest", "coast"],
+    id: "kangaroo", name: "Kangaroo", biomes: ["desert", "savanna", "plains", "forest", "coast"], regions: ["oceania"],
     tags: ["animal", "medium", "wild", "hops"], w: 9, h: 11, anchor: "baseline", layer: "ground", rarity: 0.7,
     draw: function (P, x, yb, env) {
       var body = env.col("#a06a3a"), dark = env.col("#7a4e28");
@@ -131,7 +131,7 @@ export default [
     }
   },
   {
-    id: "koala", name: "Koala", biomes: ["forest", "jungle"],
+    id: "koala", name: "Koala", biomes: ["forest", "jungle"], regions: ["oceania"],
     tags: ["animal", "small", "wild", "tree"], w: 7, h: 8, anchor: "baseline", layer: "ground", rarity: 0.6,
     draw: function (P, x, yb, env) {
       var g = env.col("#9a9aa2"), d = env.col("#6a6a72"), lite = env.col("#c2c2ca");
@@ -162,7 +162,7 @@ export default [
     }
   },
   {
-    id: "raccoon", name: "Raccoon", biomes: ["city", "forest"],
+    id: "raccoon", name: "Raccoon", biomes: ["city", "forest", "coast"],
     tags: ["animal", "small", "wild", "masked"], w: 8, h: 5, anchor: "baseline", layer: "ground", rarity: 1.0,
     draw: function (P, x, yb, env) {
       var g = env.col("#8a8a92"), d = env.col("#3a3a40"), lite = env.col("#c8c8ce");

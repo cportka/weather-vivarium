@@ -4,6 +4,36 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com) and the project uses
 [Semantic Versioning](https://semver.org). Every change bumps the version and adds an entry below.
 
+## [0.15.0] - 2026-08-07
+
+Depth fixes on the coast, and three cities get their icons.
+
+### Fixed
+- **The beachgoer walks behind the palm** (Los Angeles). A set-back walker (on the
+  sand, `lift > 0`) now paints before the trees as well as the sign; a road-shoulder
+  walker still passes in front of both. A draw-order test drives the real compositor
+  and asserts each kind on every frame.
+- **The riverboat is moored in front of the shore trees** (New Orleans). Landmarks
+  can declare `front: true` to paint after the trees — a boat at the bank is nearer
+  than the bank's own trees.
+- **No kangaroos in Los Angeles.** Ground animals can be region-locked as well as
+  biome-locked: kangaroo and koala are gated to Oceania, so Australian beach roos
+  stay Australian. LA's beach fauna gains the raccoon instead — city-funny, and
+  entirely real.
+- **Crowded scenes pack their trees instead of hiding one** (Queenstown). When every
+  slot overlaps something, the placer now scans the whole canvas for the
+  least-overlapping column (nearest the intended slot on ties) rather than giving up
+  after ten steps — two wide trees and a tall sign all read fully.
+
+### Added
+- **Cloud Gate for Chicago** — the Bean: polished chrome with a bright sky band, a
+  smeared horizon, a specular gleam, and the gate's shadowed arch on its plaza.
+- **Torrance High School** — the Renaissance Revival original: central pediment
+  pavilion with the arched entry, red-tile rooflines, arcaded wings of tall windows
+  in cream stucco, clipped hedges out front, and the pine alongside by calling card.
+  Landmark city lists now accept the same admin-scoped entries as landscapes, so
+  Torrance, Scotland keeps its own identity.
+
 ## [0.14.0] - 2026-08-07
 
 The variety sweep: thin biomes filled in, and the whole database learns what a
