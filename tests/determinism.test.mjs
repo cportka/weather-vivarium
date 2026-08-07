@@ -8,7 +8,7 @@
 // grew a different tree on each. The seed now keys on who the place IS.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { placeKey, resolveScene } from "../src/world/resolve.js";
+import { placeKey, resolveScene, sceneDensity } from "../src/world/resolve.js";
 import { pools } from "../src/catalog/index.js";
 import { createScene } from "../src/scene/compositor.js";
 import { defaultState } from "../src/data/weather.js";
@@ -23,7 +23,6 @@ const L = 50, GEOMETRY = { L, horizon: 24, groundTop: 37, roadBot: 46 };
 function fixedProps(place) {
   const res = resolveScene(place, {});
   const W = defaultState();
-  const pd = Math.min(Math.max((Math.log10(place.population || 1000) - 3.6) / 4.2, 0), 1);
   const pool = pools(res.biome.id);
   const seen = [], restore = [];
   for (const [list, kind] of [[pool.trees, "tree"], [pool.signs, "sign"]]) {
@@ -41,7 +40,7 @@ function fixedProps(place) {
     createScene(P, {
       geometry: GEOMETRY, biome: res.biome, landscape: res.landscape, landmark: res.landmark,
       latitude: res.latitude, coastal: res.coastal, unit: res.unit,
-      density: Math.max(pd, res.biome.id === "city" ? 0.5 : 0),
+      density: sceneDensity(res, place.population),
       cannabis: res.cannabis, region: res.region, callingCard: res.callingCard,
       pools: pool, W, sunrise: W.sunrise, sunset: W.sunset, moon: moonIllumination(2026, 7, 18),
       seed: seedFrom(placeKey(place)), place, tempText: () => "72°"
@@ -86,4 +85,15 @@ test("placeKey keys on identity, and falls back to a coarse cell when unnamed", 
   assert.equal(placeKey({ latitude: 34.0522, longitude: -118.2437 }),
     placeKey({ latitude: 34.0498, longitude: -118.2401 }));
   assert.equal(placeKey({}), "@0,0");
+});
+
+test("signature signs: LA leads with the neon billboard, Vegas with its welcome sign", () => {
+  // LA via the calling card's sign slot; Vegas via the casino's pairedSign — which
+  // silently never matched while it was read off the {entry, x} wrapper instead of
+  // the entry itself (Vegas only got its sign because the weighted draw favours it).
+  const la = fixedProps(SAME_PLACE[0]);
+  assert.ok(la.includes("sign:neon@"), `LA should carry the neon billboard, got: ${la}`);
+  const vegas = fixedProps({ name: "Las Vegas", country: "United States", admin1: "Nevada",
+    latitude: 36.17, longitude: -115.14, population: 623747 });
+  assert.ok(vegas.includes("sign:vegas-welcome@"), `Vegas should carry its welcome sign, got: ${vegas}`);
 });

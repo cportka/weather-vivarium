@@ -2,8 +2,8 @@
   <img src="assets/logo.png" alt="weather-vivarium" width="560" />
 </p>
 
-> **Version:** 0.12.0
-> **Cities:** 33,333 precomputed · 204 countries · **any** city on Earth via geocoding
+> **Version:** 0.13.0
+> **Cities:** 44,444 precomputed · 204 countries · **any** city on Earth via geocoding
 
 A tiny **living pixel-art weather diorama** for *any* city — dependency-free, drop
 anywhere. Give it a place (or let it find yours) and its sky, sun, moon phase,
@@ -18,11 +18,11 @@ generalised: same hand-built vintage-pixel soul, now for the whole world.
     <img src="assets/gallery-preview.gif" alt="Live weather-vivarium dioramas for Berkeley, New York, Honolulu, Anchorage, Seattle, Las Vegas, Miami, Austin, Washington, New Orleans, Memphis and Chicago" width="420" />
   </a>
   <br />
-  <em>A dozen cities, each on its current weather — or wander the <a href="https://cportka.github.io/weather-vivarium/gallery.html">live wall of 33,333 →</a></em>
+  <em>A dozen cities, each on its current weather — or wander the <a href="https://cportka.github.io/weather-vivarium/gallery.html">live wall of 44,444 →</a></em>
 </p>
 
 **[▶ Try any city / see yours (live demo)](https://cportka.github.io/weather-vivarium/)** ·
-**[▶ 33,333-city gallery](https://cportka.github.io/weather-vivarium/gallery.html)**
+**[▶ 44,444-city gallery](https://cportka.github.io/weather-vivarium/gallery.html)**
 
 ## Quick start
 
@@ -97,11 +97,11 @@ biome, so a diorama is always populated with things that belong there.
 
 `data/cities/` holds precomputed lookups from a city to its resolved vivarium —
 biome, landscape, landmark, category, unit — so a known city renders from **only
-its current weather**, no geocoding hop. Two datasets ship — **33,333 cities in
+its current weather**, no geocoding hop. Two datasets ship — **44,444 cities in
 all, across 204 countries**, disjoint by country so the total is exact: a
-**`us.json`** of the top **13,333** US cities (`npm run build:cities -- --us-top 13333`)
-and a **`world.json`** of the top **20,000** cities outside the US
-(`npm run build:cities -- --world 20000`) — both from GeoNames via `all-the-cities`,
+**`us.json`** of the top **16,444** US cities (`npm run build:cities -- --us-top 16444`)
+and a **`world.json`** of the top **28,000** cities outside the US
+(`npm run build:cities -- --world 28000`) — both from GeoNames via `all-the-cities`,
 with offline timezones from `tz-lookup`. Anything not in them still renders via
 live geocoding. The [gallery](https://cportka.github.io/weather-vivarium/gallery.html)
 puts every one of them on the wall (tiles wake as you scroll), and

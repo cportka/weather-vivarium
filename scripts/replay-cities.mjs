@@ -32,7 +32,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { decodeCities } from "../src/data/cities.js";
-import { resolveScene, placeKey } from "../src/world/resolve.js";
+import { resolveScene, placeKey, sceneDensity } from "../src/world/resolve.js";
 import { pools } from "../src/catalog/index.js";
 import { createScene } from "../src/scene/compositor.js";
 import { defaultState } from "../src/data/weather.js";
@@ -63,8 +63,7 @@ function replayCity(c) {
   const res = resolveScene(place, {});
   const pool = pools(res.biome.id);
   const W = defaultState();
-  const pd = c.population > 0 ? (Math.log10(c.population) - 3.6) / 4.2 : 0.22;
-  const density = Math.max(Math.min(Math.max(pd, 0), 1), res.biome.id === "city" ? 0.5 : 0);
+  const density = sceneDensity(res, c.population);
 
   // Record every tree/sign/landmark placement and where it landed.
   const placed = { trees: [], signs: [], landmarks: [] };

@@ -185,11 +185,18 @@ export function createScene(P, world, opts) {
     if (world.landmark) props.landmark = { entry: world.landmark, x: 1 };
     var signs = world.pools.signs;
     if (signs.length) {
-      // a landmark may name a paired sign (e.g. the casino → the Vegas welcome
-      // sign); use it when it's available for this biome, else weighted-random.
+      // A landmark may name a paired sign (the casino → the Vegas welcome sign),
+      // and a city's calling card may name its signature board (Los Angeles → the
+      // neon billboard ported from the original widget). Landmark pairing wins,
+      // then the calling card, else a weighted draw. (`pairedSign` lives on the
+      // ENTRY — reading it off the {entry, x} wrapper silently never matched, and
+      // Vegas only got its welcome sign because the weighted draw favours it.)
       var chosen = null;
-      if (props.landmark && props.landmark.pairedSign) {
-        for (var s = 0; s < signs.length; s++) if (signs[s].id === props.landmark.pairedSign) { chosen = signs[s]; break; }
+      if (props.landmark && props.landmark.entry.pairedSign) {
+        for (var s = 0; s < signs.length; s++) if (signs[s].id === props.landmark.entry.pairedSign) { chosen = signs[s]; break; }
+      }
+      if (!chosen && world.callingCard && world.callingCard.sign) {
+        for (var cs = 0; cs < signs.length; cs++) if (signs[cs].id === world.callingCard.sign) { chosen = signs[cs]; break; }
       }
       // Signs stand at SIGN_X, but a wide one (the 22px mural wall) has to be
       // pulled left to fit — hard-coding the column ran it a pixel off the canvas.
@@ -200,15 +207,21 @@ export function createScene(P, world, opts) {
     var pool = world.pools.trees;
     if (pool.length && world.biome.id !== "ocean") {
       // Trees look for room rather than demanding it: each one takes the free-est
-      // of the remaining slots, so it doesn't cover the landmark or another tree.
-      // The temperature sign is NOT a hard blocker — it's a short panel drawn over
-      // the tree, and a canopy reading above it is how the original scene looked —
-      // and a tree always gets placed, since silently dropping it just leaves a
-      // bare scene. (A `place:"water"` landmark hangs at the horizon, not on the
-      // ground, so it never competes for a slot.)
+      // of the remaining slots, so it doesn't cover the landmark, the temperature
+      // sign, or another tree — landmark, tree and sign should all read fully.
+      // Nothing is a HARD blocker though: a tree always gets placed, since
+      // silently dropping it just leaves a bare scene. (A `place:"water"` landmark
+      // hangs at the horizon, not on the ground, so it never competes for a slot.)
       var blocked = [];
       if (props.landmark && props.landmark.entry.place !== "water") {
         blocked.push([props.landmark.x, props.landmark.x + props.landmark.entry.w - 1]);
+      }
+      // Only a TALL sign hides a tree — a knee-high marker (milestone, sandwich
+      // board) in front of a trunk still leaves the whole canopy reading above
+      // it, and in a crowded scene (Lomita: a 26-wide library) that low overlap
+      // is the only way everything fits.
+      if (props.sign && props.sign.entry.h > 13) {
+        blocked.push([props.sign.x, props.sign.x + props.sign.entry.w - 1]);
       }
       // how many columns of `x..x+w-1` sit on top of something already placed
       function clash(x, w) {
@@ -240,6 +253,16 @@ export function createScene(P, world, opts) {
           if (c === 0) break;
         }
         if (bestI === -1) break;                                       // every slot used up
+        // Even the free-est slot can overlap (Oakland: the mid slot sat under the
+        // sign). Walk outward from it — left first, the open side of most scenes —
+        // to the nearest clash-free column before settling.
+        if (bestClash > 0) {
+          for (var off = 1; off <= 10; off++) {
+            var lx = bestX - off, rx = bestX + off;
+            if (lx >= 0 && clash(lx, entry.w) === 0) { bestX = lx; break; }
+            if (rx + entry.w <= P.L && clash(rx, entry.w) === 0) { bestX = rx; break; }
+          }
+        }
         props.trees.push({ entry: entry, x: bestX });
         blocked.push([bestX, bestX + entry.w - 1]);
         slots[bestI] = null;
@@ -512,6 +535,21 @@ export function createScene(P, world, opts) {
       }
     }
 
+    // ground animals ambling across the BACK of the scene — painted before the
+    // landmark and the trees, so a passing dog crosses behind the palm trunk and
+    // the plinth rather than sliding over them. (It already passes behind the
+    // temperature sign, which is drawn later still.)
+    if (!reduce && world.pools.groundAnimals.length) {
+      if (frame >= nextGrounder && grounders.length < 2) {
+        spawnGrounder(); nextGrounder = frame + Math.round(240 + rng() * 420);
+      }
+      for (var gi = grounders.length - 1; gi >= 0; gi--) {
+        var gr = grounders[gi]; gr.x += gr.speed * gr.dir;
+        if (gr.x < -gr.entry.w - 4 || gr.x > P.L + gr.entry.w + 4) { grounders.splice(gi, 1); continue; }
+        draw(gr.entry, Math.round(gr.x), gr.yb, env, gr.dir);
+      }
+    }
+
     // the city's landmark — a structure at the shoreline/midground: drawn AFTER
     // the water cast so a passing boat never floats in front of it, but before
     // the foreground trees/actors so those still layer over it. (Water-spanning
@@ -525,18 +563,6 @@ export function createScene(P, world, opts) {
     // fixed trees (behind the road) — auto-grounded like the landmark
     for (var ti = 0; ti < props.trees.length; ti++) {
       props.trees[ti].entry.draw(P, props.trees[ti].x, G.groundTop - 1 + groundOffset(props.trees[ti].entry), env);
-    }
-
-    // ground animals ambling across the back of the scene
-    if (!reduce && world.pools.groundAnimals.length) {
-      if (frame >= nextGrounder && grounders.length < 2) {
-        spawnGrounder(); nextGrounder = frame + Math.round(240 + rng() * 420);
-      }
-      for (var gi = grounders.length - 1; gi >= 0; gi--) {
-        var gr = grounders[gi]; gr.x += gr.speed * gr.dir;
-        if (gr.x < -gr.entry.w - 4 || gr.x > P.L + gr.entry.w + 4) { grounders.splice(gi, 1); continue; }
-        draw(gr.entry, Math.round(gr.x), gr.yb, env, gr.dir);
-      }
     }
 
     // a strolling figure — advance it here. A pedestrian on the road shoulder

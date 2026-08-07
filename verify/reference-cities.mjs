@@ -12,7 +12,7 @@
    verify/out/reference-50.png.
    ========================================================================= */
 
-import { resolveScene, placeKey } from "../src/world/resolve.js";
+import { resolveScene, placeKey, sceneDensity } from "../src/world/resolve.js";
 import { styleForBiome } from "../src/catalog/settlements.js";
 import { seedFrom } from "../src/engine/random.js";
 
@@ -94,7 +94,7 @@ export function referenceTier(d) {
 export function resolveReference(c) {
   var place = referencePlace(c);
   var r = resolveScene(place, {});
-  var d = referenceDensity(c.population);
+  var d = sceneDensity(r, c.population);
   var s = styleForBiome(r.biome.id, seedFrom(placeKey(place)), d, r.region);
   return {
     biome: r.biome.id, region: r.region, tier: referenceTier(d),

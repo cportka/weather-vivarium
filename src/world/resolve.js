@@ -11,7 +11,7 @@
 import { getBiome, BIOMES } from "./biomes.js";
 import { LANDSCAPES, getLandscape, landscapeForBiome } from "./landscapes.js";
 import { pickLandmark } from "../catalog/landmarks.js";
-import { cityNames } from "./match.js";
+import { cityNames, phraseIn } from "./match.js";
 
 // Countries that conventionally use Fahrenheit (rough but practical).
 var FAHRENHEIT = [
@@ -27,13 +27,32 @@ export function unitForCountry(country) {
   return FAHRENHEIT.indexOf(norm(country)) !== -1 ? "fahrenheit" : "celsius";
 }
 
-/** Match a place's name against the landscape city lists. */
+/** Match a place's name against the landscape city lists.
+
+    A list entry is either a plain string (matched by cityNames, as ever) or an
+    admin-scoped object `{ name, admin: ["ca", "california"] }` for names that
+    exist in many states: a bare "carson" entry would hijack Carson City, Nevada
+    (whose curated identity is Great Basin desert) and a 2,000-person Carson,
+    Washington. The scope accepts both the two-letter code (what the packed
+    dataset carries) and the full state name (what geocoding returns); a place
+    with NO admin at all is let through on the name alone, so typing just
+    "Lomita" still finds the South Bay. */
+function cityEntry(entry, name, full, admin) {
+  if (typeof entry === "string") return cityNames(entry, name, full);
+  if (!cityNames(entry.name, name, full)) return false;
+  if (!entry.admin || !admin) return true;
+  for (var a = 0; a < entry.admin.length; a++) {
+    if (phraseIn(full, entry.admin[a])) return true;
+  }
+  return false;
+}
+
 function matchLandscape(place) {
   var name = norm(place.name), admin = norm(place.admin1), full = name + " " + admin;
   for (var i = 0; i < LANDSCAPES.length; i++) {
     var ls = LANDSCAPES[i];
     for (var c = 0; c < ls.cities.length; c++) {
-      if (cityNames(ls.cities[c], name, full)) return ls;
+      if (cityEntry(ls.cities[c], name, full, admin)) return ls;
     }
   }
   return null;
@@ -123,8 +142,9 @@ export function regionFor(place) {
    Keys are matched as whole words against the place name (see match.js). */
 var CALLING_CARDS = [
   { cities: ["los angeles", "santa monica", "malibu", "venice beach"],
-    person: "beachgoer", nightPerson: "beach-cat", tree: "palm" },
+    person: "beachgoer", nightPerson: "beach-cat", tree: "palm", sign: "neon" },
   { cities: ["honolulu", "waikiki"], person: "surfer", tree: "palm" },
+  { cities: ["lomita"], tree: "pine" },   // the big pine by the library
   { cities: ["new orleans"], person: "street-musician" },
   { cities: ["nashville", "austin"], person: "street-musician" },
   { cities: ["amsterdam", "copenhagen", "utrecht"], person: "cyclist" },
@@ -148,7 +168,7 @@ var CALLING_CARDS = [
   { cities: ["maui", "lahaina", "reykjahlid"], water: "whale" }
 ];
 
-/** The calling card for a place: {person, nightPerson, ground, bird, water, tree} — or null. */
+/** The calling card for a place: {person, nightPerson, ground, bird, water, tree, sign} — or null. */
 export function callingCardFor(place) {
   var name = norm(place && place.name), full = name + " " + norm(place && place.admin1);
   if (!name) return null;
@@ -158,7 +178,7 @@ export function callingCardFor(place) {
       if (cityNames(cc.cities[c], name, full)) {
         return { person: cc.person || null, nightPerson: cc.nightPerson || null,
           ground: cc.ground || null, bird: cc.bird || null,
-          water: cc.water || null, tree: cc.tree || null };
+          water: cc.water || null, tree: cc.tree || null, sign: cc.sign || null };
       }
     }
   }
@@ -202,6 +222,25 @@ export function placeKey(place) {
   return "@" + Math.round(place.latitude || 0) + "," + Math.round(place.longitude || 0);
 }
 
+/* Urbanisation for a resolved scene, 0..1, from its population — THE density
+   formula. Population maps log-linearly onto the 0..1 band (a hamlet of ~4,000
+   is 0, ~63M saturates it); a place with no population gets a modest default;
+   city biomes floor well above pastoral; and a curated landscape can assert its
+   own floor (the South Bay is suburb wall to wall, whatever a member city's
+   municipal population says). This used to be hand-copied by every caller —
+   widget, verify harness, dataset replay, snapshot resolver, tests — and this
+   very file's densityFloor was missed by one of them the week it was added. */
+export function sceneDensity(res, population) {
+  var pd = 0.22;
+  if (population > 0) {
+    pd = (Math.log(population) / Math.LN10 - 3.6) / 4.2;
+    pd = pd < 0 ? 0 : pd > 1 ? 1 : pd;
+  }
+  return Math.max(pd,
+    res && res.biome && res.biome.id === "city" ? 0.5 : 0,
+    (res && res.densityFloor) || 0);
+}
+
 export function resolveScene(place, opts) {
   opts = opts || {};
   place = place || {};
@@ -233,6 +272,11 @@ export function resolveScene(place, opts) {
     unit: unit,
     region: regionFor(place),
     callingCard: callingCardFor(place),
-    cannabis: isCannabisCity(place)
+    cannabis: isCannabisCity(place),
+    // A curated landscape can declare a floor for urbanisation (its `density`).
+    // City-limits population badly understates a suburb embedded in a metro —
+    // Lomita's 20k reads as deer-in-the-woods rural, when the South Bay is
+    // wall-to-wall tract houses — so the preset asserts what the place IS.
+    densityFloor: (landscape && landscape.density) || 0
   };
 }

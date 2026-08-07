@@ -11,7 +11,7 @@
 //   * Wherever she settles, the towel stays clear of the temperature sign.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { resolveScene } from "../src/world/resolve.js";
+import { resolveScene, sceneDensity } from "../src/world/resolve.js";
 import { pools, CATALOG, byLayer } from "../src/catalog/index.js";
 import { createScene } from "../src/scene/compositor.js";
 import { defaultState } from "../src/data/weather.js";
@@ -32,7 +32,6 @@ const UMBRELLA = "#d83a52";                         // drawGear()'s canopy, used
 function run(place, dayT, frames, over) {
   const res = resolveScene(place, {});
   const W = Object.assign(defaultState(), over || {});
-  const pd = (Math.log10(place.population) - 3.6) / 4.2;
   const pool = pools(res.biome.id);
   const seen = [];
   const wrap = (e, mode, fn) => function (P, x, yb, env) { seen.push({ id: e.id, mode, x, yb }); return fn.call(this, P, x, yb, env); };
@@ -50,7 +49,7 @@ function run(place, dayT, frames, over) {
     const scene = createScene(P, {
       geometry: GEOMETRY, biome: res.biome, landscape: res.landscape, landmark: res.landmark,
       latitude: res.latitude, coastal: res.coastal, unit: res.unit,
-      density: Math.max(Math.min(Math.max(pd, 0), 1), res.biome.id === "city" ? 0.5 : 0),
+      density: sceneDensity(res, place.population),
       cannabis: res.cannabis, region: res.region, callingCard: res.callingCard,
       pools: pool, W, sunrise: W.sunrise, sunset: W.sunset, moon: moonIllumination(2026, 7, 18),
       seed: seedFrom(place.name + place.latitude), place,

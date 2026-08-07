@@ -7,6 +7,46 @@
 
 export default [
   {
+    // The City of Lomita Public Library: a long, low midcentury civic building —
+    // cream stone, tall dark glass bays between white pilasters, a flat white
+    // fascia, the entrance canopy at the right, and a lawn with planting out front.
+    id: "lomita-library", name: "Lomita Public Library", cities: ["lomita"],
+    biomes: ["forest", "coast", "city", "farmland", "plains"],
+    w: 26, h: 12, anchor: "baseline",
+    draw: function (P, x, yb, env) {
+      var night = env.night || env.dayT < 0.4;
+      var stone = env.col("#d8cbae"), stoneS = env.col("#b6a888");
+      var fascia = env.col("#f2efe6"), glassD = env.col("#2c3944");
+      var glow = "#ffdf9a";
+      // body + flat roof fascia with a shadow line under it
+      P.rect(x + 1, yb - 9, 24, 9, stone);
+      P.rect(x, yb - 10, 26, 1, fascia);
+      P.rect(x + 1, yb - 9, 24, 1, stoneS);
+      // two tall glass bays on the left, white pilasters between — a couple of
+      // panes stay warmly lit after dark (someone always reading late)
+      for (var b = 0; b < 2; b++) {
+        var gx = x + 2 + b * 5;
+        P.rect(gx, yb - 8, 4, 8, glassD);
+        P.rect(gx + 3, yb - 8, 1, 8, env.col("#46545f"));   // reflection edge
+        if (night) { P.rect(gx + 1, yb - 6, 2, 2, glow); P.rect(gx, yb - 3, 2, 2, glow); }
+        P.rect(gx + 4, yb - 9, 1, 9, fascia);               // pilaster
+      }
+      // the lettered stone panel — engraved dashes reading as inscription lines
+      var ink = env.col("#7a6f58");
+      P.rect(x + 13, yb - 7, 6, 1, ink);
+      P.rect(x + 14, yb - 5, 4, 1, ink);
+      // entrance: white canopy slab jutting over a glass door
+      P.rect(x + 19, yb - 6, 7, 1, fascia);
+      P.rect(x + 21, yb - 5, 2, 5, night ? glow : glassD);
+      P.px(x + 20, yb - 5, stoneS); P.px(x + 23, yb - 5, stoneS);
+      // lawn strip and the flower bed from the photo
+      var lawn = env.col("#5f9a4a");
+      P.rect(x, yb - 1, 26, 2, lawn);
+      P.px(x + 3, yb - 1, env.col("#c2506a")); P.px(x + 12, yb - 1, env.col("#d8d4c8"));
+      P.px(x + 17, yb - 1, env.col("#c2506a")); P.px(x + 24, yb - 1, env.col("#b04a58"));
+    }
+  },
+  {
     id: "liberty", name: "Statue of Liberty", cities: ["new york", "jersey city", "newark"], biomes: ["city", "coast"],
     w: 14, h: 32, anchor: "baseline",
     draw: function (P, x, yb, env) {

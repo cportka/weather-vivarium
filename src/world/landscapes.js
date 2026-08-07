@@ -13,6 +13,19 @@ export var LANDSCAPES = [
     cities: ["los angeles", "malibu", "santa monica", "san diego", "san sebastian", "nice", "lisbon", "barcelona", "tel aviv", "sydney", "rio de janeiro", "honolulu", "waikiki"] },
   { id: "pacific-cliffs", name: "Pacific Cliffs", biome: "coast", coastal: true,
     cities: ["san francisco", "monterey", "big sur", "cape town", "wellington", "berkeley", "oakland"] },
+  // The inland South Bay of LA county: leafy, low, and wall-to-wall suburb. The
+  // `density` floor is what makes it read that way — these cities' own municipal
+  // populations (Lomita: 20k) would otherwise render them as woodland hamlets.
+  // (The beach cities — Redondo, Hermosa, Manhattan Beach — stay coast.)
+  { id: "south-bay", name: "South Bay", biome: "forest", density: 0.42,
+    cities: [
+      { name: "lomita", admin: ["ca", "california"] },
+      { name: "torrance", admin: ["ca", "california"] },
+      { name: "gardena", admin: ["ca", "california"] },
+      { name: "carson", admin: ["ca", "california"] },
+      { name: "lawndale", admin: ["ca", "california"] },
+      { name: "hawthorne", admin: ["ca", "california"] }
+    ] },
   { id: "north-sea", name: "North Sea Harbour", biome: "coast", coastal: true,
     cities: ["copenhagen", "bergen", "aberdeen", "gothenburg", "stavanger"] },
   // Cities defined by the water they sit in/on, rather than by their latitude.
