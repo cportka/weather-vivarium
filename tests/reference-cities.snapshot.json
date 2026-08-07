@@ -123,9 +123,9 @@
     "Lomita": {
       "biome": "forest",
       "region": "north-america",
-      "tier": "rural",
+      "tier": "city",
       "style": "suburb",
-      "landmark": null
+      "landmark": "lomita-library"
     },
     "Mexico City": {
       "biome": "city",

@@ -7,7 +7,7 @@
 import { CATALOG } from "../src/catalog/index.js";
 import { LANDMARKS } from "../src/catalog/landmarks.js";
 import { createPainter } from "../src/engine/painter.js";
-import { resolveScene, placeKey } from "../src/world/resolve.js";
+import { resolveScene, placeKey, sceneDensity } from "../src/world/resolve.js";
 import { pools } from "../src/catalog/index.js";
 import { createScene } from "../src/scene/compositor.js";
 import { defaultState } from "../src/data/weather.js";
@@ -49,11 +49,8 @@ window.moonSheet = function () {
 
 const L = 50, GEOM = { L, horizon: 24, groundTop: 37, roadBot: 46 };
 function densFrom(place, res) {
-  const pop = place.population;
-  let pd = null;
-  if (pop && pop > 0) { pd = (Math.log(pop) / Math.LN10 - 3.6) / 4.2; pd = pd < 0 ? 0 : pd > 1 ? 1 : pd; }
   if (place.density != null) return place.density;
-  return Math.max(pd != null ? pd : 0.22, res.biome.id === "city" ? 0.5 : 0);
+  return sceneDensity(res, place.population);
 }
 
 function mockEnv(over) {

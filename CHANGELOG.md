@@ -4,6 +4,52 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com) and the project uses
 [Semantic Versioning](https://semver.org). Every change bumps the version and adds an entry below.
 
+## [0.13.0] - 2026-08-06
+
+Layering and signature fixes across the LA basin, and the wall grows to 44,444.
+
+### Fixed
+- **Ground animals cross behind the trees** (San Francisco). They were painted after
+  the landmark and trees, so a passing dog slid over the palm trunk; they now amble
+  across the back of the scene, behind landmark and trees, still in front of nothing
+  they shouldn't be.
+- **The tree steps clear of the temperature sign** (Oakland). Tall signs now count in
+  the tree-slot scoring, and a tree whose best slot still overlaps walks outward —
+  left first — to the nearest clash-free column, so landmark, tree and sign all read
+  fully. Knee-high markers (milestone, sandwich board) deliberately don't block: a
+  canopy above a low marker reads fine, and in a crowded scene it's the only way
+  everything fits.
+- **Vegas's welcome-sign pairing had silently never worked** — `pairedSign` was read
+  off the `{entry, x}` wrapper instead of the entry, so the casino's paired sign
+  never matched and Vegas only got it because the weighted draw favours it. Now
+  guaranteed, with a regression test.
+- **A `carson`-style bare name can no longer hijack other states' cities.** Landscape
+  city lists accept admin-scoped entries (`{ name: "carson", admin: ["ca",
+  "california"] }`), so the new South Bay preset claims Carson, California without
+  turning Carson City, Nevada's Great Basin desert — or a 2,000-person Carson,
+  Washington — into LA suburbs. Caught by review before it shipped; the datasets are
+  built from the scoped lists.
+- **One density formula.** Population → urbanisation was hand-copied in six places
+  and they had already drifted; `sceneDensity()` in resolve.js is now the single
+  source, used by the widget, the verify harness, the dataset replay, the snapshot
+  resolver and the tests.
+
+### Added
+- **Los Angeles leads with its own sign.** Calling cards gained a `sign` slot, and LA
+  pins the neon billboard — the board ported from the original widget: cream with a
+  sun motif and coral digits by day, noir purple under hot-magenta neon with cyan
+  digits at night — instead of a random coast draw.
+- **Lomita has its library.** A new landmark modeled on the City of Lomita Public
+  Library — cream stone, tall dark glass bays between white pilasters, the flat
+  white fascia, entrance canopy, lawn and flower bed — with a big pine alongside via
+  a calling-card tree, and a couple of panes left warmly lit after dark.
+- **The South Bay renders as what it is.** Curated landscapes can assert a `density`
+  floor: Lomita, Torrance, Gardena, Carson, Lawndale and Hawthorne (California) now
+  read as the wall-to-wall leafy suburb they are — paved road, tract houses — instead
+  of woodland hamlets, whatever their municipal populations say.
+- **44,444 cities** (16,444 US — the whole GeoNames pop-1000+ US list barring a few
+  hundred — + 28,000 world). The full-database replay covers every one in ~3s.
+
 ## [0.12.0] - 2026-08-06
 
 Three bugs with one thing in common: nothing threw, nothing logged, the scene just

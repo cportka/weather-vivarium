@@ -11,7 +11,7 @@ import { createPainter } from "../engine/painter.js";
 import { localTime, dayFactor, moonIllumination } from "../engine/astronomy.js";
 import { defaultState, fetchWeather } from "../data/weather.js";
 import { geocode } from "../data/geocode.js";
-import { resolveScene, placeKey } from "../world/resolve.js";
+import { resolveScene, placeKey, sceneDensity } from "../world/resolve.js";
 import { pools } from "../catalog/index.js";
 import { createScene } from "./compositor.js";
 import { seedFrom } from "../engine/random.js";
@@ -39,14 +39,6 @@ function el(target, doc) {
 function tempText(state, unit) {
   if (state.temp == null) return "--";
   return String(state.temp) + "°";
-}
-
-// Urbanisation 0..1 from population (gentle curve — most places are towns, not
-// metropolises): ~8k → 0.08, ~100k → 0.33, ~1M → 0.57, ~10M → 0.81, ~25M → 0.90.
-function densityFrom(pop) {
-  if (!pop || pop <= 0) return null;
-  var d = (Math.log(pop) / Math.LN10 - 3.6) / 4.2;
-  return d < 0 ? 0 : d > 1 ? 1 : d;
 }
 
 export function createVivarium(target, options) {
@@ -87,11 +79,9 @@ export function createVivarium(target, options) {
   function buildWorld(place, res) {
     var lt = localTime(place.timezone, nowOverride);
     var moon = moonIllumination(lt.year, lt.month, lt.day);
-    var pd = densityFrom(place.population);
-    // urbanisation: population if we have it, else a modest default; city biomes
-    // are urban by definition, so floor them well above pastoral.
-    var density = options.density != null ? options.density
-      : Math.max(pd != null ? pd : 0.22, res.biome.id === "city" ? 0.5 : 0);
+    // urbanisation: sceneDensity is THE formula (population + city floor +
+    // landscape floor); an explicit option still overrides it.
+    var density = options.density != null ? options.density : sceneDensity(res, place.population);
     var w = {
       geometry: GEOMETRY, biome: res.biome, landscape: res.landscape, landmark: res.landmark,
       latitude: res.latitude, coastal: res.coastal, unit: res.unit, density: density, cannabis: res.cannabis, region: res.region, callingCard: res.callingCard,

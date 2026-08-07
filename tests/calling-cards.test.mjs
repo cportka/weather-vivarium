@@ -13,14 +13,16 @@ const ids = {
   nightPerson: new Set(CATALOG.people.map((e) => e.id)),
   bird: new Set(CATALOG.birds.map((e) => e.id)),
   ground: new Set(byLayer(CATALOG.animals, "ground").map((e) => e.id)),
-  water: new Set(byLayer(CATALOG.animals, "water").map((e) => e.id))
+  water: new Set(byLayer(CATALOG.animals, "water").map((e) => e.id)),
+  sign: new Set(CATALOG.signs.map((e) => e.id))
 };
-const SLOTS = ["person", "nightPerson", "ground", "bird", "water"];
+const SLOTS = ["person", "nightPerson", "ground", "bird", "water", "sign"];
 
 // Places that should have a calling card, and the slot + id it should name.
 const EXPECT = [
   { place: { name: "Los Angeles", latitude: 34.05, longitude: -118.24 }, slot: "person", id: "beachgoer" },
   { place: { name: "Los Angeles", latitude: 34.05, longitude: -118.24 }, slot: "nightPerson", id: "beach-cat" },
+  { place: { name: "Los Angeles", latitude: 34.05, longitude: -118.24 }, slot: "sign", id: "neon" },
   { place: { name: "Santa Monica", latitude: 34.02, longitude: -118.49 }, slot: "person", id: "beachgoer" },
   { place: { name: "Nairobi", latitude: -1.29, longitude: 36.82 }, slot: "ground", id: "giraffe" },
   { place: { name: "Cusco", latitude: -13.53, longitude: -71.97 }, slot: "ground", id: "llama" },
@@ -54,7 +56,7 @@ test("the named calling cards resolve for their city", () => {
 
 test("a calling card is castable in its city's own biome", () => {
   const poolFor = { person: "people", nightPerson: "people", ground: "groundAnimals",
-    bird: "birds", water: "waterAnimals" };
+    bird: "birds", water: "waterAnimals", sign: "signs" };
   for (const { place, slot, id } of EXPECT) {
     const res = resolveScene(place, {});
     const pool = pools(res.biome.id)[poolFor[slot]];
