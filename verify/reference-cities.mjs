@@ -26,6 +26,10 @@ export const REFERENCE_CITIES = [
   // --- US interior: desert, mountain, plains, swamp, tundra ---
   { name: "New York City", lat: 40.71, lon: -74.01, population: 8175133, country: "United States" },
   { name: "Chicago", lat: 41.88, lon: -87.63, population: 2720546, country: "United States" },
+  // Naperville carries the metro-aware density the dataset build computed for it
+  // (Chicago's commuter belt lifts its 147k from d0.37 to 0.40) — a test pins this
+  // hand-set value to the packed us.json row so the two can never drift.
+  { name: "Naperville", admin1: "IL", lat: 41.75, lon: -88.15, population: 147100, density: 0.4, country: "United States" },
   { name: "Las Vegas", lat: 36.17, lon: -115.14, population: 623747, country: "United States" },
   { name: "Reno", lat: 39.53, lon: -119.81, population: 264165, country: "United States" },
   { name: "Denver", lat: 39.74, lon: -104.99, population: 682545, country: "United States" },
@@ -41,6 +45,7 @@ export const REFERENCE_CITIES = [
   { name: "Mexico City", lat: 19.43, lon: -99.13, population: 12294193, country: "Mexico" },
   { name: "Rio de Janeiro", lat: -22.91, lon: -43.2, population: 6023699, country: "Brazil" },
   { name: "Cusco", lat: -13.53, lon: -71.97, population: 312140, country: "Peru" },
+  { name: "Iquitos", lat: -3.75, lon: -73.25, population: 437620, country: "Peru" },
   { name: "Ushuaia", lat: -54.8, lon: -68.3, population: 63000, country: "Argentina" },
   { name: "Havana", lat: 23.13, lon: -82.38, population: 2163824, country: "Cuba" },
   { name: "Vancouver", lat: 49.28, lon: -123.12, population: 600000, country: "Canada" },
@@ -94,7 +99,7 @@ export function referenceTier(d) {
 export function resolveReference(c) {
   var place = referencePlace(c);
   var r = resolveScene(place, {});
-  var d = sceneDensity(r, c.population);
+  var d = c.density != null ? c.density : sceneDensity(r, c.population);
   var s = styleForBiome(r.biome.id, seedFrom(placeKey(place)), d, r.region);
   return {
     biome: r.biome.id, region: r.region, tier: referenceTier(d),

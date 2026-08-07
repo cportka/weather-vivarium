@@ -99,7 +99,7 @@ export default [
     }
   },
   {
-    id: "snake", name: "Snake", biomes: ["forest", "plains", "desert", "wetland", "jungle"],
+    id: "snake", name: "Snake", biomes: ["forest", "plains", "desert", "wetland", "jungle", "canyon"],
     tags: ["animal", "small", "wild", "reptile"], w: 13, h: 5, anchor: "baseline", layer: "ground", rarity: 0.8,
     draw: function (P, x, yb, env) {
       var body = env.col("#5a8a3a"), dark = env.col("#3d6626"), tongue = env.col("#c23a2a");
@@ -121,7 +121,7 @@ export default [
     }
   },
   {
-    id: "bee", name: "Bee", biomes: ["plains", "farmland", "forest", "jungle", "wetland"],
+    id: "bee", name: "Bee", biomes: ["plains", "farmland", "forest", "jungle", "wetland", "savanna", "mountain", "lake"],
     tags: ["animal", "air", "insect"], w: 6, h: 4, anchor: "center", layer: "air", rarity: 1.2,
     draw: function (P, x, y, env) {
       var body = env.col("#e8c23a"), dark = env.col("#2b2b25");
@@ -140,7 +140,7 @@ export default [
     }
   },
   {
-    id: "dragonfly", name: "Dragonfly", biomes: ["wetland", "plains", "forest", "jungle"],
+    id: "dragonfly", name: "Dragonfly", biomes: ["wetland", "plains", "forest", "jungle", "lake", "canyon"],
     tags: ["animal", "air", "insect"], w: 8, h: 6, anchor: "center", layer: "air", rarity: 1.0,
     draw: function (P, x, y, env) {
       var body = env.col("#3aa88a"), dark = env.col("#237055");
@@ -161,7 +161,7 @@ export default [
     }
   },
   {
-    id: "firefly", name: "Firefly", biomes: ["forest", "plains", "farmland", "wetland", "jungle"],
+    id: "firefly", name: "Firefly", biomes: ["forest", "plains", "farmland", "wetland", "jungle", "lake", "savanna"],
     tags: ["animal", "air", "insect", "glow"], w: 7, h: 7, anchor: "center", layer: "air", rarity: 1.1,
     draw: function (P, x, y, env) {
       var t = env.frame;
@@ -177,7 +177,7 @@ export default [
     }
   },
   {
-    id: "bat", name: "Bat", biomes: ["forest", "jungle", "desert", "plains"],
+    id: "bat", name: "Bat", biomes: ["forest", "jungle", "desert", "plains", "canyon", "savanna", "city"],
     tags: ["animal", "air", "night"], w: 8, h: 5, anchor: "center", layer: "air", rarity: 0.9,
     draw: function (P, x, y, env) {
       if (!env.night) return;                              // bats only fly at night

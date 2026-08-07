@@ -202,7 +202,7 @@ export default [
     }
   },
   {
-    id: "aspen", name: "Aspen", biomes: ["mountain", "forest", "tundra", "plains"],
+    id: "aspen", name: "Aspen", biomes: ["mountain", "forest", "tundra", "plains", "canyon"],
     tags: ["tree", "broadleaf", "quaking"], w: 10, h: 20, anchor: "baseline",
     draw: function (P, x, yb, env) {
       var sway = Math.round(windSway(env, 1.3));

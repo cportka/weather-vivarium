@@ -21,7 +21,7 @@ const server = http.createServer((req, res) => {
 
 const specs = (now, wx) => REFERENCE_CITIES.map((c) => ({
   label: c.name, now,
-  place: { name: c.name, latitude: c.lat, longitude: c.lon, country: c.country, population: c.population },
+  place: { name: c.name, admin1: c.admin1 || "", latitude: c.lat, longitude: c.lon, country: c.country, population: c.population, density: c.density },
   wx
 }));
 

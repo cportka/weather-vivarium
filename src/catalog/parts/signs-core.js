@@ -45,7 +45,7 @@ export default [
     }
   },
   {
-    id: "trailpost", name: "Wooden trail sign", biomes: ["forest", "mountain", "plains", "tundra", "wetland"],
+    id: "trailpost", name: "Wooden trail sign", biomes: ["forest", "mountain", "plains", "tundra", "wetland", "jungle", "lake", "canyon", "savanna", "desert"],
     tags: ["sign", "wood"], w: 19, h: 16, anchor: "baseline",
     draw: function (P, x, yb, env) {
       var post = env.col("#6a4f2e"), board = env.col("#9a7748"), edge = env.col("#5a4022");

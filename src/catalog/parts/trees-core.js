@@ -39,7 +39,7 @@ export default [
     }
   },
   {
-    id: "pine", name: "Pine", biomes: ["mountain", "forest", "tundra", "plains"],
+    id: "pine", name: "Pine", biomes: ["mountain", "forest", "tundra", "plains", "canyon", "lake"],
     tags: ["tree", "conifer", "cold"], w: 11, h: 20, anchor: "baseline",
     draw: function (P, x, yb, env) {
       var sway = Math.round(windSway(env, 1.2));
@@ -60,7 +60,7 @@ export default [
     }
   },
   {
-    id: "oak", name: "Oak", biomes: ["forest", "plains", "farmland", "city", "wetland"],
+    id: "oak", name: "Oak", biomes: ["forest", "plains", "farmland", "city", "wetland", "lake"],
     tags: ["tree", "broadleaf", "temperate"], w: 15, h: 18, anchor: "baseline",
     draw: function (P, x, yb, env) {
       var sway = Math.round(windSway(env, 1.6));
@@ -77,7 +77,7 @@ export default [
     }
   },
   {
-    id: "birch", name: "Birch", biomes: ["forest", "mountain", "tundra"],
+    id: "birch", name: "Birch", biomes: ["forest", "mountain", "tundra", "lake"],
     tags: ["tree", "broadleaf", "cold"], w: 10, h: 19, anchor: "baseline",
     draw: function (P, x, yb, env) {
       var sway = Math.round(windSway(env, 1.4));
@@ -94,7 +94,7 @@ export default [
     }
   },
   {
-    id: "deadwood", name: "Bare tree", biomes: ["tundra", "wetland", "desert", "plains", "farmland"],
+    id: "deadwood", name: "Bare tree", biomes: ["tundra", "wetland", "desert", "plains", "farmland", "canyon"],
     tags: ["tree", "bare", "winter"], w: 13, h: 18, anchor: "baseline", rarity: 0.7,
     draw: function (P, x, yb, env) {
       var sway = Math.round(windSway(env, 1.0));

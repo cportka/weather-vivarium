@@ -102,7 +102,7 @@
     const meta = tile.querySelector(".meta");
     const inst = createVivarium(m, {
       city: c.name, lat: c.lat, lon: c.lon, timezone: c.tz, biome: c.biome, landscape: c.landscape,
-      population: c.population, temperatureUnit: c.unit, size: 110, interactive: true, minimalData: true, refreshMs: 0
+      population: c.population, density: c.density, temperatureUnit: c.unit, size: 110, interactive: true, minimalData: true, refreshMs: 0
     });
     const paint = () => { meta.textContent = metaText(c, inst.weather.temp); };
     paint();

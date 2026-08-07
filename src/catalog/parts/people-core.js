@@ -113,7 +113,7 @@ export default [
     }
   },
   {
-    id: "stroller", name: "Passer-by", biomes: ["city", "coast", "plains", "farmland", "forest"],
+    id: "stroller", name: "Passer-by", biomes: ["city", "coast", "plains", "farmland", "forest", "jungle", "desert", "savanna", "mountain", "tundra", "lake", "wetland", "canyon"],
     tags: ["person", "casual"], w: 4, h: 7, anchor: "baseline", layer: "ground",
     draw: function (P, x, yb, env) {
       var skin = "#d7a26a", coat = env.col("#3a63b8"), pants = env.col("#2a2f3a");

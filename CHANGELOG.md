@@ -4,6 +4,42 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com) and the project uses
 [Semantic Versioning](https://semver.org). Every change bumps the version and adds an entry below.
 
+## [0.14.0] - 2026-08-07
+
+The variety sweep: thin biomes filled in, and the whole database learns what a
+suburb is.
+
+### Added
+- **Metro-aware density, baked into the dataset.** City-limits population lies about
+  suburbs — Naperville's 147k next to Chicago's 2.7M rendered as a mid-size town in a
+  cornfield. At build time every city now consults its neighbourhood: a bigger core
+  within its commuter belt (tiered reach — a 2M+ metro pulls from 50 km, a 100k town
+  from 20) lifts the suburb to ~60% of the core's density. **12,962 cities** across
+  the two datasets carry the lifted value in a new packed `density` column; the
+  gallery, demo wall, reference sheet and CI replay all render with it. Noise lifts
+  (below village grade, or under +0.03) aren't stored, so the files barely grow, and
+  curated landscape floors (the South Bay) still win where they say more. Cores and
+  standalone towns are untouched — Chicago is its own metro, Iowa City has no bigger
+  neighbour. Tests pin Naperville risen, Chicago unmoved, and the reference row's
+  hand-set value equal to the dataset's.
+- **Tiki board** — a thatched beach-bar sign for jungle, coast and lake: bamboo
+  posts, palm-frond roof, driftwood plank, and a pair of tiki torches that flicker
+  alight after dark. Amazon river ports (Iquitos, Manaus) lead with it by calling
+  card — and send the capybara out first.
+- **Naperville, IL and Iquitos, Peru join the reference set** — now 54. One shows a
+  commuter suburb rendered as what it is; the other shows the filled-out jungle.
+
+### Changed
+- **No biome is threadbare any more.** Sign, tree, bird, animal and stroller biome
+  lists widened where ecology allows: jungle went from **one** sign for 6,782 cities
+  to five (even 20% spread, measured across the database); forest (25,351 cities)
+  from three to four; lake from one to six. Canyon — one tree, zero ground animals —
+  now has pinyon pine, aspen and deadwood, bighorn goats, jackrabbits and snakes.
+  Lakeshores get deer, foxes, birch and oak; alpine meadows and savanna get their
+  butterflies and bees; city nights get bats; the passer-by strolls every biome. The
+  full-database replay and a distribution tally confirm every biome now draws from
+  ≥4 signs with no degenerate favourite.
+
 ## [0.13.0] - 2026-08-06
 
 Layering and signature fixes across the LA basin, and the wall grows to 44,444.
