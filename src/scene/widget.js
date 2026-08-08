@@ -149,6 +149,12 @@ export function createVivarium(target, options) {
     add("Biome", world.biome.name);
     add("Landscape", world.landscape.name);
     add("Landmark", world.landmark ? world.landmark.name : "none");
+    var planted = scene && scene.trees ? scene.trees() : [];
+    var treeNames = [];
+    for (var ti = 0; ti < planted.length; ti++) {
+      if (treeNames.indexOf(planted[ti].name) === -1) treeNames.push(planted[ti].name);
+    }
+    add(treeNames.length > 1 ? "Trees" : "Tree", treeNames.length ? treeNames.join(", ") : "none");
     var d = world.density || 0;
     add("Settlement", d >= 0.78 ? "metropolis" : d >= 0.62 ? "big city" : d >= 0.36 ? "city"
       : d >= 0.2 ? "town" : d >= 0.08 ? "village" : "rural");

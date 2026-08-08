@@ -59,3 +59,52 @@ export function groundOffset(entry) {
   entry.__groundOff = off;
   return off;
 }
+
+/** The entry's real painted horizontal span, relative to its anchor x, sampled
+    across a full animation cycle — {left, right} where left <= 0 <= right.
+
+    Placement used to trust the declared `w`, but canopies don't read contracts:
+    the palm's fronds reach four columns past its box, so a second tree placed
+    "clash-free" beside it still landed in the leaves (Santa Monica), and the
+    sign's clearance was measured to the wrong edge (Seattle, Paris). Measured
+    once per entry and cached, exactly like groundOffset. */
+export function paintedSpan(entry) {
+  if (entry.__span) return entry.__span;
+  var minX = Infinity, maxX = -Infinity, refX = 20;
+  try {
+    for (var f = 0; f < 8; f++) {
+      var m = mockPainterX();
+      entry.draw(m.P, refX, 40, Object.assign({}, ENV, { frame: f }));
+      if (m.min() < minX) minX = m.min();
+      if (m.max() > maxX) maxX = m.max();
+    }
+  } catch (e) { /* fall through to the declared box */ }
+  var span = isFinite(minX)
+    ? { left: Math.min(0, minX - refX), right: Math.max((entry.w || 1) - 1, maxX - refX) }
+    : { left: 0, right: (entry.w || 1) - 1 };
+  entry.__span = span;
+  return span;
+}
+
+// A sibling of mockPainter that records X extents instead of the lowest row.
+function mockPainterX() {
+  var minX = Infinity, maxX = -Infinity;
+  function mark(x) { if (x < minX) minX = x; if (x > maxX) maxX = x; }
+  function span2(x0, x1) { mark(x0 < x1 ? x0 : x1); mark(x0 < x1 ? x1 : x0); }
+  var noop = function () {};
+  var P = {
+    L: 50,
+    px: function (x) { mark(x); },
+    rect: function (x, y, w, h) { mark(x); mark(x + (w > 0 ? w - 1 : 0)); },
+    line: function (x0, y0, x1, y1) { span2(x0, x1); },
+    disc: function (x, y, r) { mark(x - r); mark(x + r); },
+    dband: function (x0, y0, x1) { span2(x0, x1); },
+    glyph: noop, text: function (s, x) { if (typeof x === "number") { mark(x); mark(x + (s ? s.length * 4 - 1 : 0)); } },
+    withAlpha: function (a, fn) { fn(); },
+    alpha: noop, flip: function (x, w, fn) { fn(); }, clear: noop,
+    mix: function (a) { return a; }, shade: function (a) { return a; }, tint: function (a) { return a; },
+    lerp: function (a) { return a; }, clamp: function (v, a, b) { return v < a ? a : v > b ? b : v; },
+    hex: function (a) { return a; }, BAYER: [0, 0, 0, 0]
+  };
+  return { P: P, min: function () { return minX; }, max: function () { return maxX; } };
+}

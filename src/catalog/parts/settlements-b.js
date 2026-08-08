@@ -10,20 +10,33 @@
    oil-town pumpjack rocks with env.frame, everything else is static. */
 
 export default [
-  // Dense uniform mid-rise slabs — a grid of lit windows, the housing estate look.
+  // Dense mid-rise slabs — the housing estate look. NOT uniform grey: brick,
+  // render, slate and warm-concrete blocks stand shoulder to shoulder, and the
+  // daytime windows contrast with their wall (sky-lit glass on dark walls, dark
+  // glass on light walls) — darker-grey-on-grey windows were invisible and the
+  // whole block read as one drab slab.
   {
     id: "apartment-blocks", name: "Apartment Blocks", biomes: ["city"],
     heights: [5, 9, 14], maxCoverage: 0.55,
     width: function (rng) { return 4 + Math.floor(rng() * 3); },
     building: function (P, x, w, h, env, lit, rng) {
       var b = env.groundTop - 1, top = b - h + 1;
-      var base = P.mix("#7f858e", "#616772", rng());
-      var wall = env.col(base), off = env.col(P.shade(base, 0.3));
+      var fam = [
+        { wall: "#75543f", glass: "#9db4c4" },   // brick
+        { wall: "#9a927e", glass: "#4c5860" },   // render/tan
+        { wall: "#5d6570", glass: "#a3b8c6" },   // slate
+        { wall: "#82766a", glass: "#46525c" }    // warm concrete
+      ][Math.floor(rng() * 4)];
+      var wall = env.col(fam.wall), glass = env.col(fam.glass);
       P.rect(x, top, w, h, wall);
-      P.rect(x, top, w, 1, env.col(P.shade(base, 0.28)));            // parapet / cornice
-      for (var wy = top + 2; wy < b; wy += 2)                        // dense window grid
+      P.rect(x, top, w, 1, env.col(P.shade(fam.wall, 0.28)));        // parapet / cornice
+      P.rect(x + w - 1, top, 1, h, env.col(P.shade(fam.wall, 0.2))); // shaded flank
+      for (var wy = top + 2; wy < b; wy += 2) {                      // window floors
         for (var wx = x + 1; wx < x + w - 1; wx += 2)
-          P.px(wx, wy, (lit && rng() < 0.6) ? "#ffe6a2" : off);
+          P.px(wx, wy, (lit && rng() < 0.6) ? "#ffe6a2" : glass);
+        if (wy + 1 < b && rng() < 0.4)                               // balcony rail
+          P.px(x, wy + 1, env.col(P.tint(fam.wall, 0.25)));
+      }
       P.px(x + (w >> 1), b, lit ? "#ffd27a" : env.col("#332f2b"));   // ground-floor entrance
       if (rng() < 0.5) P.rect(x + 1, top - 1, 2, 1, env.col("#4c525b")); // rooftop stair/lift box
     }
