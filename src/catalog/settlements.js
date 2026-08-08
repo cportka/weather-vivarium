@@ -28,23 +28,70 @@ function w3(rng) { return 3 + Math.floor(rng() * 3); }
 function w4(rng) { return 4 + Math.floor(rng() * 4); }
 
 export var STYLES = {
-  // Glass/steel towers — only real dense cities (city biome).
+  // Glass/steel towers — only real dense cities (city biome). A tower is NOT a
+  // grey slab: it belongs to a facade family (dark glass / steel blue / pale
+  // stone / warm concrete), steps back as it rises, carries curtain-wall window
+  // columns by day and scattered lit offices by night, and tops out in an
+  // antenna mast or a water tank.
   towers: {
     id: "towers", name: "Towers", heights: [6, 12, 24], maxCoverage: 0.5, width: function (rng) { return 4 + Math.floor(rng() * 4); },
     building: function (P, x, w, h, env, lit, rng) {
-      var b = baseRow(env), top = b - h + 1, wall = env.col(mix("#39424f", "#505b6a", rng()));
-      P.rect(x, top, w, h, wall); P.rect(x, top, w, 1, mix(wall, "#000000", 0.25));
-      lights(P, x, top, w, h, lit, rng, "#ffe58a", mix(wall, "#000000", 0.3));
-      if (rng() < 0.4) P.px(x + (w >> 1), top - 1, env.night ? "#ff5a5a" : wall);      // antenna
+      var b = baseRow(env), top = b - h + 1;
+      // `glass` is the daylight window tone, chosen per family so windows always
+      // CONTRAST with their wall instead of vanishing into it (the old
+      // darker-grey-on-grey windows were exactly the "grey blob" complaint).
+      var fam = [
+        { wall: "#2e3844", glass: "#7292ae" },   // dark glass (the Willis look)
+        { wall: "#46525f", glass: "#93b6cc" },   // steel blue
+        { wall: "#918a7a", glass: "#4f5c66" },   // pale stone, dark windows
+        { wall: "#6c655c", glass: "#96abbb" }    // warm concrete
+      ][Math.floor(rng() * 4)];
+      var wall = env.col(fam.wall), glass = env.col(fam.glass);
+      var side = mix(wall, "#000000", 0.3), cap = mix(wall, "#000000", 0.2);
+      // the classic setback silhouette: [tierTopRow, tierWidth], bottom tier first
+      var tiers = (h >= 16 && w >= 6) ? [[top + Math.round(h * 0.45), w], [top + Math.round(h * 0.18), w - 2], [top, w - 4]]
+                : (h >= 10 && w >= 5) ? [[top + Math.round(h * 0.35), w], [top, w - 2]]
+                : [[top, w]];
+      for (var t = 0; t < tiers.length; t++) {
+        var yT = tiers[t][0], tw = tiers[t][1], tx = x + ((w - tw) >> 1);
+        var yB = t === 0 ? b : tiers[t - 1][0] - 1;
+        P.rect(tx, yT, tw, yB - yT + 1, wall);
+        P.rect(tx, yT, tw, 1, cap);                                  // parapet
+        P.rect(tx + tw - 1, yT, 1, yB - yT + 1, side);               // shaded flank
+        if (lit) {                                                   // night: scattered lit offices
+          for (var wy = yT + 1; wy <= yB - 1; wy += 2)
+            for (var wx = tx + 1; wx < tx + tw - 1; wx += 2)
+              P.px(wx, wy, rng() < 0.55 ? "#ffdf8a" : mix(wall, "#000000", 0.35));
+        } else {                                                     // day: curtain-wall mullions
+          for (var gx = tx + 1; gx < tx + tw - 1; gx += 2)
+            P.rect(gx, yT + 1, 1, yB - yT - 1, glass);
+        }
+      }
+      var crown = tiers[tiers.length - 1];
+      var cx = x + ((w - crown[1]) >> 1) + (crown[1] >> 1);
+      if (h >= 12 && rng() < 0.55) {                                 // antenna mast + beacon
+        P.px(cx, top - 1, side); P.px(cx, top - 2, lit ? "#ff5a5a" : side);
+      } else if (rng() < 0.5) {
+        P.rect(x + ((w - crown[1]) >> 1) + 1, top - 1, 2, 1, side);  // water tank
+      }
     }
   },
-  // Concrete/brick mid-rise — harbour and mixed cities.
+  // Concrete/brick mid-rise — harbour and mixed cities. Warm varied walls, a
+  // cornice, a shaded flank, and a regular window grid that stays readable in
+  // daylight (dark glass on light masonry).
   midrise: {
     id: "midrise", name: "Mid-rise", heights: [4, 8, 14], maxCoverage: 0.5, width: w4,
     building: function (P, x, w, h, env, lit, rng) {
-      var b = baseRow(env), top = b - h + 1, wall = env.col(mix("#7a6f62", "#9a8f7e", rng()));
-      P.rect(x, top, w, h, wall); P.rect(x, top, w, 1, mix(wall, "#000000", 0.2));
-      lights(P, x, top, w, h, lit, rng, "#ffe0a0", env.col("#4a4238"));
+      var b = baseRow(env), top = b - h + 1;
+      var wall = env.col(["#7a6f62", "#9a8f7e", "#8a5f4a", "#6e7276", "#a08a6a"][Math.floor(rng() * 5)]);
+      var winD = mix(env.col("#3d4750"), wall, 0.15);
+      P.rect(x, top, w, h, wall);
+      P.rect(x, top, w, 1, mix(wall, "#000000", 0.3));                // cornice
+      P.rect(x + w - 1, top, 1, h, mix(wall, "#000000", 0.22));       // shaded flank
+      for (var wy = top + 2; wy < b; wy += 2)
+        for (var wx = x + 1; wx < x + w - 1; wx += 2)
+          P.px(wx, wy, lit && rng() < 0.5 ? "#ffe0a0" : winD);
+      P.px(x + 1, b, mix(wall, "#000000", 0.35));                     // doorway
       if (rng() < 0.5) P.rect(x + 1, top - 1, 2, 1, env.col("#5a5248"));                // rooftop tank
     }
   },
@@ -56,22 +103,38 @@ export var STYLES = {
       var wall = env.col(["#b06a4a", "#8a9a6a", "#6a8aa0", "#c0a060", "#9a6a8a"][Math.floor(rng() * 5)]);
       P.rect(x, top, w, h, wall);
       P.rect(x, top, w, 1, env.col("#3a3230"));                                          // eaves
+      for (var wx = x + 1; wx < x + w - 1; wx += 2)                                      // upper windows
+        P.px(wx, top + 2, lit && rng() < 0.6 ? "#ffe0a0" : mix(wall, "#000000", 0.4));
       P.rect(x, b, w, 1, env.col("#5a4a3a"));                                            // shopfront/awning
       P.px(x + (w >> 1), b - 1, lit ? "#ffe0a0" : env.col("#3a3630"));                   // lit window/door
     }
   },
-  // Red barn + silo farmstead.
+  // Red barn + silo farmstead. The barn wears its identity: a gambrel roof
+  // (flat crown over flared eaves — the double-pitch barn silhouette) and a
+  // white-trimmed X-braced sliding door, so the red shape reads "barn" at a
+  // glance instead of "unclear red thing".
   farmstead: {
     id: "farmstead", name: "Farmstead", heights: [8, 9, 10], maxCoverage: 0.3, width: function (rng) { return 4 + Math.floor(rng() * 3); },
     building: function (P, x, w, h, env, lit, rng) {
       var b = baseRow(env), top = b - h + 1;
-      if (rng() < 0.4) { // silo
+      if (rng() < 0.4) { // grain silo: steel drum, domed cap, ring seam
         var sw = 2, sx = x + ((w - sw) >> 1);
-        P.rect(sx, top, sw, h, env.col("#c9c2b0")); P.px(sx, top, env.col("#8a8478")); P.px(sx + 1, top, env.col("#8a8478"));
-      } else {           // barn
-        P.rect(x, top + 1, w, h - 1, env.col("#a83a2a"));
-        for (var i = 0; i < w; i++) P.px(x + i, top, env.col(i === (w >> 1) ? "#c9c2b0" : "#8a2f22")); // ridge
-        P.rect(x + (w >> 1) - 1, b - 1, 2, 1, env.col("#e0d8c0"));                       // hay door
+        P.rect(sx, top + 1, sw, h - 1, env.col("#c9c2b0"));
+        P.rect(sx + sw - 1, top + 1, 1, h - 1, env.col("#a49d8c"));  // shaded side
+        P.rect(sx, top, sw, 1, env.col("#8a8478"));                  // dome cap
+        P.px(sx, top + 3, env.col("#a49d8c"));                       // ring seam
+      } else {           // the barn
+        var red = env.col("#a83a2a"), redS = env.col("#7e2a1e"), trim = env.col("#ece6d4");
+        P.rect(x + 1, top, w - 2, 1, env.col("#7d6048"));            // gambrel crown
+        P.rect(x, top + 1, w, 1, env.col("#5f4634"));                // flared eave
+        P.rect(x, top + 2, w, h - 2, red);                           // body
+        P.rect(x + w - 1, top + 2, 1, h - 2, redS);                  // shaded end
+        P.px(x + (w >> 1), top + 2, trim);                           // hayloft vent
+        var dx = x + (w >> 1) - 1;                                   // sliding door, X-braced
+        P.rect(dx, b - 2, 3, 3, redS);
+        P.px(dx, b - 2, trim); P.px(dx + 2, b - 2, trim);
+        P.px(dx + 1, b - 1, trim);
+        P.px(dx, b, trim); P.px(dx + 2, b, trim);
       }
     }
   },

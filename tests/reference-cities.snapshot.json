@@ -13,7 +13,7 @@
       "region": "north-america",
       "tier": "town",
       "style": "suburb",
-      "landmark": null
+      "landmark": "ferris-wheel"
     },
     "San Francisco": {
       "biome": "coast",

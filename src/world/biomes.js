@@ -289,10 +289,19 @@ var FARMLAND = {
   water: null, road: { kind: "dirt", markings: false },
   drawFar: function (P, env) {
     treeline(P, env, "#3a6a3a");
-    // a little red barn on the horizon
-    var bx = 6, hy = env.horizon;
-    P.rect(bx, hy - 5, 6, 5, env.col("#a03a2a")); P.rect(bx, hy - 7, 6, 2, env.col("#8a2f22"));
-    P.px(bx + 2, hy - 3, env.col("#e0d0a0"));
+    // The barn on the horizon, wearing its identity: gambrel roof (flat crown
+    // over flared eaves), white-trimmed X-braced door, a grain silo alongside —
+    // it used to be two stacked red rectangles, which read as "unclear red thing".
+    var bx = 6, hy = env.horizon, trim = env.col("#ece6d4");
+    P.rect(bx + 1, hy - 7, 4, 1, env.col("#7d6048"));   // gambrel crown
+    P.rect(bx, hy - 6, 6, 1, env.col("#5f4634"));       // flared eave
+    P.rect(bx, hy - 5, 6, 5, env.col("#a03a2a"));       // body
+    P.rect(bx + 5, hy - 5, 1, 5, env.col("#7e2a1e"));   // shaded end
+    P.px(bx + 2, hy - 5, trim);                         // hayloft vent
+    P.rect(bx + 2, hy - 2, 2, 2, env.col("#7e2a1e"));   // sliding door
+    P.px(bx + 2, hy - 2, trim); P.px(bx + 3, hy - 1, trim);  // X-brace hint
+    P.rect(bx + 7, hy - 4, 1, 4, env.col("#c9c2b0"));   // silo drum
+    P.px(bx + 7, hy - 4, env.col("#8a8478"));           // silo cap
   },
   drawGround: function (P, env) {
     // ploughed field rows

@@ -15,28 +15,38 @@ export default [
     w: 20, h: 11, anchor: "baseline",
     draw: function (P, x, yb, env) {
       var night = env.night || env.dayT < 0.4;
-      var skyR = night ? "#2c3654" : env.col("#dcecf6");    // what the top reflects
-      var lit = env.col(night ? "#8794a8" : "#c2d4e0");
-      var mid = env.col("#8fa4b2"), deep = env.col("#5c6c78"), dark = env.col("#3e4a54");
+      // A mirror shows three bands: sky above the waist, a smeared horizon AT the
+      // waist, and the warm plaza below it — that gradient, on a true ellipse with
+      // a walk-through arch, is what says "the Bean" instead of "a grey mound".
+      var skyHi = night ? "#232c48" : env.col("#e4f1fa");   // crown: mirrored zenith
+      var skyLo = night ? "#313c5c" : env.col("#c6dcee");   // shoulders: mirrored sky
+      var mid = env.col("#93a8b6"), deep = env.col("#5c6c78"), dark = env.col("#39444e");
       var pave = env.col("#b8b4a8"), paveS = env.col("#8e8a7e");
-      // the blob, row by row — widest at the waist, tucked at the feet
-      P.rect(x + 6, yb - 10, 8, 1, lit);
-      P.rect(x + 4, yb - 9, 12, 1, skyR);                   // sky band
-      P.rect(x + 3, yb - 8, 14, 1, skyR);
-      P.rect(x + 2, yb - 7, 16, 1, lit);
-      P.rect(x + 2, yb - 6, 16, 1, mid);
-      P.rect(x + 1, yb - 6, 1, 1, lit); P.rect(x + 18, yb - 6, 1, 1, lit);
-      P.rect(x + 2, yb - 5, 16, 1, deep);                   // smeared horizon
-      P.rect(x + 2, yb - 4, 16, 1, mid);
-      P.rect(x + 3, yb - 3, 14, 1, deep);
-      // the arch: feet at the ends, the gate's shadow between them
-      P.rect(x + 3, yb - 2, 4, 2, deep); P.rect(x + 13, yb - 2, 4, 2, deep);
-      P.rect(x + 7, yb - 2, 6, 1, dark);
-      // specular gleam
-      P.px(x + 5, yb - 9, "#f4fbff"); P.px(x + 6, yb - 9, "#f4fbff");
+      var paveR = night ? "#3e3a34" : env.col("#9b968a");   // plaza mirrored in the belly
+      // Ellipse, crown to waist: 6 → 12 → 16 → 18 → 20 wide. Each row's end pixel
+      // turns just ONE band darker — a chrome edge rolls away smoothly; hard dark
+      // dots there read as spots on the mirror.
+      P.rect(x + 7, yb - 10, 6, 1, skyHi);
+      P.rect(x + 4, yb - 9, 12, 1, skyHi); P.px(x + 4, yb - 9, skyLo); P.px(x + 15, yb - 9, skyLo);
+      P.rect(x + 2, yb - 8, 16, 1, skyLo); P.px(x + 2, yb - 8, mid); P.px(x + 17, yb - 8, mid);
+      P.rect(x + 1, yb - 7, 18, 1, skyLo); P.px(x + 1, yb - 7, mid); P.px(x + 18, yb - 7, mid);
+      P.rect(x, yb - 6, 20, 1, mid); P.px(x, yb - 6, deep); P.px(x + 19, yb - 6, deep);
+      // the waist: a smeared upside-down skyline (lit windows once the city is)
+      P.rect(x, yb - 5, 20, 1, deep);
+      for (var i = 2; i < 18; i += 3) P.px(x + i, yb - 5, night ? "#ffdf8a" : mid);
+      // belly, narrowing back in: mirrors the plaza, then shades to the underside
+      P.rect(x + 1, yb - 4, 18, 1, paveR); P.px(x + 1, yb - 4, deep); P.px(x + 18, yb - 4, deep);
+      P.rect(x + 2, yb - 3, 16, 1, deep);
+      P.rect(x + 6, yb - 3, 8, 1, dark);                    // arch underside (dark chrome)
+      // the gate: two chrome feet with real head-height air between them
+      P.rect(x + 2, yb - 2, 4, 2, deep); P.px(x + 2, yb - 1, dark); P.px(x + 5, yb - 2, dark);
+      P.rect(x + 14, yb - 2, 4, 2, deep); P.px(x + 17, yb - 1, dark); P.px(x + 14, yb - 2, dark);
+      P.rect(x + 6, yb - 2, 8, 2, night ? "#2a3140" : paveS); // the plaza seen through
+      // specular gleam on the crown shoulder
+      P.px(x + 5, yb - 9, "#f6fcff"); P.px(x + 6, yb - 9, "#f6fcff"); P.px(x + 4, yb - 8, "#f6fcff");
       // plaza pavement with the bean's shadow
       P.rect(x, yb, 20, 1, pave);
-      P.rect(x + 3, yb, 14, 1, paveS);
+      P.rect(x + 2, yb, 16, 1, paveS);
     }
   },
   {
@@ -411,18 +421,35 @@ export default [
     }
   },
   {
-    id: "ferris-wheel", name: "Ferris wheel", cities: ["london eye", "vienna", "yokohama"], biomes: ["city", "coast"],
+    id: "ferris-wheel", name: "Ferris wheel", cities: ["london eye", "vienna", "yokohama", "santa monica"], biomes: ["city", "coast"],
     w: 16, h: 17, anchor: "baseline",
+    // Steel A-frame, a dense rim, four turning spokes and coloured cabins — the
+    // old version was two pale lines and twelve pale dots, invisible against the
+    // sky it stood on. At night the cabins run the LED show the Pacific Wheel is
+    // known for.
     draw: function (P, x, yb, env) {
-      var m = env.col("#c0c6cc"), cx = x + 8, cy = yb - 9, r = 7;
-      P.line(x + 5, yb, cx, cy, m); P.line(x + 11, yb, cx, cy, m); // A-frame
-      for (var a = 0; a < 12; a++) {
-        var ang = (a / 12) * Math.PI * 2 + env.frame * 0.02;
-        var px = Math.round(cx + Math.cos(ang) * r), py = Math.round(cy + Math.sin(ang) * r);
-        var lit = (env.night || env.dayT < 0.4);
-        P.px(px, py, lit ? ["#ff5a7a", "#ffd24a", "#4affd2"][a % 3] : m);
+      var night = env.night || env.dayT < 0.4;
+      var steel = env.col("#7e8a99"), steelD = env.col("#5d6774");
+      var cx = x + 8, cy = yb - 9, r = 7, rot = env.frame * 0.02;
+      P.line(x + 5, yb - 1, cx, cy, steelD); P.line(x + 11, yb - 1, cx, cy, steelD); // A-frame
+      P.rect(x + 4, yb, 9, 1, steelD);                                              // boarding deck
+      for (var s = 0; s < 4; s++) {                                                 // turning spokes
+        var sa = rot + s * Math.PI / 2;
+        P.line(cx, cy, Math.round(cx + Math.cos(sa) * (r - 1)), Math.round(cy + Math.sin(sa) * (r - 1)), steel);
       }
-      P.disc(cx, cy, 1, m);
+      for (var a = 0; a < 64; a++) {                                                // the rim itself —
+        var ang = (a / 64) * Math.PI * 2 + rot;                                     // sampled densely so it
+        P.px(Math.round(cx + Math.cos(ang) * r), Math.round(cy + Math.sin(ang) * r), // draws a SOLID circle,
+          night ? "#5a6a7e" : steel);                                               // not a dashed one
+      }
+      for (var c = 0; c < 12; c++) {                                                // cabins ride the rim
+        var ca = (c / 12) * Math.PI * 2 + rot;
+        P.px(Math.round(cx + Math.cos(ca) * r), Math.round(cy + Math.sin(ca) * r),
+          night ? ["#ff5a7a", "#ffd24a", "#4affd2", "#7a9aff"][c % 4]
+                : ["#d84a5a", "#e8b23a", "#3a8ad8"][c % 3]);
+      }
+      P.disc(cx, cy, 1, night ? "#ffd24a" : env.col("#c23b3b"));                    // hub
+      P.px(cx, cy, env.col("#f2efe6"));
     }
   },
   {

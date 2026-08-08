@@ -4,6 +4,55 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com) and the project uses
 [Semantic Versioning](https://semver.org). Every change bumps the version and adds an entry below.
 
+## [0.16.0] - 2026-08-08
+
+Placement measured for real, forty trees, and the grey cities get their colour.
+
+### Fixed
+- **Trees are placed by their real painted span, not their declared box.** A new
+  `paintedSpan()` measure (cached, like `groundOffset()`) records each sprite's true
+  horizontal extent across a full animation cycle; tree placement, sign clearance and
+  the building step-around all use it. The palm's fronds reach four columns past its
+  box — that overhang is why Santa Monica grew a tree in its palm and why Seattle's
+  and Paris's trees hid behind signs. Every sign now blocks placement too (low ones
+  included); when a scene is genuinely too full, the min-clash scan degrades to the
+  least-covered spot instead of hiding a tree.
+- **The distant skyline never overshoots its cap.** The old height curve could run
+  25% past it, and that one un-capped slab was Chicago's "grey blob popping out the
+  top". Far towers are washed firmly toward the sky, and the tall ones taper into a
+  slim spire so they read as skyline, not slab.
+
+### Added
+- **Twenty new tree species** (`trees-b.js`) spread across every land biome —
+  jacaranda, Monterey cypress, Joshua tree, ponderosa, dogwood, magnolia, ginkgo,
+  date palm, fir, larch, Lombardy poplar, cottonwood, juniper, fig, rubber tree,
+  kapok, flame tree, yucca, tulip poplar, paperbark. The catalog now carries 40
+  trees; every land biome offers 7–15 species.
+- **A Tree row on the info card.** The scene exposes its planted trees
+  (`scene.trees()`), and `attributes()` lists their species names after Landmark.
+- **Santa Monica is its own postcard.** The Pacific Wheel (ferris-wheel landmark)
+  turns over the beach and the jacaranda blooms by the road; the palm and the neon
+  billboard now belong to Los Angeles alone. San Francisco plants its wind-sculpted
+  Monterey cypress, Seattle its Douglas fir — each via calling-card trees.
+
+### Changed
+- **The grey cities got their colour back.** Towers build in facade families (dark
+  glass, steel blue, pale stone, warm concrete) with setback silhouettes,
+  curtain-wall window columns by day, scattered lit offices by night, and antenna
+  masts with beacons. Apartment blocks mix brick, render, slate and warm concrete
+  with balcony rails; mid-rises get cornices, shaded flanks and readable window
+  grids. Daylight windows always contrast with their wall — darker-grey-on-grey
+  was the "drab blob" complaint.
+- **Cloud Gate is a mirror, not a mound.** A true ellipse with the three mirror
+  bands (sky above the waist, smeared skyline at it, warm plaza below), a
+  walk-through arch between chrome feet, and lit window reflections at night.
+- **The ferris wheel is steel, not mist.** Solid rim, four turning spokes, coloured
+  cabins by day and the LED show at night, on an A-frame with a boarding deck.
+- **Barns look like barns.** The farmstead barn and the farmland horizon barn wear
+  gambrel roofs, white-trimmed X-braced sliding doors, hayloft vents and proper
+  grain silos — the horizon one had been two stacked red rectangles ("unclear red
+  thing", Naperville).
+
 ## [0.15.0] - 2026-08-07
 
 Depth fixes on the coast, and three cities get their icons.

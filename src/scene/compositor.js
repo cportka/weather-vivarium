@@ -16,7 +16,7 @@ import { intensity as wmoIntensity, isPrecip, isSnow, isStorm, isRain, isFog } f
 import { EFFECTS } from "./weatherfx.js";
 import { makeRng, pickWeighted } from "../engine/random.js";
 import { styleForBiome } from "../catalog/settlements.js";
-import { groundOffset } from "../catalog/measure.js";
+import { groundOffset, paintedSpan } from "../catalog/measure.js";
 
 var LANE_NEAR = 43, LANE_FAR = 39;
 // Where the temperature sign stands, and how long each fold-down / get-up pose
@@ -76,10 +76,15 @@ function distantSkyline(P, env, rng) {
   while (x < P.L) {
     if (rng() < cov) {
       var w = 2 + Math.floor(rng() * 3);
-      var h = Math.max(2, Math.round(cap * (0.35 + rng() * rng() * 0.9)));   // mostly low, a few tall
-      var tall = h / (cap || 1);
-      var wall = mix(env.col(mix("#4a5464", "#616c7c", rng())), haze, 0.62 - tall * 0.16);
+      // Mostly low, a few tall — but never past the cap: the old curve overshot it
+      // by up to a quarter, and that one un-capped slab was the "grey blob popping
+      // out the top" of Chicago. Every far tower is washed FIRMLY toward the sky
+      // (distance is the same for all of them), and the tall ones taper into a
+      // slim spire so they read as skyline silhouette, not slab.
+      var h = Math.max(2, Math.round(cap * (0.35 + rng() * rng() * 0.65)));
+      var wall = mix(env.col(mix("#4a5464", "#616c7c", rng())), haze, 0.58 + rng() * 0.16);
       P.rect(x, hy - h, w, h, wall);
+      if (h >= cap * 0.75 && w >= 3) P.px(x + (w >> 1), hy - h - 1, mix(wall, haze, 0.25));
       if (lit) {
         for (var wy = hy - h + 1; wy < hy - 1; wy += 2)
           for (var wx = x + 1; wx < x + w - 1; wx += 2) if (rng() < 0.3) P.px(wx, wy, mix("#ffe08a", haze, 0.25));
@@ -210,24 +215,29 @@ export function createScene(P, world, opts) {
       // of the remaining slots, so it doesn't cover the landmark, the temperature
       // sign, or another tree — landmark, tree and sign should all read fully.
       // Nothing is a HARD blocker though: a tree always gets placed, since
-      // silently dropping it just leaves a bare scene. (A `place:"water"` landmark
-      // hangs at the horizon, not on the ground, so it never competes for a slot.)
+      // silently dropping it just leaves a bare scene.
+      //
+      // All footprints are the sprites' MEASURED painted spans, not their declared
+      // boxes — a palm's fronds reach four columns past its box, and "clash-free
+      // beside the palm" has to mean beside the leaves. And every sign blocks,
+      // low ones included: when a scene is genuinely too full (Lomita), the
+      // min-clash scan below degrades to the least-covered spot rather than a
+      // hidden tree. (A `place:"water"` landmark hangs at the horizon, not on
+      // the ground, so it never competes for a slot.)
       var blocked = [];
+      function blockEntry(x, entry) {
+        var sp = paintedSpan(entry);
+        blocked.push([x + sp.left, x + sp.right]);
+      }
       if (props.landmark && props.landmark.entry.place !== "water") {
-        blocked.push([props.landmark.x, props.landmark.x + props.landmark.entry.w - 1]);
+        blockEntry(props.landmark.x, props.landmark.entry);
       }
-      // Only a TALL sign hides a tree — a knee-high marker (milestone, sandwich
-      // board) in front of a trunk still leaves the whole canopy reading above
-      // it, and in a crowded scene (Lomita: a 26-wide library) that low overlap
-      // is the only way everything fits.
-      if (props.sign && props.sign.entry.h > 13) {
-        blocked.push([props.sign.x, props.sign.x + props.sign.entry.w - 1]);
-      }
-      // how many columns of `x..x+w-1` sit on top of something already placed
-      function clash(x, w) {
-        var n = 0;
+      if (props.sign) blockEntry(props.sign.x, props.sign.entry);
+      // how many painted columns of this entry at x sit on something already placed
+      function clash(x, entry) {
+        var sp = paintedSpan(entry), x0 = x + sp.left, x1 = x + sp.right, n = 0;
         for (var b = 0; b < blocked.length; b++) {
-          var lo = Math.max(x, blocked[b][0]), hi = Math.min(x + w - 1, blocked[b][1]);
+          var lo = Math.max(x0, blocked[b][0]), hi = Math.min(x1, blocked[b][1]);
           if (hi >= lo) n += hi - lo + 1;
         }
         return n;
@@ -244,11 +254,14 @@ export function createScene(P, world, opts) {
           wantTree = null;
         }
         if (!entry) entry = pickWeighted(rng, pool);
+        var span = paintedSpan(entry);
+        var loX = -span.left, hiX = P.L - 1 - span.right;              // painted span on-canvas
+        if (hiX < loX) hiX = loX;
         var bestI = -1, bestX = 0, bestClash = Infinity;
         for (var sI = 0; sI < slots.length; sI++) {
           if (slots[sI] == null) continue;
-          var sx = clamp(slots[sI], 0, Math.max(0, P.L - entry.w));   // keep it on the canvas
-          var c = clash(sx, entry.w);
+          var sx = clamp(slots[sI], loX, hiX);
+          var c = clash(sx, entry);
           if (c < bestClash) { bestClash = c; bestI = sI; bestX = sx; }
           if (c === 0) break;
         }
@@ -259,8 +272,8 @@ export function createScene(P, world, opts) {
         // spot nearest the chosen slot on ties — in a crowded scene that packs
         // the trees left of the sign instead of leaving one hidden behind it.
         if (bestClash > 0) {
-          for (var cx2 = 0; cx2 + entry.w <= P.L; cx2++) {
-            var c2 = clash(cx2, entry.w);
+          for (var cx2 = loX; cx2 <= hiX; cx2++) {
+            var c2 = clash(cx2, entry);
             if (c2 < bestClash || (c2 === bestClash && Math.abs(cx2 - slots[bestI]) < Math.abs(bestX - slots[bestI]))) {
               bestClash = c2; bestX = cx2;
               if (c2 === 0 && Math.abs(cx2 - slots[bestI]) <= 3) break;
@@ -268,11 +281,15 @@ export function createScene(P, world, opts) {
           }
         }
         props.trees.push({ entry: entry, x: bestX });
-        blocked.push([bestX, bestX + entry.w - 1]);
+        blockEntry(bestX, entry);
         slots[bestI] = null;
       }
-      // buildings step around the trees, so neither is drawn on top of the other
-      props.treeSpans = props.trees.map(function (t) { return [t.x, t.x + t.entry.w - 1]; });
+      // buildings step around the trees (their real leaf spread, not the box), so
+      // neither is drawn on top of the other
+      props.treeSpans = props.trees.map(function (t) {
+        var sp = paintedSpan(t.entry);
+        return [t.x + sp.left, t.x + sp.right];
+      });
     }
   })();
 
@@ -667,7 +684,11 @@ export function createScene(P, world, opts) {
     }
   }
 
-  return { render: render };
+  return {
+    render: render,
+    /** The tree entries actually planted in this scene (fixed props, in placement order). */
+    trees: function () { return props.trees.map(function (t) { return t.entry; }); }
+  };
 }
 
 // road palettes resolved to concrete colours (kept out of the hot path)

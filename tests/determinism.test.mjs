@@ -14,7 +14,7 @@ import { createScene } from "../src/scene/compositor.js";
 import { defaultState } from "../src/data/weather.js";
 import { seedFrom } from "../src/engine/random.js";
 import { moonIllumination } from "../src/engine/astronomy.js";
-import { groundOffset } from "../src/catalog/measure.js";
+import { groundOffset, paintedSpan } from "../src/catalog/measure.js";
 import { stubPainter } from "./stub-painter.mjs";
 
 const L = 50, GEOMETRY = { L, horizon: 24, groundTop: 37, roadBot: 46 };
@@ -27,10 +27,10 @@ function fixedProps(place) {
   const seen = [], restore = [];
   for (const [list, kind] of [[pool.trees, "tree"], [pool.signs, "sign"]]) {
     for (const e of list) {
-      // groundOffset() measures a sprite by mock-drawing it once and caching the
-      // result; warm it here so that one-off measuring pass isn't mistaken for a
-      // placement when we wrap draw below.
-      groundOffset(e);
+      // groundOffset()/paintedSpan() measure a sprite by mock-drawing it and
+      // caching the result; warm both here so those one-off measuring passes
+      // aren't mistaken for placements when we wrap draw below.
+      groundOffset(e); paintedSpan(e);
       const orig = e.draw; restore.push(() => { e.draw = orig; });
       e.draw = function (P, x, yb, env) { seen.push(kind + ":" + e.id + "@" + x); return orig.call(this, P, x, yb, env); };
     }

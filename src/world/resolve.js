@@ -123,8 +123,13 @@ export function regionFor(place) {
 
    Keys are matched as whole words against the place name (see match.js). */
 var CALLING_CARDS = [
-  { cities: ["los angeles", "santa monica", "malibu", "venice beach"],
+  { cities: ["los angeles", "malibu"],
     person: "beachgoer", nightPerson: "beach-cat", tree: "palm", sign: "neon" },
+  // Santa Monica is its own postcard, not a copy of LA's: the Pacific Wheel over
+  // the pier (via the ferris-wheel landmark) and the jacaranda bloom of Ocean
+  // Avenue — the beach cast stays, the neon billboard and the palm go to LA.
+  { cities: ["santa monica", "venice beach"],
+    person: "beachgoer", nightPerson: "beach-cat", tree: "jacaranda" },
   { cities: ["honolulu", "waikiki"], person: "surfer", tree: "palm" },
   { cities: ["lomita", "torrance"], tree: "pine" },   // the pines by the library and the high school
   // Amazon river ports: a thatched riverfront board, and the capybara ambles out first
@@ -137,7 +142,10 @@ var CALLING_CARDS = [
   { cities: ["aspen", "zermatt", "chamonix", "queenstown", "whistler"], person: "skier" },
   { cities: ["boulder", "portland", "eugene"], person: "jogger" },
   { cities: ["paris", "florence", "firenze"], person: "painter" },
-  { cities: ["san francisco", "seattle"], person: "photographer" },
+  // Each gets its region's signature conifer: the wind-sculpted Monterey cypress
+  // of the California headlands, and the Douglas fir of Puget Sound.
+  { cities: ["san francisco"], person: "photographer", tree: "monterey-cypress" },
+  { cities: ["seattle"], person: "photographer", tree: "fir" },
   { cities: ["dallas", "fort worth", "calgary", "cheyenne"], person: "cowboy" },
   { cities: ["nairobi", "arusha", "serengeti"], ground: "giraffe" },
   { cities: ["cusco", "la paz", "arequipa"], ground: "llama" },
